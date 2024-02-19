@@ -1,20 +1,28 @@
 import puppeteer from "puppeteer-extra";
 import { evaluatePostPage } from "./evaluate-functions.js";
 import {
-  getArgs,
   getPercentageString,
   timeoutPromise,
 } from "../../custom_helpers_js/index.js";
-import { join } from "path";
 import { existsSync, readFileSync } from "fs";
 import registerGracefulExit from "../../custom_helpers_js/graceful-exit.js";
-import { getOutFolder } from "../../custom_helpers_js/get-paths.js";
 import { createRunLogger } from "../../custom_helpers_js/run-logger.mjs";
 import UserAgent from "user-agents";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import yargs from "yargs/yargs";
+import { hideBin } from "yargs/helpers";
 
 const main = async () => {
-  const OUT_FOLDER = getOutFolder("scrape_aift_posts");
+  // Process input arguments
+  const argv = yargs(hideBin(process.argv)).argv;
+  let { outFolder, urlsFilepath, startIndex, endIndex } = argv;
+  if (!outFolder || !urlsFilepath) {
+    console.log("Invalid arguments");
+    return;
+  }
+  if (!startIndex) startIndex = 0;
+  if (!endIndex) endIndex = 0;
+
   const dataHeaders = [
     "product_url",
     "count_save",
@@ -26,7 +34,7 @@ const main = async () => {
   const runLogger = await createRunLogger(
     "aift-scrape-posts",
     dataHeaders,
-    OUT_FOLDER
+    outFolder
   );
 
   // Run constants
@@ -43,38 +51,8 @@ const main = async () => {
   const ERROR_STRING_CANT_RETRY = "Error but can't retry!";
 
   // Initializer variables
-  const FILEPATH_KEYS = ["all", "latest"];
-  let urlsFilepath = FILEPATH_KEYS[1];
-  let START_INDEX = 0;
-  let END_INDEX = 0;
-
-  // Handle CLI arguments
-  const cliArgs = getArgs();
-  const arg1 = cliArgs[0];
-
-  if (arg1) {
-    urlsFilepath = arg1;
-
-    // Parse second and third args for start and stop
-    const arg2 = cliArgs[1];
-    const arg3 = cliArgs[2];
-
-    if (arg2) {
-      if (arg3) {
-        START_INDEX = parseInt(arg2);
-        END_INDEX = parseInt(arg3);
-      } else {
-        START_INDEX = parseInt(arg2);
-      }
-    }
-  }
-
-  // Get urls file path if using a key
-  if (FILEPATH_KEYS.includes(urlsFilepath)) {
-    const POST_URLS_FOLDER = getOutFolder("scrape_aift_post_urls");
-    const filename = urlsFilepath + ".json";
-    urlsFilepath = join(POST_URLS_FOLDER, filename);
-  }
+  let START_INDEX = startIndex;
+  let END_INDEX = endIndex;
 
   // Read urls file
   if (!urlsFilepath || !existsSync(urlsFilepath)) {
@@ -96,7 +74,7 @@ const main = async () => {
   const lastIndex = END_INDEX ? END_INDEX : postUrlsToScrape.length;
 
   await runLogger.addToStartLog({
-    cliArgs,
+    argv: JSON.stringify(argv),
     startIndex: START_INDEX,
     endIndex: END_INDEX,
     lastIndex,
@@ -121,6 +99,14 @@ const main = async () => {
       deviceScaleFactor: 1,
     });
     await page.setDefaultNavigationTimeout(NAV_TIMEOUT);
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (request.resourceType() === "image") {
+        request.abort();
+      } else {
+        request.continue();
+      }
+    });
     return page;
   };
 
@@ -269,6 +255,8 @@ const main = async () => {
         continue;
       }
     }
+
+    endLogContents.success = true;
   } catch (error) {
     endLogContents.error = "" + error;
   }

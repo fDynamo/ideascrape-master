@@ -1,5 +1,4 @@
 import {
-  getArgs,
   timeoutPromise,
   getPercentageString,
 } from "../../custom_helpers_js/index.js";
@@ -29,7 +28,7 @@ const main = async () => {
     "source_url",
   ];
   const runLogger = await createRunLogger(
-    "source-ph-scrape",
+    "ph-scrape-homefeed",
     dataHeaders,
     outFolder
   );
@@ -62,7 +61,7 @@ const main = async () => {
   const endLogContents = {};
 
   await runLogger.addToStartLog({
-    argv,
+    argv: JSON.stringify(argv),
     startCursor: START_CURSOR,
     endCursor: ENDING_CURSOR,
   });

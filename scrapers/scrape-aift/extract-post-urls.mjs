@@ -1,30 +1,27 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const { readCsvFile } = require("../../custom_helpers_js/read-csv");
-const { getArgs } = require("../../custom_helpers_js/index");
-const { getOutFolder } = require("../../custom_helpers_js/get-paths");
+import { join } from "path";
+import { readdirSync, writeFileSync } from "fs";
+import yargs from "yargs/yargs";
+import { hideBin } from "yargs/helpers";
+import { readCsvFile } from "../../custom_helpers_js/read-csv.js";
 
 const main = async () => {
   const VALID_EXTRACT_TYPES = ["all", "latest"];
-  let extractType = VALID_EXTRACT_TYPES[1];
 
-  // Handle CLI arguments
-  const cliArgs = getArgs();
-  const arg1 = cliArgs[0];
-
-  if (arg1) {
-    if (VALID_EXTRACT_TYPES.includes(arg1)) {
-      extractType = arg1;
-    }
+  // Process input arguments
+  const argv = yargs(hideBin(process.argv)).argv;
+  let { outFile, extractType, listsFolder } = argv;
+  if (!outFile || !listsFolder) {
+    console.log("Invalid arguments");
+    return;
   }
+  if (!extractType) extractType = VALID_EXTRACT_TYPES[0];
 
   // Folder variables
-  const LISTS_FOLDER = getOutFolder("scrape_aift_lists");
-  const POST_URLS_FOLDER = getOutFolder("scrape_aift_post_urls");
-  const OUT_FILE = path.join(POST_URLS_FOLDER, extractType + ".json");
+  const LISTS_FOLDER = listsFolder;
+  const OUT_FILE = outFile;
 
   // Get urls list
-  const files = fs.readdirSync(LISTS_FOLDER);
+  const files = readdirSync(LISTS_FOLDER);
   let urlsList = [];
   const filesRead = [];
 
@@ -56,7 +53,7 @@ const main = async () => {
 
   for (let i = 0; i < filesRead.length; i++) {
     const file = filesRead[i];
-    const filepath = path.join(LISTS_FOLDER, file);
+    const filepath = join(LISTS_FOLDER, file);
     const fileRows = await readCsvFile(filepath);
     fileRows.forEach((row) => {
       const url = row.source_url;
@@ -71,6 +68,6 @@ const main = async () => {
     files: filesRead,
     urls: urlsList,
   };
-  fs.writeFileSync(OUT_FILE, JSON.stringify(toWrite), { encoding: "utf-8" });
+  writeFileSync(OUT_FILE, JSON.stringify(toWrite), { encoding: "utf-8" });
 };
 main();

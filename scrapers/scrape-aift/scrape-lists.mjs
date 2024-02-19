@@ -2,26 +2,33 @@ import puppeteer from "puppeteer-extra";
 import path from "path";
 import { evaluateTasks } from "./evaluate-functions.js";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { getOutFolder } from "../../custom_helpers_js/get-paths.js";
 import registerGracefulExit from "../../custom_helpers_js/graceful-exit.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { existsSync, readFileSync } from "fs";
 import { createRunLogger } from "../../custom_helpers_js/run-logger.mjs";
 import {
-  getArgs,
   getPercentageString,
   timeoutPromise,
 } from "../../custom_helpers_js/index.js";
 import UserAgent from "user-agents";
+import yargs from "yargs/yargs";
+import { hideBin } from "yargs/helpers";
 
 const main = async () => {
-  const OUT_FOLDER = getOutFolder("scrape_aift_lists");
+  // Process input arguments
+  const argv = yargs(hideBin(process.argv)).argv;
+  let { outFolder, presetName } = argv;
+  if (!outFolder) {
+    console.log("Invalid arguments");
+    return;
+  }
+
   const dataHeaders = ["product_url", "count_save", "image_url", "source_url"];
   const runLogger = await createRunLogger(
     "aift-scrape-lists",
     dataHeaders,
-    OUT_FOLDER
+    outFolder
   );
 
   // Run variables
@@ -32,23 +39,13 @@ const main = async () => {
   // List file
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const LIST_PRESETS_FOLDER = path.join(__dirname, "list-presets");
-  let LIST_FILEPATH = path.join(LIST_PRESETS_FOLDER, "all-years.json");
 
-  // Handle CLI arguments
-  const cliArgs = getArgs();
-  const arg1 = cliArgs[0];
-
-  if (arg1) {
-    if (arg1.startsWith("preset-")) {
-      const presetName = arg1.replace("preset-", "");
-      const presetFilename = presetName + ".json";
-      const presetFilepath = path.join(LIST_PRESETS_FOLDER, presetFilename);
-      LIST_FILEPATH = presetFilepath;
-    } else LIST_FILEPATH = arg1;
-  }
+  const presetFilename = presetName + ".json";
+  const presetFilepath = path.join(LIST_PRESETS_FOLDER, presetFilename);
+  const LIST_FILEPATH = presetFilepath;
 
   if (!LIST_FILEPATH || !existsSync(LIST_FILEPATH)) {
-    console.log("List file not found!", LIST_FILEPATH);
+    console.log("Preset file not found!", LIST_FILEPATH);
     process.exit();
   }
 
@@ -64,7 +61,7 @@ const main = async () => {
   }
 
   await runLogger.addToStartLog({
-    cliArgs,
+    argv: JSON.stringify(argv),
     instructionList: JSON.stringify(instructionList),
   });
 
@@ -86,6 +83,14 @@ const main = async () => {
       deviceScaleFactor: 1,
     });
     await page.setDefaultNavigationTimeout(NAV_TIMEOUT);
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      if (request.resourceType() === "image") {
+        request.abort();
+      } else {
+        request.continue();
+      }
+    });
     return page;
   };
 
