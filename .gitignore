@@ -1,0 +1,11 @@
+.venv/
+.env
+__pycache__/
+test/
+test_resize/
+test.*
+test*/
+temp*/
+.vscode/
+out_folder/
+node_modules/
