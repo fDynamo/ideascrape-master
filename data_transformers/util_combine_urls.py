@@ -20,7 +20,7 @@ def main():
         print("Invalid inputs")
         return
 
-    master_df = concat_folder_into_df(in_folderpath)
+    master_df = concat_folder_into_df(in_folderpath, ends_with_filter=None)
     master_df = master_df.dropna(subset="url")
     master_df = master_df.drop_duplicates(subset="url", keep="last")
     master_df = master_df.sort_values(by="url")
