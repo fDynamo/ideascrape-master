@@ -1,4 +1,3 @@
-import validators
 from urllib.parse import urlparse
 import re
 
@@ -60,17 +59,15 @@ def clean_url(in_url: str) -> str:
 
 def get_domain_from_url(in_url: str) -> str:
     in_url = clean_url(in_url)
+    in_url = "https://" + in_url
+    domain = urlparse(in_url).netloc
+    domain_parts = domain.split(".")
+    if len(domain_parts) >= 2:
+        domain = ".".join(domain_parts[-2:])
 
-    slash_index = in_url.find("/")
-    if slash_index < 0:
-        return in_url
-
-    in_url = in_url[:slash_index]
-    return in_url
+    return domain
 
 
 if __name__ == "__main__":
-    test_url = (
-        "https://fakeface.io/#index?ref=taaft&utm_source=taaft&utm_medium=referral"
-    )
+    test_url = "https://app.lol.fakeface.io/#index?ref=taaft&utm_source=taaft&utm_medium=referral"
     print(get_domain_from_url(test_url))

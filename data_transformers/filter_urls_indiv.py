@@ -1,5 +1,5 @@
 import pandas as pd
-from custom_helpers_py.filter_results import is_url_valid, is_url_individual_scrape
+from custom_helpers_py.filter_results import is_url_valid
 from custom_helpers_py.url_formatters import clean_url, get_domain_from_url
 from custom_helpers_py.pandas_helpers import read_csv_as_df, save_df_as_csv
 import argparse
@@ -26,7 +26,7 @@ def main():
 
     # Filter
     def is_url_valid_helper(in_url):
-        return is_url_valid(in_url) and is_url_individual_scrape(in_url)
+        return is_url_valid(in_url)
 
     master_df["url"] = master_df["url"].apply(clean_url)
     master_df["domain"] = master_df["url"].apply(get_domain_from_url)

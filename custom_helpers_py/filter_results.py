@@ -43,14 +43,6 @@ def is_url_valid(in_clean_url: str) -> bool:
     return True
 
 
-def is_url_individual_scrape(in_url: str) -> bool:
-    substrings = url_filters["individual_scrape_substrings"]
-    for substring in substrings:
-        if substring in in_url:
-            return False
-    return True
-
-
 def is_page_title_valid(page_title: str):
     if not page_title:
         return False
