@@ -80,8 +80,14 @@ def main():
         )
     )
 
+    # Similarweb
+    similarweb_domains_file = join(out_folderpath, "filter_sup_similarweb_domains.csv")
+    component_filter_domains_sup_similarweb = 'python data_transformers/filter_domains_sup_similarweb.py -i "{}" -o "{}"'.format(
+        filter_indiv_scrape_domains_outfile, similarweb_domains_file
+    )
+
     component_sup_similarweb_scrape = 'npm run sup_similarweb_scrape -- --domainListFilepath "{}" --outFolder "{}"'.format(
-        filter_indiv_scrape_domains_outfile, sup_similarweb_scrape_folder
+        similarweb_domains_file, sup_similarweb_scrape_folder
     )
 
     cc_sup_similarweb_scrape_outfile = join(
@@ -149,6 +155,7 @@ def main():
         component_filter_indiv_scrape_domains,
         "",
         "[Scrape similarweb]",
+        component_filter_domains_sup_similarweb,
         component_sup_similarweb_scrape,
         component_cc_sup_similarweb_scrape,
         "",
