@@ -1,9 +1,6 @@
-import pandas as pd
 from os.path import join
-from custom_helpers_py.get_paths import get_out_folder
 from custom_helpers_py.string_formatters import clean_text
 from custom_helpers_py.basic_time_logger import log_start, log_end
-from ds_helpers import concat_out_folder_data_files
 from download_product_images import ERROR_FILENAME, RECORD_FILENAME
 from custom_helpers_py.pandas_helpers import (
     read_csv_as_df,

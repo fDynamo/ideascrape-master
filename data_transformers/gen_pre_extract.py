@@ -1,4 +1,3 @@
-import pandas as pd
 from custom_helpers_py.url_formatters import get_domain_from_url
 from custom_helpers_py.pandas_helpers import (
     read_csv_as_df,
