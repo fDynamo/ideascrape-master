@@ -88,6 +88,15 @@ def is_page_description_valid(in_desc: str) -> bool:
     return True
 
 
+def is_domain_similarweb_scrapable(in_domain):
+    substrings = url_filters["substrings"]
+    for substring in substrings:
+        if substring in in_domain:
+            return False
+
+    return True
+
+
 if __name__ == "__main__":
     test_url = "amazon.com/ai/songwraiter/?ref=alternative"
 

@@ -134,7 +134,8 @@
     "api.whatsapp.",
     "apps.microsoft.",
     "marketplace.atlassian.",
-    ".substack."
+    ".substack.",
+    "bubbleapps."
   ],
   "starts": [
     "justpaste.",
@@ -250,5 +251,7 @@
     "dailymotion."
   ],
   "ends": [".png", ".mp3", ".mp4", ".wav", ".webp", ".jpg", "-review", ".zip"],
-  "individual_scrape_substrings": []
+  "similarweb": {
+    "substrings": ["vercel.", "bubbleapps."]
+  }
 }
