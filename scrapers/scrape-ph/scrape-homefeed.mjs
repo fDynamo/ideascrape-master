@@ -17,7 +17,7 @@ const main = async () => {
     return;
   }
   if (!startIndex) startIndex = 0;
-  if (!endIndex) endIndex = 5;
+  if (!endIndex) endIndex = 14;
 
   const dataHeaders = [
     "product_url",
