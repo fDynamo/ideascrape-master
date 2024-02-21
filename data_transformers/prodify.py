@@ -172,9 +172,6 @@ def main():
 
     """
     Get search main
-    
-    TODO:
-    - Needs extra logic here if we are updating, probably by just adding an increment to indexes
     """
     """
     Get ids

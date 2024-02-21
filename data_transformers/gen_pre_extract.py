@@ -19,13 +19,13 @@ def main():
 
     parser.add_argument("--cc-indiv-scrape-filepath", type=str)
     parser.add_argument("--cc-sup-similarweb-scrape-filepath", type=str)
-    parser.add_argument("--cc-source-scrape-folderpath", type=str)
+    parser.add_argument("--combined-source-filepath", type=str)
     parser.add_argument("-o", "--out-filepath", type=str)
     args = parser.parse_args()
 
     cc_indiv_scrape_filepath = args.cc_indiv_scrape_filepath
     cc_sup_similarweb_scrape_filepath = args.cc_sup_similarweb_scrape_filepath
-    cc_source_scrape_folderpath = args.cc_source_scrape_folderpath
+    combined_source_filepath = args.combined_source_filepath
     out_filepath = args.out_filepath
 
     if (
@@ -38,33 +38,35 @@ def main():
 
     master_df = read_csv_as_df(cc_indiv_scrape_filepath)
 
-    if cc_source_scrape_folderpath:
+    if combined_source_filepath:
         # TODO:
         # Merge master df with source scrape
         # Also need to handle better descriptions, titles, and image urls
         # Also need to handle better image urls here
-        # compressed_source_df = get_compressed_sources_df()
+        combined_source_filepath = read_csv_as_df(combined_source_filepath)
 
-        # master_df = filtered_individual_df.merge(
-        #     compressed_source_df, left_on="url", right_on="clean_product_url", how="left"
-        # )
-        # master_df = master_df.drop(columns="clean_product_url")
-        pass
+        master_df = master_df.merge(
+            combined_source_filepath,
+            left_on="url",
+            right_on="clean_product_url",
+            how="left",
+        )
+        master_df = master_df.drop(columns="clean_product_url")
+
+    # Get domain
+    master_df["product_domain"] = master_df["url"].apply(get_domain_from_url)
 
     # Decide on product image url
     # Use these substrings for source images and filter out these default images
-    banned_substring = [
+    banned_image_url_substrings = [
         "media.theresanaiforthat.com/assets/favicon-large",
         "media.theresanaiforthat.com/assets/favicon",
         "ph-files.imgix.net/ecca7485-4473-4479-84ea-1702b0fe04e5",
     ]
 
-    # Get domain
-    master_df["product_domain"] = master_df["url"].apply(get_domain_from_url)
-
     # Fix image urls
-    def fix_image_urls(row):
-        image_url = row["product_image_url"]
+    def fix_favicon_url(row):
+        image_url = row["favicon_url"]
         if not isinstance(image_url, str) or image_url == "":
             return None
 
@@ -79,15 +81,44 @@ def main():
             to_return = "https://" + domain + image_url
             return to_return
         except:
-            print(row)
+            print("image url failure", row)
+            pass
 
-    master_df["product_image_url"] = master_df["favicon_url"]
-    master_df["product_image_url"] = master_df.apply(fix_image_urls, axis=1)
+    def choose_image_url(row) -> str | None:
+        favicon_url = row["favicon_url"]
+        if not isinstance(favicon_url, str):
+            favicon_url = None
 
-    print("lol", master_df)
+        aift_image_url = row["aift_image_url"]
+        if not isinstance(aift_image_url, str):
+            aift_image_url = None
+
+        ph_image_url = row["ph_image_url"]
+        if not isinstance(ph_image_url, str):
+            ph_image_url = None
+
+        for substr in banned_image_url_substrings:
+            if favicon_url and substr in favicon_url:
+                favicon_url = None
+            if aift_image_url and substr in aift_image_url:
+                aift_image_url = None
+            if ph_image_url and substr in ph_image_url:
+                ph_image_url = None
+
+        if ph_image_url:
+            return ph_image_url
+        if aift_image_url:
+            return aift_image_url
+        if favicon_url:
+            favicon_url = fix_favicon_url(row)
+            return favicon_url
+
+        return None
+
+    master_df["product_image_url"] = master_df.apply(choose_image_url, axis=1)
 
     # Decide on description
-    def get_product_description(row):
+    def choose_product_description(row):
         page_desc: str = row["page_description"]
         if not page_desc or not isinstance(page_desc, str):
             return None
@@ -98,7 +129,7 @@ def main():
             return None
         return page_desc
 
-    master_df["description"] = master_df.apply(get_product_description, axis=1)
+    master_df["description"] = master_df.apply(choose_product_description, axis=1)
     master_df = master_df.dropna(subset="description")
 
     # Decide on title

@@ -8,11 +8,13 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-i", "--in-filepath", type=str)
+    parser.add_argument("--combined-source-filepath", type=str)
     parser.add_argument("-o", "--out-folderpath", type=str)
     args = parser.parse_args()
 
     in_filepath: str = args.in_filepath
     out_folderpath: str = args.out_folderpath
+    combined_source_filepath: str = args.combined_source_filepath
     if not in_filepath or not out_folderpath:
         print("Invalid inputs")
         return
@@ -30,7 +32,7 @@ def main():
             out_folderpath,
             indiv_scrape_folder,
             sup_similarweb_scrape_folder,
-            prod_folder,
+            product_images_folder,
             prod_folder,
         ]
     )
@@ -99,12 +101,21 @@ def main():
         )
     )
 
+    # Pre extract
     gen_pre_extract_outfile = join(out_folderpath, "pre_extract.csv")
     component_gen_pre_extract = 'python data_transformers/gen_pre_extract.py --cc-indiv-scrape-filepath "{}" --cc-sup-similarweb-scrape-filepath "{}" -o "{}"'.format(
         filter_indiv_scrape_outfile,
         cc_sup_similarweb_scrape_outfile,
         gen_pre_extract_outfile,
     )
+
+    if combined_source_filepath:
+        component_gen_pre_extract = 'python data_transformers/gen_pre_extract.py --cc-indiv-scrape-filepath "{}" --cc-sup-similarweb-scrape-filepath "{}" --combined-source-filepath "{}" -o "{}"'.format(
+            filter_indiv_scrape_outfile,
+            cc_sup_similarweb_scrape_outfile,
+            combined_source_filepath,
+            gen_pre_extract_outfile,
+        )
 
     extract_embed_description_outfile = join(
         out_folderpath, "extract_embed_description.csv"

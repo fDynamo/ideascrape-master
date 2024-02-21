@@ -71,6 +71,14 @@ def main():
             "",
         ]
 
+    # Combine data
+    combined_source_filepath = join(out_folderpath, "combined_source.csv")
+    combine_source_component = (
+        'python data_transformers/gen_combined_source.py -i "{}" -o "{}"'.format(
+            folder_cc_source_scrapes, combined_source_filepath
+        )
+    )
+
     # Combine urls
     combined_urls_filepath = join(out_folderpath, "scraped_urls_list.csv")
     combine_urls_component = (
@@ -80,13 +88,14 @@ def main():
     )
 
     # Call duckster
-    duckster_call = 'python pipeline_orchestrators/duckster.py -i "{}" -o "{}"'.format(
-        combined_urls_filepath, out_folderpath
+    duckster_call = 'python pipeline_orchestrators/duckster.py -i "{}" --combined-source-filepath "{}" -o "{}"'.format(
+        combined_urls_filepath, combined_source_filepath, out_folderpath
     )
 
     # Write
     to_write_list += [
-        "[Combine urls]",
+        "[Combine data and urls]",
+        combine_source_component,
         combine_urls_component,
         "",
         "[Duckster call]",
