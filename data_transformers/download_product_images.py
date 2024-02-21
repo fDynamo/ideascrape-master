@@ -3,7 +3,7 @@ from custom_helpers_py.string_formatters import (
     format_count_percentage,
 )
 import pandas as pd
-from os.path import join
+from os.path import join, basename
 import requests
 from time import sleep
 from custom_helpers_py.basic_time_logger import log_start, log_end
@@ -12,9 +12,7 @@ from custom_helpers_py.pandas_helpers import (
     save_df_as_csv,
 )
 import argparse
-from PIL import Image
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPM
+from wand.image import Image
 
 
 RECORD_FILENAME = "_record.csv"
@@ -31,27 +29,14 @@ def download_image(to_download_url: str, save_filepath: str):
         handler.write(img_data)
 
 
-def transform_image(in_image_path: str, in_folderpath: str, in_image_name: str):
-    src = in_image_path
-    dst = in_image_path
+def transform_image(in_image_path: str, save_filepath: str):
+    with Image(filename=in_image_path) as img:
+        if in_image_path.endswith(".svg"):
+            save_filepath = save_filepath.replace("svg", "png")
+        img.resize(width=32, height=32)
+        img.save(filename=save_filepath)
 
-    new_image_name = in_image_name
-    if in_image_name.endswith(".svg"):
-        new_image_name = in_image_name[:-3] + "png"
-        tmp_filename = "tmp_" + new_image_name
-        tmp_png_dst = join(in_folderpath, tmp_filename)
-
-        rlg_file = svg2rlg(in_image_path)
-        renderPM.drawToFile(rlg_file, tmp_png_dst, fmt="PNG")
-
-        src = tmp_png_dst
-        dst = join(in_folderpath, new_image_name)
-
-    image = Image.open(src)
-    new_image = image.resize((32, 32))
-    new_image.save(dst)
-
-    return [dst, new_image_name]
+    return save_filepath
 
 
 def main():
@@ -71,7 +56,7 @@ def main():
 
     start_time = log_start("download_product_images")
 
-    RECORD_FILEPATH = join(out_folderpath, "record.csv")
+    RECORD_FILEPATH = join(out_folderpath, RECORD_FILENAME)
     RUN_DELAY = 0
 
     pre_extraction_df = read_csv_as_df(in_filepath)
@@ -117,14 +102,15 @@ def main():
 
             try:
                 download_image(image_url, save_filepath)
-                [_, transformed_image_filename] = transform_image(
-                    save_filepath, out_folderpath, save_image_name
-                )
-
-                # Save filepath in entry
-                entry["image_filename"] = transformed_image_filename
             except:
                 entry["image_filename"] = ERROR_FILENAME
+                continue
+
+            transformed_filepath = transform_image(save_filepath, save_filepath)
+            transformed_filename = basename(transformed_filepath)
+
+            # Save filepath in entry
+            entry["image_filename"] = transformed_filename
 
             i += 1
 

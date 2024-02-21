@@ -9,3 +9,4 @@ temp*/
 .vscode/
 out_folder/
 node_modules/
+tmp/
