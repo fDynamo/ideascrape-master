@@ -67,6 +67,7 @@ def main():
 
     # TODO: Filter on existing images
     # TODO: Filter on error files
+    # TODO: Write to records csv as we go not at the end
 
     # Download
     allowed_extensions = [".svg", ".png", ".gif", ".ico", ".jpg", ".jpeg", ".webp"]
@@ -102,12 +103,11 @@ def main():
 
             try:
                 download_image(image_url, save_filepath)
+                transformed_filepath = transform_image(save_filepath, save_filepath)
+                transformed_filename = basename(transformed_filepath)
             except:
                 entry["image_filename"] = ERROR_FILENAME
                 continue
-
-            transformed_filepath = transform_image(save_filepath, save_filepath)
-            transformed_filename = basename(transformed_filepath)
 
             # Save filepath in entry
             entry["image_filename"] = transformed_filename
