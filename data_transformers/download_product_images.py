@@ -85,7 +85,7 @@ def main():
             print("downloading", i, image_url)
 
             # Convert url to image name
-            save_image_name = convert_url_to_filename(image_url)
+            save_image_name = convert_url_to_filename(entry["url"])
 
             # Get extension name
             to_save_ext = ""
