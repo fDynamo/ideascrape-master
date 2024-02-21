@@ -1,23 +1,38 @@
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import createSupabaseClient from "../custom_helpers/create-supabase-client.js";
-import { readCsvFile } from "../custom_helpers/read-csv.js";
+import createSupabaseClient from "../custom_helpers_js/create-supabase-client.js";
+import { readCsvFile } from "../custom_helpers_js/read-csv.js";
 import * as dotenv from "dotenv";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 
 /**
- * TODO: Handle duplicate rows
- *
- *  node add_records.mjs --masterOutFolder non_poc --recordsFolder non_poc --fileName search_main
- * FOR TESTING:
- * If for AIFT started at 1683
+ * TODO:
+ * - Handle duplicate rows
+ * - Batch uploads to not do too many changes at once!
  */
+
+async function safeAdd(tableName, inData) {
+  try {
+    const { data, error } = await supabase
+      .from(tableName)
+      .insert(inData)
+      .select();
+    if (error) {
+      throw error;
+    }
+    return { isError: false, resData: data };
+  } catch (error) {
+    const errString = error + " ";
+    return { isError: true, errString, error };
+  }
+}
+
 async function main() {
   dotenv.config();
 
   const argv = yargs(hideBin(process.argv)).argv;
-  let { toUploadPath, fileName, recordsFolder, prod } = argv;
+  let { toUploadFolderPath, fileName, recordsFolder, prod } = argv;
   const TYPE_TO_TABLE = {
     source_aift: "source_aift",
     source_ph: "source_ph",
@@ -27,7 +42,7 @@ async function main() {
   const FILE_TYPES_LIST = Object.keys(TYPE_TO_TABLE);
 
   if (
-    !toUploadPath ||
+    !toUploadFolderPath ||
     !fileName ||
     !recordsFolder ||
     !FILE_TYPES_LIST.includes(fileName)
@@ -36,7 +51,7 @@ async function main() {
     return;
   }
 
-  const filePath = join(toUploadPath, fileName + ".csv");
+  const filePath = join(toUploadFolderPath, fileName + ".csv");
 
   let inDataList = await readCsvFile(filePath);
   let supabase = createSupabaseClient(prod);
@@ -44,7 +59,7 @@ async function main() {
   let table = TYPE_TO_TABLE[fileName];
 
   let toWriteObj = {};
-
+  let onConflictVal = "";
   if (fileName == TYPE_TO_TABLE.search_main) {
     let source_aift_record = null;
     const source_aift_record_file = join(recordsFolder, "source_aift.json");
@@ -97,22 +112,6 @@ async function main() {
       };
     });
 
-    async function safeAdd(tableName, inData) {
-      try {
-        const { data, error } = await supabase
-          .from(tableName)
-          .insert(inData)
-          .select();
-        if (error) {
-          throw error;
-        }
-        return { isError: false, resData: data };
-      } catch (error) {
-        const errString = error + " ";
-        return { isError: true, errString, error };
-      }
-    }
-
     // Try go all at once
     const { isError, errString, error, resData } = await safeAdd(
       table,
@@ -164,12 +163,19 @@ async function main() {
     writeFileSync(outFilePath, toWrite);
 
     return;
+  } else if (fileName == TYPE_TO_TABLE.source_aift) {
+    onConflictVal = "source_url";
+  } else if (fileName == TYPE_TO_TABLE.source_ph) {
+    onConflictVal = "source_url";
+  } else if (fileName == TYPE_TO_TABLE.sup_similarweb) {
+    onConflictVal = "source_domain";
   }
 
   const { data, error } = await supabase
     .from(table)
-    .insert(inDataList)
+    .upsert(inDataList, { onConflict: onConflictVal, ignoreDuplicates: false })
     .select();
+
   if (error) {
     console.log(error);
     toWriteObj.runError = error;

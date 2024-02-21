@@ -26,6 +26,7 @@ def main():
     sup_similarweb_scrape_folder = join(out_folderpath, "sup_similarweb_scrape")
     product_images_folder = join(out_folderpath, "product_images")
     prod_folder = join(out_folderpath, "to_upload")
+    upload_records_folder = join(out_folderpath, "upload_records")
 
     mkdir_if_not_exists(
         [
@@ -34,6 +35,7 @@ def main():
             sup_similarweb_scrape_folder,
             product_images_folder,
             prod_folder,
+            upload_records_folder,
         ]
     )
 
@@ -141,16 +143,16 @@ def main():
 
     # Upload scripts
     # TODO: Make npm scripts here to follow convention
-    upload_script_sup_similarweb = 'node uploaders/add_records.mjs --toUploadPath "{}" --fileName "{}" --recordsFolder "{}" --prod'.format(
-        prod_folder, "sup_similarweb", "./records/"
+    upload_script_sup_similarweb = 'node uploaders/upload_records.mjs --toUploadFolderPath "{}" --fileName "{}" --recordsFolder "{}" --prod'.format(
+        prod_folder, "sup_similarweb", upload_records_folder
     )
 
-    upload_script_search_main = 'node uploaders/add_records.mjs --toUploadPath "{}" --fileName "{}" --recordsFolder "{}" --prod'.format(
-        prod_folder, "search_main", "./records/"
+    upload_script_search_main = 'node uploaders/upload_records.mjs --toUploadFolderPath "{}" --fileName "{}" --recordsFolder "{}" --prod'.format(
+        prod_folder, "search_main", upload_records_folder
     )
 
     upload_images = 'node uploaders/upload_images.mjs --imagesFolderPath "{}" --errorFile "{}" --prod'.format(
-        product_images_folder, "./records/image_upload_errors.txt"
+        product_images_folder, join(upload_records_folder, "image_upload_errors.txt")
     )
 
     # Write
