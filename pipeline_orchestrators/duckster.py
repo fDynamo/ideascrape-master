@@ -10,11 +10,13 @@ def main():
     parser.add_argument("-i", "--in-filepath", type=str)
     parser.add_argument("--combined-source-filepath", type=str)
     parser.add_argument("-o", "--out-folderpath", type=str)
+    parser.add_argument("--prod-upload", type=str)
     args = parser.parse_args()
 
     in_filepath: str = args.in_filepath
     out_folderpath: str = args.out_folderpath
     combined_source_filepath: str = args.combined_source_filepath
+    prod_upload: str = args.prod_upload
     if not in_filepath or not out_folderpath:
         print("Invalid inputs")
         return
@@ -143,16 +145,27 @@ def main():
 
     # Upload scripts
     # TODO: Make npm scripts here to follow convention
-    upload_script_sup_similarweb = 'node uploaders/upload_records.mjs --toUploadFolderPath "{}" --fileName "{}" --recordsFolder "{}" --prod'.format(
-        prod_folder, "sup_similarweb", upload_records_folder
-    )
+    prod_upload_flag = ""
+    if prod_upload and prod_upload == "y":
+        prod_upload_flag = " --prod"
 
-    upload_script_search_main = 'node uploaders/upload_records.mjs --toUploadFolderPath "{}" --fileName "{}" --recordsFolder "{}" --prod'.format(
-        prod_folder, "search_main", upload_records_folder
-    )
+    upload_script_filename_list = ["sup_similarweb"]
+    if combined_source_filepath:
+        # TODO: Make extensible with more sources
+        upload_script_filename_list += ["source_aift", "source_ph"]
+    upload_script_filename_list += ["search_main"]
 
-    upload_images = 'node uploaders/upload_images.mjs --imagesFolderPath "{}" --errorFile "{}" --prod'.format(
-        product_images_folder, join(upload_records_folder, "image_upload_errors.txt")
+    upload_script_component_list = []
+    for filename in upload_script_filename_list:
+        to_add = 'node uploaders/upload_records.mjs --toUploadFolderPath "{}" --fileName "{}" --recordsFolder "{}"{}'.format(
+            prod_folder, filename, upload_records_folder, prod_upload_flag
+        )
+        upload_script_component_list.append(to_add)
+
+    upload_images = 'node uploaders/upload_images.mjs --imagesFolderPath "{}" --errorFile "{}"{}'.format(
+        product_images_folder,
+        join(upload_records_folder, "image_upload_errors.txt"),
+        prod_upload_flag,
     )
 
     # Write
@@ -183,8 +196,7 @@ def main():
         component_prodify,
         "",
         "[Upload]",
-        upload_script_sup_similarweb,
-        upload_script_search_main,
+        *upload_script_component_list,
         upload_images,
     ]
 

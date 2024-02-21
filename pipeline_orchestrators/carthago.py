@@ -88,7 +88,7 @@ def main():
     )
 
     # Call duckster
-    duckster_call = 'python pipeline_orchestrators/duckster.py -i "{}" --combined-source-filepath "{}" -o "{}"'.format(
+    duckster_call = 'python pipeline_orchestrators/duckster.py -i "{}" --combined-source-filepath "{}" -o "{}" --prod-upload y'.format(
         combined_urls_filepath, combined_source_filepath, out_folderpath
     )
 
