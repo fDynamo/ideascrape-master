@@ -12,22 +12,6 @@ import { hideBin } from "yargs/helpers";
  * - Batch uploads to not do too many changes at once!
  */
 
-async function safeAdd(tableName, inData) {
-  try {
-    const { data, error } = await supabase
-      .from(tableName)
-      .insert(inData)
-      .select();
-    if (error) {
-      throw error;
-    }
-    return { isError: false, resData: data };
-  } catch (error) {
-    const errString = error + " ";
-    return { isError: true, errString, error };
-  }
-}
-
 async function main() {
   dotenv.config();
 
@@ -61,16 +45,23 @@ async function main() {
   let toWriteObj = {};
   let onConflictVal = "";
   if (fileName == TYPE_TO_TABLE.search_main) {
+    onConflictVal = "product_url";
+
+    // Read other record files
     let source_aift_record = null;
+    let aiftIdList = [];
     const source_aift_record_file = join(recordsFolder, "source_aift.json");
     if (existsSync(source_aift_record_file)) {
       source_aift_record = JSON.parse(readFileSync(source_aift_record_file));
+      aiftIdList = source_aift_record.idList;
     }
 
     let source_ph_record = null;
+    let phIdList = [];
     const source_ph_record_file = join(recordsFolder, "source_ph.json");
     if (existsSync(source_ph_record_file)) {
       source_ph_record = JSON.parse(readFileSync(source_ph_record_file));
+      phIdList = source_ph_record.idList;
     }
 
     let sup_similarweb_record = null;
@@ -78,30 +69,29 @@ async function main() {
       recordsFolder,
       "sup_similarweb.json"
     );
+    let similarwebIdList = [];
     if (existsSync(sup_similarweb_record_file)) {
       sup_similarweb_record = JSON.parse(
         readFileSync(sup_similarweb_record_file)
       );
+      similarwebIdList = sup_similarweb_record.idList;
     }
 
+    // Modify ids in data
     inDataList = inDataList.map((record) => {
       let aiftId = record.aift_id || null;
-      if (source_aift_record) {
-        aiftId = aiftId
-          ? source_aift_record.startId - 1 + parseInt(aiftId)
-          : null;
+      if (source_aift_record && aiftId) {
+        aiftId = aiftIdList[parseInt(aiftId) - 1];
       }
 
       let phId = record.ph_id || null;
-      if (source_ph_record) {
-        phId = phId ? source_ph_record.startId - 1 + parseInt(phId) : null;
+      if (source_ph_record && phId) {
+        phId = phIdList[parseInt(phId) - 1];
       }
 
       let similarwebId = record.similarweb_id || null;
-      if (sup_similarweb_record) {
-        similarwebId = similarwebId
-          ? sup_similarweb_record.startId - 1 + parseInt(similarwebId)
-          : null;
+      if (sup_similarweb_record && similarwebId) {
+        similarwebId = similarwebIdList[parseInt(similarwebId) - 1];
       }
 
       return {
@@ -111,58 +101,6 @@ async function main() {
         ph_id: phId,
       };
     });
-
-    // Try go all at once
-    const { isError, errString, error, resData } = await safeAdd(
-      table,
-      inDataList
-    );
-    if (isError) {
-      const RANGE_ERROR_STRING = "RangeError: Invalid string length";
-      if (!errString.includes(RANGE_ERROR_STRING)) {
-        console.log("ERROR", error);
-        return;
-      } else {
-        console.log("Could not go all at once, slicing up input");
-        // Break apart and try one by one
-        const BREAK_NUM = 10;
-        const BREAK_SIZE = Math.floor(inDataList.length / BREAK_NUM);
-        for (let i = 0; i < BREAK_NUM; i++) {
-          const startIndex = i * BREAK_SIZE;
-          const isLastSlice = i + 1 == BREAK_NUM;
-          const endIndex = isLastSlice
-            ? inDataList.length
-            : (i + 1) * BREAK_SIZE;
-          const toAdd = inDataList.slice(startIndex, endIndex);
-          const { isError, error } = await safeAdd(table, toAdd);
-
-          const sliceNum = i + 1;
-          if (isError) {
-            console.log("Error adding slice", sliceNum);
-            console.log("Start end", startIndex, endIndex);
-            console.log(error);
-            return;
-          } else {
-            console.log("Success adding", sliceNum);
-            toWriteObj["success_" + sliceNum] = {
-              startIndex,
-              endIndex,
-            };
-          }
-        }
-      }
-    } else {
-      toWriteObj = {
-        message: "success in 1 go",
-        addedSize: inDataList.length,
-      };
-    }
-
-    const toWrite = JSON.stringify(toWriteObj);
-    const outFilePath = join(recordsFolder, fileName + ".json");
-    writeFileSync(outFilePath, toWrite);
-
-    return;
   } else if (fileName == TYPE_TO_TABLE.source_aift) {
     onConflictVal = "source_url";
   } else if (fileName == TYPE_TO_TABLE.source_ph) {
@@ -171,28 +109,70 @@ async function main() {
     onConflictVal = "source_domain";
   }
 
-  const { data, error } = await supabase
-    .from(table)
-    .upsert(inDataList, { onConflict: onConflictVal, ignoreDuplicates: false })
-    .select();
+  // Break apart and try one by one
+  const BREAK_SIZE = 1000;
+  const BREAK_NUM =
+    BREAK_SIZE < inDataList.length
+      ? Math.ceil(inDataList.length / BREAK_SIZE)
+      : 1;
+  const SLICE_PREFIX_STR = "slice_";
+  console.log("num slices", BREAK_NUM);
 
-  if (error) {
-    console.log(error);
-    toWriteObj.runError = error;
+  for (let i = 0; i < BREAK_NUM; i++) {
+    const startIndex = i * BREAK_SIZE;
+    const isLastSlice = i + 1 == BREAK_NUM;
+    const endIndex = isLastSlice ? inDataList.length : (i + 1) * BREAK_SIZE;
+    const toAdd = inDataList.slice(startIndex, endIndex);
+
+    const { data, error } = await supabase
+      .from(table)
+      .upsert(toAdd, {
+        onConflict: onConflictVal,
+        ignoreDuplicates: false,
+      })
+      .select();
+
+    const sliceNum = i + 1;
+    if (error) {
+      console.log("Error adding slice", sliceNum);
+      console.log("Start end", startIndex, endIndex);
+      console.error(error);
+      toWriteObj.lastSlice = {
+        sliceNum,
+        startIndex,
+        endIndex,
+        error,
+      };
+      break;
+    }
+
+    if (data) {
+      console.log("Success adding", sliceNum);
+      toWriteObj[SLICE_PREFIX_STR + sliceNum] = {
+        numInserted: data.length,
+        idList: data.map((obj) => obj.id),
+      };
+    }
   }
-  if (data) {
-    const runData = data;
-    const numInserted = runData.length;
-    const startId = runData[0].id;
-    const endId = runData[numInserted - 1].id;
-    toWriteObj = {
-      numInserted,
-      startId,
-      endId,
-      idList: runData.map((obj) => obj.id),
-    };
-    console.log(numInserted + " rows inserted");
-  }
+
+  const toWriteKeys = Object.keys(toWriteObj);
+  const successSliceKeys = toWriteKeys.filter((val) =>
+    val.startsWith(SLICE_PREFIX_STR)
+  );
+
+  let totalNumInserted = 0;
+  let totalIdList = [];
+
+  successSliceKeys.forEach((keyStr) => {
+    const itemObj = toWriteObj[keyStr];
+    totalNumInserted += itemObj.numInserted;
+    totalIdList = [...totalIdList, ...itemObj.idList];
+
+    delete toWriteObj[keyStr];
+  });
+
+  toWriteObj.numInserted = totalNumInserted;
+  toWriteObj.idList = totalIdList;
 
   const toWrite = JSON.stringify(toWriteObj);
   const outFilePath = join(recordsFolder, fileName + ".json");

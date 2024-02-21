@@ -1,16 +1,19 @@
 import { appendFileSync, readFileSync, readdirSync } from "fs";
 import { join } from "path";
-import createSupabaseClient from "../custom_helpers/create-supabase-client.js";
-import { getPercentageString } from "../custom_helpers/string-formatters.js";
+import createSupabaseClient from "../custom_helpers_js/create-supabase-client.js";
+import { getPercentageString } from "../custom_helpers_js/string-formatters.js";
 import * as dotenv from "dotenv";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
+import { timeoutPromise } from "../custom_helpers_js/index.js";
+import { readCsvFile } from "../custom_helpers_js/read-csv.js";
 
 async function main() {
   dotenv.config();
 
+  let RUN_DELAY = 500;
   const argv = yargs(hideBin(process.argv)).argv;
-  const { imagesFolderPath, prod, errorFile, startWith } = argv;
+  const { imagesFolderPath, prod, errorFile, startIndex: inStartIndex } = argv;
   if ((!imagesFolderPath, !errorFile)) {
     console.log("Invalid inputs");
     return;
@@ -18,21 +21,22 @@ async function main() {
 
   let supabase = createSupabaseClient(prod);
 
-  /**
-   * TODO:
-   * - Get from to upload instead of poc
-   * - Upload to actual project online
-   */
   const imagesFolder = imagesFolderPath;
-  const files = readdirSync(imagesFolder);
+  const recordFile = join(imagesFolderPath, "_record.csv"); // Get filename from RECORD_FILE constant
+  const recordsList = await readCsvFile(recordFile);
 
-  const startIndex = startWith ? parseInt(startWith) : 0;
+  const startIndex = inStartIndex ? parseInt(inStartIndex) : 0;
 
-  for (let i = startIndex; i < files.length; i++) {
-    const file = files[i];
-    console.log("uploading", i, file);
+  for (let i = startIndex; i < recordsList.length; i++) {
+    const file = recordsList[i].image_filename;
+    if (!file || file.endsWith("svg") || file.endsWith("csv")) {
+      console.log("skipping", i, file);
+      continue;
+    }
 
     const srcFile = join(imagesFolder, file);
+    console.log("uploading", i, file, srcFile);
+
     const fileBody = readFileSync(srcFile);
     const extensionIndex = srcFile.lastIndexOf(".");
     const extension =
@@ -63,10 +67,11 @@ async function main() {
         });
       if (error) throw error;
 
-      const percentage = getPercentageString(i + 1, 0, files.length);
+      const percentage = getPercentageString(i + 1, 0, recordsList.length);
       console.log("done", i, percentage);
       console.log("done file", file);
     } catch (error) {
+      console.error(error);
       const toWriteString = `
       file: ${file}
       index: ${i}
@@ -74,6 +79,8 @@ async function main() {
       `;
       appendFileSync(errorFile, toWriteString);
     }
+
+    await timeoutPromise(RUN_DELAY);
   }
 }
 
