@@ -3,6 +3,7 @@ import argparse
 from custom_helpers_py.folder_helpers import mkdir_if_not_exists
 from custom_helpers_py.date_helpers import get_current_date_filename
 from custom_helpers_py.get_paths import get_artifacts_folder_path
+from pipeline_orchestrators.carthago_create_script import TEST_ARTIFACTS_FOLDERPATH
 
 DUCKSTER_SCRIPT_FILENAME = "_duckster_list.txt"
 
@@ -15,14 +16,18 @@ def main():
     parser.add_argument("--combined-source-filepath", type=str)
     parser.add_argument("-o", "--out-folderpath", type=str)
     parser.add_argument("-n", "--new-run", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--local-upload", action=argparse.BooleanOptionalAction)
     parser.add_argument("--prod-upload", action=argparse.BooleanOptionalAction)
-    args = parser.parse_args()
+    parser.add_argument("--dry-run", action=argparse.BooleanOptionalAction)
+    args, _ = parser.parse_known_args()
 
     in_filepath: str = args.in_filepath
     out_folderpath: str = args.out_folderpath
     combined_source_filepath: str = args.combined_source_filepath
     is_prod_upload: bool = args.prod_upload
+    is_local_upload: bool = args.local_upload
     is_new_run: bool = args.new_run
+    is_dry_run: bool = args.dry_run
 
     if not in_filepath:
         print("Invalid inputs")
@@ -69,6 +74,9 @@ def main():
             filter_urls_indiv_outfile, indiv_scrape_folder
         )
     )
+    if is_dry_run:
+        component_indiv_scrape = ""
+        indiv_scrape_folder = join(TEST_ARTIFACTS_FOLDERPATH, "indiv_scrape")
 
     cc_indiv_scrape_outfile = join(out_folderpath, "cc_indiv_scrape.csv")
     component_cc_indiv_scrape = (
@@ -111,6 +119,11 @@ def main():
     component_sup_similarweb_scrape = 'npm run sup_similarweb_scrape -- --domainListFilepath "{}" --outFolder "{}"'.format(
         similarweb_domains_file, sup_similarweb_scrape_folder
     )
+    if is_dry_run:
+        component_sup_similarweb_scrape = ""
+        sup_similarweb_scrape_folder = join(
+            TEST_ARTIFACTS_FOLDERPATH, "sup_similarweb_scrape"
+        )
 
     cc_sup_similarweb_scrape_outfile = join(
         out_folderpath, "cc_sup_similarweb_scrape.csv"
@@ -137,6 +150,7 @@ def main():
             gen_pre_extract_outfile,
         )
 
+    # Extract features
     extract_embed_description_outfile = join(
         out_folderpath, "extract_embed_description.csv"
     )
@@ -145,13 +159,22 @@ def main():
             gen_pre_extract_outfile, extract_embed_description_outfile
         )
     )
+    if is_dry_run:
+        component_extract_embed_description = ""
+        extract_embed_description_outfile = join(
+            TEST_ARTIFACTS_FOLDERPATH, "extract_embed_description.csv"
+        )
 
     component_download_product_images = (
         'python data_transformers/download_product_images.py -i "{}" -o "{}"'.format(
             gen_pre_extract_outfile, product_images_folder
         )
     )
+    if is_dry_run:
+        component_download_product_images = ""
+        product_images_folder = join(TEST_ARTIFACTS_FOLDERPATH, "product_images")
 
+    # Prodify
     component_prodify = 'python data_transformers/prodify.py -i "{}" --embedding-description-filepath "{}" --product-images-folderpath "{}" -o "{}"'.format(
         gen_pre_extract_outfile,
         extract_embed_description_outfile,
@@ -161,28 +184,37 @@ def main():
 
     # Upload scripts
     # TODO: Make npm scripts here to follow convention
-    prod_upload_flag = ""
-    if is_prod_upload:
-        prod_upload_flag = " --prod"
-
-    upload_script_filename_list = ["sup_similarweb"]
-    if combined_source_filepath:
-        # TODO: Make extensible with more sources
-        upload_script_filename_list += ["source_aift", "source_ph"]
-    upload_script_filename_list += ["search_main"]
-
     upload_script_component_list = []
-    for filename in upload_script_filename_list:
-        to_add = 'node uploaders/upload_records.mjs --toUploadFolderPath "{}" --fileName "{}" --recordsFolder "{}"{}'.format(
-            prod_folder, filename, upload_records_folder, prod_upload_flag
-        )
-        upload_script_component_list.append(to_add)
+    if is_local_upload or is_prod_upload:
+        upload_script_component_list.append("[Upload]")
 
-    upload_images = 'node uploaders/upload_images.mjs --imagesFolderPath "{}" --errorFile "{}"{}'.format(
-        product_images_folder,
-        join(upload_records_folder, "image_upload_errors.txt"),
-        prod_upload_flag,
-    )
+        prod_upload_flag = ""
+        if is_prod_upload:
+            prod_upload_flag = " --prod"
+
+        # Generate scripts for upload
+        upload_script_filename_list = ["sup_similarweb"]
+        if combined_source_filepath:
+            # TODO: Make extensible with more sources
+            upload_script_filename_list += ["source_aift", "source_ph"]
+        upload_script_filename_list += ["search_main"]
+
+        for filename in upload_script_filename_list:
+            to_add = 'node uploaders/upload_records.mjs --toUploadFolderPath "{}" --fileName "{}" --recordsFolder "{}"{}'.format(
+                prod_folder, filename, upload_records_folder, prod_upload_flag
+            )
+            upload_script_component_list.append(to_add)
+
+        upload_images = 'node uploaders/upload_images.mjs --imagesFolderPath "{}" --errorFile "{}"{}'.format(
+            product_images_folder,
+            join(upload_records_folder, "image_upload_errors.txt"),
+            prod_upload_flag,
+        )
+
+        upload_script_component_list.append(upload_images)
+
+    if is_dry_run:
+        upload_script_component_list = []
 
     # Write
     to_write = [
@@ -211,15 +243,16 @@ def main():
         "[Prodify]",
         component_prodify,
         "",
-        "[Upload]",
         *upload_script_component_list,
-        upload_images,
     ]
 
     script_list_outfile = join(out_folderpath, DUCKSTER_SCRIPT_FILENAME)
     with open(script_list_outfile, "w", encoding="utf-8") as file:
         file.write("\n\n".join(to_write))
 
+    return script_list_outfile
+
 
 if __name__ == "__main__":
-    main()
+    script_filepath = main()
+    print(script_filepath)
