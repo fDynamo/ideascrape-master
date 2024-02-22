@@ -29,7 +29,7 @@ async function main() {
 
   for (let i = startIndex; i < recordsList.length; i++) {
     const file = recordsList[i].image_filename;
-    if (!file || file.endsWith("svg") || file.endsWith("csv")) {
+    if (!file || file.endsWith("svg") || file.endsWith("csv") || file == "ER") {
       console.log("skipping", i, file);
       continue;
     }
