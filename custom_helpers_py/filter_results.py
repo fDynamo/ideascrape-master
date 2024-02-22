@@ -89,7 +89,7 @@ def is_page_description_valid(in_desc: str) -> bool:
 
 
 def is_domain_similarweb_scrapable(in_domain):
-    substrings = url_filters["substrings"]
+    substrings = url_filters["similarweb"]["substrings"]
     for substring in substrings:
         if substring in in_domain:
             return False

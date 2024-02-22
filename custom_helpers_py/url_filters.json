@@ -252,6 +252,6 @@
   ],
   "ends": [".png", ".mp3", ".mp4", ".wav", ".webp", ".jpg", "-review", ".zip"],
   "similarweb": {
-    "substrings": ["vercel.", "bubbleapps."]
+    "substrings": []
   }
 }
