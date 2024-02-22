@@ -15,3 +15,7 @@ def access_cache_folder(key: str) -> str:
         new_folder_path = directory_structure_json[key]
 
     return join(master_root, new_folder_path)
+
+
+def get_artifacts_folder_path() -> str:
+    return environ.get("RUN_ARTIFACTS_FOLDER")

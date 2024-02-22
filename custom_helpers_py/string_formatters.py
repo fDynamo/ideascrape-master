@@ -19,6 +19,10 @@ ACCEPTABLE_PUNCTUATION = [
 ]  # Removes non alphanumeric text and new lines
 
 
+def replace_non_alphanumeric(in_text: str, replace_with: str):
+    return re.sub("[^0-9a-zA-Z]+", replace_with, in_text)
+
+
 def format_count_percentage(count: int, max_count: int) -> str:
     pct = count * 100 / max_count
     pct = "{:10.2f}%".format(pct)
@@ -27,6 +31,12 @@ def format_count_percentage(count: int, max_count: int) -> str:
 
 def camel_to_snake_case(in_str: str) -> str:
     return re.sub(CAMEL2SNAKE, "_", in_str).lower()
+
+
+"""
+NOTE:
+This code is lowkey shit, need to fix somehow
+"""
 
 
 def clean_text(
@@ -62,11 +72,6 @@ def clean_text(
 def cleanhtml(raw_html):
     cleantext = re.sub(CLEANR, " ", raw_html)
     return cleantext
-
-
-def get_date_filename(in_date):
-    iso_string = in_date.isoformat()
-    return iso_string.replace(":", "_")
 
 
 def convert_url_to_filename(in_url: str):
