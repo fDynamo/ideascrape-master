@@ -4,6 +4,8 @@ import argparse
 from custom_helpers_py.date_helpers import get_current_date_filename
 from custom_helpers_py.get_paths import get_artifacts_folder_path
 
+CARTHAGO_SCRIPT_FILENAME = "_carthago_list.txt"
+
 
 def main():
     # Get arguments
@@ -122,7 +124,7 @@ def main():
         "",
     ]
 
-    script_list_outfile = join(out_folderpath, "_carthago_list.txt")
+    script_list_outfile = join(out_folderpath, CARTHAGO_SCRIPT_FILENAME)
     with open(script_list_outfile, "w", encoding="utf-8") as file:
         file.write("\n\n".join(to_write_list))
 

@@ -10,3 +10,4 @@ temp*/
 out_folder/
 node_modules/
 tmp/
+run_artifacts/

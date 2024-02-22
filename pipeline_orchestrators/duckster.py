@@ -4,6 +4,8 @@ from custom_helpers_py.folder_helpers import mkdir_if_not_exists
 from custom_helpers_py.date_helpers import get_current_date_filename
 from custom_helpers_py.get_paths import get_artifacts_folder_path
 
+DUCKSTER_SCRIPT_FILENAME = "_duckster_list.txt"
+
 
 def main():
     # Get arguments
@@ -214,7 +216,7 @@ def main():
         upload_images,
     ]
 
-    script_list_outfile = join(out_folderpath, "_duckster_list.txt")
+    script_list_outfile = join(out_folderpath, DUCKSTER_SCRIPT_FILENAME)
     with open(script_list_outfile, "w", encoding="utf-8") as file:
         file.write("\n\n".join(to_write))
 
