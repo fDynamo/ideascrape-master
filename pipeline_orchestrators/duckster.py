@@ -1,6 +1,8 @@
 from os.path import join, abspath
 import argparse
 from custom_helpers_py.folder_helpers import mkdir_if_not_exists
+from custom_helpers_py.date_helpers import get_current_date_filename
+from custom_helpers_py.get_paths import get_artifacts_folder_path
 
 
 def main():
@@ -10,16 +12,28 @@ def main():
     parser.add_argument("-i", "--in-filepath", type=str)
     parser.add_argument("--combined-source-filepath", type=str)
     parser.add_argument("-o", "--out-folderpath", type=str)
-    parser.add_argument("--prod-upload", type=str)
+    parser.add_argument("-n", "--new-run", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--prod-upload", action=argparse.BooleanOptionalAction)
     args = parser.parse_args()
 
     in_filepath: str = args.in_filepath
     out_folderpath: str = args.out_folderpath
     combined_source_filepath: str = args.combined_source_filepath
-    prod_upload: str = args.prod_upload
-    if not in_filepath or not out_folderpath:
+    is_prod_upload: bool = args.prod_upload
+    is_new_run: bool = args.new_run
+
+    if not in_filepath:
         print("Invalid inputs")
         return
+
+    if not out_folderpath:
+        if is_new_run:
+            folder_name = get_current_date_filename()
+            artifacts_folder_path = get_artifacts_folder_path()
+            out_folderpath = join(artifacts_folder_path, folder_name)
+        else:
+            print("Invalid inputs")
+            return
 
     out_folderpath = abspath(out_folderpath)
 
@@ -146,7 +160,7 @@ def main():
     # Upload scripts
     # TODO: Make npm scripts here to follow convention
     prod_upload_flag = ""
-    if prod_upload and prod_upload == "y":
+    if is_prod_upload:
         prod_upload_flag = " --prod"
 
     upload_script_filename_list = ["sup_similarweb"]

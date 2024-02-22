@@ -1,6 +1,8 @@
 from custom_helpers_py.folder_helpers import mkdir_if_not_exists
 from os.path import abspath, join
 import argparse
+from custom_helpers_py.date_helpers import get_current_date_filename
+from custom_helpers_py.get_paths import get_artifacts_folder_path
 
 
 def main():
@@ -8,12 +10,22 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-o", "--out-folderpath", type=str)
+    parser.add_argument("-n", "--new-run", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--prod-upload", action=argparse.BooleanOptionalAction)
     args = parser.parse_args()
 
     out_folderpath: str = args.out_folderpath
+    is_prod_upload: bool = args.prod_upload
+    is_new_run: bool = args.new_run
+
     if not out_folderpath:
-        print("Invalid inputs")
-        return
+        if is_new_run:
+            folder_name = get_current_date_filename()
+            artifacts_folder_path = get_artifacts_folder_path()
+            out_folderpath = join(artifacts_folder_path, folder_name)
+        else:
+            print("Invalid inputs")
+            return
 
     out_folderpath = abspath(out_folderpath)
 
@@ -87,9 +99,16 @@ def main():
         )
     )
 
+    prod_upload_flag = ""
+    if is_prod_upload:
+        prod_upload_flag = " --prod-upload"
+
     # Call duckster
-    duckster_call = 'python pipeline_orchestrators/duckster.py -i "{}" --combined-source-filepath "{}" -o "{}" --prod-upload y'.format(
-        combined_urls_filepath, combined_source_filepath, out_folderpath
+    duckster_call = 'python pipeline_orchestrators/duckster.py -i "{}" --combined-source-filepath "{}" -o "{}"{}'.format(
+        combined_urls_filepath,
+        combined_source_filepath,
+        out_folderpath,
+        prod_upload_flag,
     )
 
     # Write
