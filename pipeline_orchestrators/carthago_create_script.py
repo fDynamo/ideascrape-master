@@ -106,7 +106,7 @@ def main():
         prod_upload_flag = " --prod-upload"
 
     # Call duckster
-    duckster_call = 'python pipeline_orchestrators/duckster.py -i "{}" --combined-source-filepath "{}" -o "{}"{}'.format(
+    duckster_call = 'python pipeline_orchestrators/duckster_create_script.py -i "{}" --combined-source-filepath "{}" -o "{}"{}'.format(
         combined_urls_filepath,
         combined_source_filepath,
         out_folderpath,
