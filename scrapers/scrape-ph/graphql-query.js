@@ -20,6 +20,12 @@ query HomePage($cursor: String, $kind: HomefeedKindEnum!) {
               structuredData
               followersCount
               url
+              tagline
+              postsCount
+              reviewsCount
+              reviewersCount
+              reviewsRating
+              description
             }
           }
         }
@@ -29,7 +35,18 @@ query HomePage($cursor: String, $kind: HomefeedKindEnum!) {
 }
 `;
 
+/**
+ * Cursor index 0 is today
+ * 1 is yesterday
+ * 2 is 2 days ago
+ * and so on
+ */
 async function queryPH(cursor) {
+  if (cursor === 0) {
+    cursor = null;
+  } else {
+    cursor = cursor - 1;
+  }
   const variables = {
     kind: "ALL",
     cursor: "" + cursor,

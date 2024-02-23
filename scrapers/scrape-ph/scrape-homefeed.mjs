@@ -26,6 +26,12 @@ const main = async () => {
     "listed_at",
     "updated_at",
     "source_url",
+    "tagline_text",
+    "count_post",
+    "count_review",
+    "count_reviewer",
+    "review_rating",
+    "description",
   ];
   const runLogger = await createRunLogger(
     "ph-scrape-homefeed",
@@ -97,15 +103,26 @@ const main = async () => {
         let updated_at = "";
         let count_follower = 0;
         let source_url = "";
-        try {
-          image_url = thumbnailImageUuid
-            ? "https://ph-files.imgix.net/" + thumbnailImageUuid
-            : "";
-          listed_at = product.structuredData.datePublished;
-          updated_at = product.structuredData.dateModified;
-          count_follower = product.followersCount;
-          source_url = product.url;
-        } catch {}
+        let tagline_text = "";
+        let count_post = 0;
+        let count_review = 0;
+        let count_reviewer = 0;
+        let review_rating = 0;
+        let description = "";
+
+        image_url = thumbnailImageUuid
+          ? "https://ph-files.imgix.net/" + thumbnailImageUuid
+          : "";
+        listed_at = product.structuredData.datePublished;
+        updated_at = product.structuredData.dateModified;
+        count_follower = product.followersCount;
+        source_url = product.url;
+        tagline_text = product.tagline;
+        count_post = product.postsCount;
+        count_review = product.reviewsCount;
+        count_reviewer = product.reviewersCount;
+        review_rating = product.reviewsRating;
+        description = product.description;
 
         recordsToWrite.push({
           product_url: product.websiteUrl,
@@ -114,6 +131,12 @@ const main = async () => {
           updated_at,
           count_follower,
           source_url,
+          tagline_text,
+          count_post,
+          count_review,
+          count_reviewer,
+          review_rating,
+          description,
         });
       });
 
