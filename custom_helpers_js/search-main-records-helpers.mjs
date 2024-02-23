@@ -6,8 +6,7 @@ export function getSearchMainRecordsFilepath(prod) {
   let cacheKey = "file_search_main_records";
   if (prod) cacheKey += "_prod";
   else cacheKey += "_local";
-  const RECORDS_FILEPATH = accessCacheFolder(cacheKey);
-  return RECORDS_FILEPATH;
+  return accessCacheFolder(cacheKey);
 }
 
 export function createSearchMainRecordsCsvWriter(prod, options) {
