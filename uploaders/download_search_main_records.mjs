@@ -1,10 +1,11 @@
 import createSupabaseClient from "../custom_helpers_js/create-supabase-client.js";
-import { accessCacheFolder } from "../custom_helpers_js/get-paths.js";
 import * as dotenv from "dotenv";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
-import { createObjectCsvWriter } from "csv-writer";
-import { readCsvFile } from "../custom_helpers_js/read-csv.js";
+import {
+  createSearchMainRecordsCsvWriter,
+  readSearchMainRecords,
+} from "../custom_helpers_js/search-main-records-helpers.mjs";
 
 /**
  */
@@ -19,11 +20,6 @@ async function main() {
   }
 
   const MAX_RECORDS = 1000;
-  let cacheKey = "file_search_main_records";
-  if (prod) cacheKey += "_prod";
-  else cacheKey += "_local";
-
-  const RECORDS_FILEPATH = accessCacheFolder(cacheKey);
   let supabase = createSupabaseClient(prod);
 
   const batchesList = [];
@@ -34,17 +30,11 @@ async function main() {
   }
 
   // Create CSV writer
-  const CSV_HEADER = [
-    { id: "id", title: "id" },
-    { id: "product_url", title: "product_url" },
-  ];
-
-  const csvWriter = createObjectCsvWriter({
-    path: RECORDS_FILEPATH,
-    header: CSV_HEADER,
+  const csvWriter = createSearchMainRecordsCsvWriter(true, {
     append: reset ? false : true,
   });
 
+  const downloadedRecords = [];
   for (let i = 0; i < batchesList.length; i++) {
     const [start, end] = batchesList[i];
     const { data, error } = await supabase
@@ -62,14 +52,21 @@ async function main() {
     }
 
     await csvWriter.writeRecords(data);
-    if (data.length < MAX_RECORDS) {
+
+    data.forEach((record) => {
+      downloadedRecords.push(record);
+    });
+
+    if (data.length == 0) {
       break;
     }
+    console.log("Downloaded ", i);
   }
 
   // Fix list
   if (!reset) {
-    const recordsList = await readCsvFile(RECORDS_FILEPATH);
+    let recordsList = await readSearchMainRecords(prod);
+    recordsList = [...recordsList, ...downloadedRecords];
 
     const dupeSet = {};
     const finalList = [];
@@ -86,9 +83,7 @@ async function main() {
       finalList.push(record);
     }
 
-    const finalCsvWriter = createObjectCsvWriter({
-      path: RECORDS_FILEPATH,
-      header: CSV_HEADER,
+    const finalCsvWriter = createSearchMainRecordsCsvWriter(prod, {
       append: false,
     });
 

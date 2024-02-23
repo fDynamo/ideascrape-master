@@ -5,6 +5,10 @@ import { readCsvFile } from "../custom_helpers_js/read-csv.js";
 import * as dotenv from "dotenv";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
+import {
+  createSearchMainRecordsCsvWriter,
+  readSearchMainRecords,
+} from "../custom_helpers_js/search-main-records-helpers.mjs";
 
 /**
  * TODO:
@@ -17,40 +21,73 @@ async function main() {
 
   const argv = yargs(hideBin(process.argv)).argv;
   let { toUploadFolderPath, fileName, recordsFolder, prod } = argv;
-  const TYPE_TO_TABLE = {
-    source_aift: "source_aift",
-    source_ph: "source_ph",
-    sup_similarweb: "sup_similarweb",
-    search_main: "search_main",
+  const TABLE_DICT = {
+    source_aift: {
+      table: "source_aift",
+      recordFilename: "source_aift",
+    },
+    source_ph: {
+      table: "source_ph",
+      recordFilename: "source_ph",
+    },
+    sup_similarweb: {
+      table: "sup_similarweb",
+      recordFilename: "sup_similarweb",
+    },
+    search_main: {
+      table: "search_main",
+      recordFilename: "search_main",
+    },
   };
-  const FILE_TYPES_LIST = Object.keys(TYPE_TO_TABLE);
+  const ACCEPTED_FILENAMES = Object.keys(TABLE_DICT);
 
   if (
     !toUploadFolderPath ||
     !fileName ||
     !recordsFolder ||
-    !FILE_TYPES_LIST.includes(fileName)
+    !ACCEPTED_FILENAMES.includes(fileName)
   ) {
     console.log("Invalid inputs");
     return;
   }
 
-  const filePath = join(toUploadFolderPath, fileName + ".csv");
+  // Change records filenames
+  ACCEPTED_FILENAMES.forEach((keyStr) => {
+    let newRecordFilename = TABLE_DICT[keyStr].recordFilename;
+    if (prod) {
+      newRecordFilename += "_prod.json";
+    } else {
+      newRecordFilename += "_local.json";
+    }
 
-  let inDataList = await readCsvFile(filePath);
+    TABLE_DICT[keyStr].recordFilename = newRecordFilename;
+  });
+
+  const tableDictObj = TABLE_DICT[fileName];
+
+  const inDataFilePath = join(toUploadFolderPath, fileName + ".csv");
+  const recordsFilePath = join(recordsFolder, tableDictObj.recordFilename);
+
+  let inDataList = await readCsvFile(inDataFilePath);
   let supabase = createSupabaseClient(prod);
 
-  let table = TYPE_TO_TABLE[fileName];
+  let table = tableDictObj.table;
 
   let toWriteObj = {};
   let onConflictVal = "";
-  if (fileName == TYPE_TO_TABLE.search_main) {
+  let isSearchMain = false;
+
+  if (fileName == "search_main") {
     onConflictVal = "product_url";
+    isSearchMain = true;
 
     // Read other record files
     let source_aift_record = null;
     let aiftIdList = [];
-    const source_aift_record_file = join(recordsFolder, "source_aift.json");
+    const source_aift_record_file = join(
+      recordsFolder,
+      TABLE_DICT["source_aift"].recordFilename
+    );
     if (existsSync(source_aift_record_file)) {
       source_aift_record = JSON.parse(readFileSync(source_aift_record_file));
       aiftIdList = source_aift_record.idList;
@@ -58,7 +95,10 @@ async function main() {
 
     let source_ph_record = null;
     let phIdList = [];
-    const source_ph_record_file = join(recordsFolder, "source_ph.json");
+    const source_ph_record_file = join(
+      recordsFolder,
+      TABLE_DICT["source_ph"].recordFilename
+    );
     if (existsSync(source_ph_record_file)) {
       source_ph_record = JSON.parse(readFileSync(source_ph_record_file));
       phIdList = source_ph_record.idList;
@@ -67,7 +107,7 @@ async function main() {
     let sup_similarweb_record = null;
     const sup_similarweb_record_file = join(
       recordsFolder,
-      "sup_similarweb.json"
+      TABLE_DICT["sup_similarweb"].recordFilename
     );
     let similarwebIdList = [];
     if (existsSync(sup_similarweb_record_file)) {
@@ -101,11 +141,11 @@ async function main() {
         ph_id: phId,
       };
     });
-  } else if (fileName == TYPE_TO_TABLE.source_aift) {
+  } else if (fileName == "source_aift") {
     onConflictVal = "source_url";
-  } else if (fileName == TYPE_TO_TABLE.source_ph) {
+  } else if (fileName == "source_ph") {
     onConflictVal = "source_url";
-  } else if (fileName == TYPE_TO_TABLE.sup_similarweb) {
+  } else if (fileName == "sup_similarweb") {
     onConflictVal = "source_domain";
   }
 
@@ -115,9 +155,10 @@ async function main() {
     BREAK_SIZE < inDataList.length
       ? Math.ceil(inDataList.length / BREAK_SIZE)
       : 1;
-  const SLICE_PREFIX_STR = "slice_";
   console.log("num slices", BREAK_NUM);
 
+  const uploadedIds = [];
+  const upsertedSearchMainRecords = [];
   for (let i = 0; i < BREAK_NUM; i++) {
     const startIndex = i * BREAK_SIZE;
     const isLastSlice = i + 1 == BREAK_NUM;
@@ -148,35 +189,53 @@ async function main() {
 
     if (data) {
       console.log("Success adding", sliceNum);
-      toWriteObj[SLICE_PREFIX_STR + sliceNum] = {
-        numInserted: data.length,
-        idList: data.map((obj) => obj.id),
-      };
+      console.log("Num added", data.length);
+      data.forEach((obj) => {
+        uploadedIds.push(obj.id);
+        if (isSearchMain) {
+          upsertedSearchMainRecords.push({
+            id: obj.id,
+            product_url: obj.product_url,
+          });
+        }
+      });
     }
   }
 
-  const toWriteKeys = Object.keys(toWriteObj);
-  const successSliceKeys = toWriteKeys.filter((val) =>
-    val.startsWith(SLICE_PREFIX_STR)
-  );
+  toWriteObj.numInserted = uploadedIds.length;
+  toWriteObj.idList = uploadedIds;
 
-  let totalNumInserted = 0;
-  let totalIdList = [];
+  // Update cache after upload
+  if (isSearchMain) {
+    const searchMainRecords = await readSearchMainRecords(prod);
+    const oldRecordsCount = searchMainRecords.length;
 
-  successSliceKeys.forEach((keyStr) => {
-    const itemObj = toWriteObj[keyStr];
-    totalNumInserted += itemObj.numInserted;
-    totalIdList = [...totalIdList, ...itemObj.idList];
+    const dupeSet = {};
 
-    delete toWriteObj[keyStr];
-  });
+    const newData = [...searchMainRecords, ...upsertedSearchMainRecords];
+    const toWriteRecords = [];
+    for (let i = 0; i < newData.length; i++) {
+      const record = newData[i];
+      if (!record.product_url) continue;
+      if (dupeSet[record.id]) continue;
 
-  toWriteObj.numInserted = totalNumInserted;
-  toWriteObj.idList = totalIdList;
+      dupeSet[record.id] = true;
+      toWriteRecords.push(record);
+    }
+
+    const newRecordsCount = toWriteRecords.length;
+
+    const searchMainRecordsWriter = createSearchMainRecordsCsvWriter(prod, {
+      append: false,
+    });
+    await searchMainRecordsWriter.writeRecords(toWriteRecords);
+
+    toWriteObj.newRecordsCount = newRecordsCount;
+    toWriteObj.newRecords = newRecordsCount - oldRecordsCount;
+  }
 
   const toWrite = JSON.stringify(toWriteObj);
-  const outFilePath = join(recordsFolder, fileName + ".json");
-  writeFileSync(outFilePath, toWrite);
+  writeFileSync(recordsFilePath, toWrite);
 }
 
 main();
