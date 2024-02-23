@@ -7,6 +7,7 @@ import { createRunLogger } from "../../custom_helpers_js/run-logger.mjs";
 import registerGracefulExit from "../../custom_helpers_js/graceful-exit.js";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
+import { cleanTextForCsv } from "../../custom_helpers_js/string-formatters.js";
 
 const main = async () => {
   // Process input arguments
@@ -122,7 +123,7 @@ const main = async () => {
         count_review = product.reviewsCount;
         count_reviewer = product.reviewersCount;
         review_rating = product.reviewsRating;
-        description = product.description;
+        description = cleanTextForCsv(product.description);
 
         recordsToWrite.push({
           product_url: product.websiteUrl,

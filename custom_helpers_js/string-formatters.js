@@ -6,4 +6,15 @@ const getPercentageString = (currIndex, startIndex, lastIndex) => {
   const donePercentageString = donePercentage.toFixed(2) + "%";
   return donePercentageString;
 };
-module.exports = { getPercentageString };
+
+const cleanTextForCsv = (inText) => {
+  if (!inText) return "";
+
+  let newText = inText;
+  newText = newText.replace(/,/g, " ");
+  newText = newText.trim();
+  newText = newText.replace(/ +/g, " ");
+  return newText;
+};
+
+module.exports = { getPercentageString, cleanTextForCsv };
