@@ -1,5 +1,3 @@
-const { getAllComments } = require("../../custom_helpers_js/scraping-helpers");
-
 const evaluateGenericPage = async () => {
   const titleEl = document.querySelector("head title");
   let pageTitle = "";

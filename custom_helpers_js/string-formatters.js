@@ -7,13 +7,21 @@ const getPercentageString = (currIndex, startIndex, lastIndex) => {
   return donePercentageString;
 };
 
-const cleanTextForCsv = (inText) => {
+const cleanTextForCsv = (inText, options) => {
   if (!inText) return "";
 
   let newText = inText;
   newText = newText.replace(/,/g, " ");
+
+  if (options) {
+    if (options.removeNewLine) {
+      newText = newText.replace(/\n/g, " ");
+    }
+  }
+
   newText = newText.trim();
   newText = newText.replace(/ +/g, " ");
+
   return newText;
 };
 
