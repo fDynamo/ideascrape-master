@@ -11,3 +11,4 @@ out_folder/
 node_modules/
 tmp/
 run_artifacts/
+cache_folder/files/
