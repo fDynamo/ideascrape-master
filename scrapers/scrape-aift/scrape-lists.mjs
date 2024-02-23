@@ -24,7 +24,15 @@ const main = async () => {
     return;
   }
 
-  const dataHeaders = ["product_url", "count_save", "image_url", "source_url"];
+  const dataHeaders = [
+    "product_url",
+    "count_save",
+    "image_url",
+    "source_url",
+    "is_verified",
+    "corner_icon_url",
+    "price_text",
+  ];
   const runLogger = await createRunLogger(
     "aift-scrape-lists",
     dataHeaders,
@@ -145,6 +153,9 @@ const main = async () => {
           count_save: obj.countSaves,
           image_url: obj.imageUrl,
           source_url: obj.postUrl,
+          is_verified: obj.isVerified,
+          corner_icon_url: obj.cornerIconUrl,
+          price_text: obj.priceText,
         };
       });
 

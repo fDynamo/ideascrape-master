@@ -354,6 +354,28 @@ const evaluatePostPage = async () => {
     imageUrl = imageEl.getAttribute("src");
   }
 
+  // Get user info
+  let userName = "";
+  let userAiCountText = "";
+  let userKarmaText = "";
+  const userCardEl = document.querySelector("a.user_card");
+  if (userCardEl) {
+    const userNameEl = userCardEl.querySelector(".user_name");
+    if (userNameEl) {
+      userName = userNameEl.innerText;
+    }
+
+    const userAiCountEl = userCardEl.querySelector(".user_ais_count");
+    if (userAiCountEl) {
+      userAiCountText = userAiCountEl.innerText;
+    }
+
+    const userKarmaEl = userCardEl.querySelector(".user_karma");
+    if (userKarmaEl) {
+      userKarmaText = userKarmaEl.innerText;
+    }
+  }
+
   return {
     productInfo: {
       postTitle,
@@ -387,6 +409,11 @@ const evaluatePostPage = async () => {
       mostPopularAlternative,
       rankingAlternativesText,
       alsoSearchedList,
+    },
+    authorData: {
+      userName,
+      userAiCountText,
+      userKarmaText,
     },
   };
 };

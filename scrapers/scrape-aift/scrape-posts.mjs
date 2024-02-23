@@ -26,10 +26,22 @@ const main = async () => {
   const dataHeaders = [
     "product_url",
     "count_save",
+    "count_rating",
+    "count_comment",
+    "star_rating",
     "image_url",
     "source_url",
     "listed_at",
     "updated_at",
+    "primary_task",
+    "tag_list",
+    "price_info",
+    "ranking_text",
+    "count_alternative",
+    "most_popular_alternative_obj",
+    "author_user_name",
+    "author_ai_count_text",
+    "author_karma_text",
   ];
   const runLogger = await createRunLogger(
     "aift-scrape-posts",
@@ -181,10 +193,23 @@ const main = async () => {
         const recordToWrite = {
           product_url: result.productInfo.productLink,
           count_save: result.ratings.countSaves,
+          count_rating: result.ratings.countRatings,
+          count_comment: result.ratings.countComments,
+          star_rating: result.ratings.starRatings,
           image_url: result.productInfo.imageUrl,
           source_url: urlToScrape,
           listed_at: result.productInfo.launchDateText,
           updated_at: firstFeaturedText,
+          primary_task: result.productInfo.primaryTask,
+          tag_list: result.tags.tagList,
+          price_info: result.productInfo.priceTag,
+          ranking_text: result.productInfo.rankingText,
+          count_alternative: result.alternatives.alternativesCount,
+          most_popular_alternative_obj:
+            result.alternatives.mostPopularAlternative,
+          author_user_name: result.authorData.userName,
+          author_ai_count_text: result.authorData.userAiCountText,
+          author_karma_text: result.authorData.userKarmaText,
         };
 
         // Write to csv file
