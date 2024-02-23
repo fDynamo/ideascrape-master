@@ -11,6 +11,9 @@ import { createRunLogger } from "../../custom_helpers_js/run-logger.mjs";
 import UserAgent from "user-agents";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
+import { cleanTextForCsv } from "../../custom_helpers_js/string-formatters.js";
+import { join } from "path";
+import { createObjectCsvWriter } from "csv-writer";
 
 const main = async () => {
   // Process input arguments
@@ -36,12 +39,33 @@ const main = async () => {
     "favicon_url",
     "twitter_meta_tags",
     "og_meta_tags",
+    "canonical_url",
+    "other_meta_tags",
+    "script_tags",
+    "link_tags",
+    "out_links_list",
+    "comments_list",
   ];
   const runLogger = await createRunLogger(
     "indiv-scrape",
     dataHeaders,
     outFolder
   );
+
+  // Page copy
+  const PAGE_COPY_FILEPATH = join(
+    outFolder,
+    runLogger.baseFileName + "-page_copy.csv"
+  );
+  const PAGE_COPY_HEADER = [
+    { id: "url", title: "url" },
+    { id: "page_copy", title: "page_copy" },
+  ];
+
+  const pageCopyCsvWriter = createObjectCsvWriter({
+    path: PAGE_COPY_FILEPATH,
+    header: PAGE_COPY_HEADER,
+  });
 
   // Run constants
   const NAV_TIMEOUT = 30 * 1000;
@@ -189,14 +213,26 @@ const main = async () => {
         const recordToWrite = {
           url: urlToScrape,
           title: results.pageTitle,
-          description: results.pageDescription,
+          description: cleanTextForCsv(results.pageDescription),
           favicon_url: results.faviconUrl,
           twitter_meta_tags: results.twitterMetaTags,
           og_meta_tags: results.ogMetaTags,
+          canonical_url: results.canonicalUrl,
+          other_meta_tags: results.otherMetaTags,
+          script_tags: results.scriptTags,
+          link_tags: results.linkTags,
+          out_links_list: results.outLinksList,
+          comments_list: results.commentsList,
         };
 
         // Write results
         await runLogger.addToData([recordToWrite]);
+        await pageCopyCsvWriter.writeRecords([
+          {
+            url: urlToScrape,
+            page_copy: cleanTextForCsv(results.pageCopy),
+          },
+        ]);
 
         // Print progress
         const donePercentageString = getPercentageString(

@@ -1,3 +1,5 @@
+const { getAllComments } = require("../../custom_helpers_js/scraping-helpers");
+
 const evaluateGenericPage = async () => {
   const titleEl = document.querySelector("head title");
   let pageTitle = "";
@@ -8,17 +10,25 @@ const evaluateGenericPage = async () => {
   const linkElList = document.querySelectorAll("head link");
   let canonicalUrl = "";
   let faviconUrl = "";
+  const linkTags = [];
+
+  // Link tags
   linkElList.forEach((linkEl) => {
     const rel = linkEl.getAttribute("rel");
+    const href = linkEl.getAttribute("href");
     if (rel == "canonical") {
-      canonicalUrl = linkEl.getAttribute("href");
+      canonicalUrl = href;
     }
 
+    // TODO: Store or choose best image url
     if (rel == "shortcut icon" || rel == "icon" || rel == "icon shortcut") {
-      faviconUrl = linkEl.getAttribute("href");
+      faviconUrl = href;
     }
+
+    linkTags.push({ rel, href });
   });
 
+  // Meta tags
   const metaElList = document.querySelectorAll("head meta");
   let pageDescription = "";
   let contentLanguage = "";
@@ -77,6 +87,29 @@ const evaluateGenericPage = async () => {
     otherMetaTags.push(metaInfo);
   });
 
+  // Script tags
+  const scriptTags = [];
+  const scriptTagList = document.querySelectorAll("head script");
+  scriptTagList.forEach((tagEl) => {
+    const src = tagEl.getAttribute("src");
+    const scriptType = tagEl.getAttribute("type");
+    if (src || scriptType) {
+      scriptTags.push({ src, scriptType });
+    }
+  });
+
+  // anchor tags
+  const outLinksList = [];
+  const anchorTagsList = document.querySelectorAll("a");
+  anchorTagsList.forEach((aTag) => {
+    const href = aTag.href;
+    outLinksList.push(href);
+  });
+
+  const commentsList = getAllComments(document);
+
+  const pageCopy = document.body.innerText;
+
   return {
     pageTitle,
     canonicalUrl,
@@ -89,6 +122,11 @@ const evaluateGenericPage = async () => {
     ogMetaTags,
     otherMetaTags,
     faviconUrl,
+    scriptTags,
+    linkTags,
+    outLinksList,
+    commentsList,
+    pageCopy,
   };
 };
 
