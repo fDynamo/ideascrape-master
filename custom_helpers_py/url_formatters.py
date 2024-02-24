@@ -27,10 +27,6 @@ def clean_url(in_url: str) -> str:
     if in_url.startswith("http://"):
         in_url = in_url[7:]
 
-    # Replace beginning www
-    if in_url.startswith("www."):
-        in_url = in_url[4:]
-
     # Remove product hunt
     # TODO: Make this part extendable
     ph_strings = [
