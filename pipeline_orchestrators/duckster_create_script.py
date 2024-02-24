@@ -4,6 +4,7 @@ from custom_helpers_py.folder_helpers import mkdir_if_not_exists
 from custom_helpers_py.date_helpers import get_current_date_filename
 from custom_helpers_py.get_paths import get_artifacts_folder_path
 from pipeline_orchestrators.carthago_create_script import TEST_ARTIFACTS_FOLDERPATH
+from shutil import copy
 
 DUCKSTER_SCRIPT_FILENAME = "_duckster_list.txt"
 
@@ -61,6 +62,11 @@ def main():
             upload_records_folder,
         ]
     )
+
+    # Copy in filepath to folder
+    in_urls_file_copy_path = join(out_folderpath, "in_urls_file.csv")
+    copy(in_filepath, in_urls_file_copy_path)
+    in_filepath = in_urls_file_copy_path
 
     filter_urls_indiv_outfile = join(out_folderpath, "urls_4_indiv_scrape.csv")
     component_filter_urls_indiv = (
