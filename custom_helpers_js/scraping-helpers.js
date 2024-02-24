@@ -1,21 +1,18 @@
-function filterNone() {
-  return NodeFilter.FILTER_ACCEPT;
-}
-
-function getAllComments(rootElem) {
-  var comments = [];
-  // Fourth argument, which is actually obsolete according to the DOM4 standard, is required in IE 11
-  var iterator = document.createNodeIterator(
-    rootElem,
-    NodeFilter.SHOW_COMMENT,
-    filterNone,
-    false
-  );
-  var curNode;
-  while ((curNode = iterator.nextNode())) {
-    comments.push(curNode.nodeValue);
+function getAllComments(node) {
+  if (node.nodeType === Node.COMMENT_NODE) {
+    return [node.nodeValue];
   }
-  return comments;
+
+  if (node.childNodes) {
+    const toReturn = [];
+    for (var i = 0; i < node.childNodes.length; i++) {
+      const res = getAllComments(node.childNodes[i]);
+      res.forEach((el) => {
+        if (el) toReturn.push(el);
+      });
+    }
+    return toReturn;
+  } else return [];
 }
 
 module.exports = {

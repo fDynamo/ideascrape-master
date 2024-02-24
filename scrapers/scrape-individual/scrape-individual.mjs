@@ -14,7 +14,6 @@ import { hideBin } from "yargs/helpers";
 import { cleanTextForCsv } from "../../custom_helpers_js/string-formatters.js";
 import { join } from "path";
 import { createObjectCsvWriter } from "csv-writer";
-import { getAllComments } from "../../custom_helpers_js/scraping-helpers.js";
 
 const main = async () => {
   // Process input arguments
@@ -126,9 +125,6 @@ const main = async () => {
         request.continue();
       }
     });
-
-    // Helper functions for scrapers
-    await page.exposeFunction("getAllComments", getAllComments);
 
     return page;
   };
