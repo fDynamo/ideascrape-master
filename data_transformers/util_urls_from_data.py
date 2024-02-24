@@ -24,12 +24,11 @@ def main():
     master_df = read_csv_as_df(in_filepath)
 
     # Handle col_name arg
-    col_name = args.col_name or "url"
-    if args.col_name:
-        master_df["url"] = master_df[col_name]
-        master_df = master_df[["url"]]
+    col_name = args.col_name or "product_url"
 
-    urls_df = master_df[col_name].to_frame("url")
+    master_df["url"] = master_df[col_name]
+    master_df = master_df[["url"]]
+    urls_df = master_df["url"].to_frame("url")
     urls_df = urls_df.dropna(subset="url")
     urls_df = urls_df.drop_duplicates(subset="url", keep="last")
     urls_df = urls_df.sort_values(by="url")

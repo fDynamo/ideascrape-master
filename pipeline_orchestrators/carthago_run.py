@@ -38,7 +38,7 @@ def main():
     output = output.strip()
     duckster_script_filepath = output
 
-    if not isinstance(duckster_script_filepath, str):
+    if not isinstance(duckster_script_filepath, str) or not duckster_script_filepath:
         print("No duckster script created")
         return
     duckster_com_list = get_components_from_script(duckster_script_filepath)

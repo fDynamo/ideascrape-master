@@ -1,5 +1,6 @@
 from custom_helpers_py.folder_helpers import mkdir_if_not_exists
 from os.path import abspath, join
+from os import listdir
 import argparse
 from custom_helpers_py.date_helpers import get_current_date_filename
 from custom_helpers_py.get_paths import get_artifacts_folder_path
@@ -14,6 +15,7 @@ def main():
 
     parser.add_argument("-o", "--out-folderpath", type=str)
     parser.add_argument("-n", "--new-run", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--recent-run", action=argparse.BooleanOptionalAction)
     parser.add_argument("--local-upload", action=argparse.BooleanOptionalAction)
     parser.add_argument("--prod-upload", action=argparse.BooleanOptionalAction)
     parser.add_argument("--dry-run", action=argparse.BooleanOptionalAction)
@@ -24,9 +26,21 @@ def main():
     is_new_run: bool = args.new_run
     is_dry_run: bool = args.dry_run
     is_local_upload: bool = args.local_upload
+    is_recent_run: bool = args.recent_run
 
     if not out_folderpath:
-        if is_new_run:
+        if is_recent_run:
+            artifacts_folder_path = get_artifacts_folder_path()
+            artifacts_contents = listdir(artifacts_folder_path)
+            most_recent = ""
+            for folderpath in artifacts_contents:
+                if folderpath.startswith("2"):
+                    if not most_recent:
+                        most_recent = folderpath
+                    elif folderpath > most_recent:
+                        most_recent = folderpath
+            out_folderpath = join(artifacts_folder_path, most_recent)
+        elif is_new_run:
             folder_name = get_current_date_filename()
             artifacts_folder_path = get_artifacts_folder_path()
             out_folderpath = join(artifacts_folder_path, folder_name)

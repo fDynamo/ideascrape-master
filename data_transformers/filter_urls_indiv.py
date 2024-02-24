@@ -30,9 +30,8 @@ def main():
 
     # Handle col_name arg
     col_name = args.col_name or "url"
-    if args.col_name:
-        master_df["url"] = master_df[col_name]
-        master_df = master_df[["url"]]
+    master_df["url"] = master_df[col_name]
+    master_df = master_df[["url"]]
 
     # Clean and get domains from urls
     master_df["url"] = master_df["url"].apply(clean_url)

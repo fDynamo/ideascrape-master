@@ -32,9 +32,8 @@ def main():
 
     # Handle col_name arg
     col_name = args.col_name or "domain"
-    if args.col_name:
-        master_df["domain"] = master_df[col_name]
-        master_df = master_df[["domain"]]
+    master_df["domain"] = master_df[col_name]
+    master_df = master_df[["domain"]]
 
     # Drop na
     master_df = master_df.dropna(subset="domain")
