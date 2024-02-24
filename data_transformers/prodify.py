@@ -7,6 +7,7 @@ from custom_helpers_py.pandas_helpers import (
     save_df_as_csv,
 )
 import argparse
+from custom_helpers_py.df_validator import validate_prod_sup_similarweb_df
 
 
 """
@@ -167,6 +168,8 @@ def main():
     ].astype(int)
     similarweb_cols = ["source_domain", "total_visits_last_month", "data_created_at"]
     sup_similarweb_df = sup_similarweb_df[similarweb_cols]
+
+    validate_prod_sup_similarweb_df(sup_similarweb_df)
 
     print("start search main")
 
