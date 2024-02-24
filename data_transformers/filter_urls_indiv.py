@@ -13,22 +13,25 @@ def main():
     parser.add_argument("-i", "--in-filepath", type=str)
     parser.add_argument("-o", "--out-filepath", type=str)
     parser.add_argument("-r", "--rejected-filepath", type=str)
-    parser.add_argument("--use-local-cache")
+    parser.add_argument("--use-local-cache")  # Just for testing
+    parser.add_argument("-c", "--col-name", type=str)
     args = parser.parse_args()
 
     in_filepath = args.in_filepath
     out_filepath = args.out_filepath
     rejected_filepath = args.rejected_filepath
-    use_local_cache = args.use_local_cache  # Just for testing
+    use_local_cache = args.use_local_cache
 
     if not in_filepath or not out_filepath:
         print("Invalid inputs")
         return
 
+    col_name = args.col_name or "url"
+
     master_df = read_csv_as_df(in_filepath)
 
     # Clean and get domains from urls
-    master_df["url"] = master_df["url"].apply(clean_url)
+    master_df["url"] = master_df[col_name].apply(clean_url)
     master_df["domain"] = master_df["url"].apply(get_domain_from_url)
 
     master_df = pd.concat([master_df["url"], master_df["domain"]]).to_frame("url")
