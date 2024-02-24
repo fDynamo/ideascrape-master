@@ -7,7 +7,10 @@
     "indiv_scrape": "node scrapers/scrape-individual/scrape-individual.mjs",
     "sup_similarweb_scrape": "node scrapers/scrape-similarweb/scrape-similarweb.mjs",
     "source_aift_scrape": "node scrapers/scrape-aift/index.mjs",
-    "source_ph_scrape": "node scrapers/scrape-ph/scrape-homefeed.mjs"
+    "source_ph_scrape": "node scrapers/scrape-ph/scrape-homefeed.mjs",
+    "pi_upsert_records": "node prod_interface/upsert_records.mjs",
+    "pi_upsert_images": "node prod_interface/upsert_images.mjs",
+    "pi_cache_search_main_records": "node prod_interface/cache_search_main_records.mjs"
   },
   "author": "",
   "license": "ISC",

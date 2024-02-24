@@ -206,12 +206,12 @@ def main():
         upload_script_filename_list += ["search_main"]
 
         for filename in upload_script_filename_list:
-            to_add = 'node supabase_interface/upsert_records.mjs --toUploadFolderPath "{}" --fileName "{}" --recordsFolder "{}"{}'.format(
+            to_add = 'npm run pi_upsert_records -- --toUploadFolderPath "{}" --fileName "{}" --recordsFolder "{}"{}'.format(
                 prod_folder, filename, upload_records_folder, prod_upload_flag
             )
             upload_script_component_list.append(to_add)
 
-        upload_images = 'node supabase_interface/upsert_images.mjs --imagesFolderPath "{}" --errorFile "{}"{}'.format(
+        upload_images = 'node run pi_upsert_images -- --imagesFolderPath "{}" --errorFile "{}"{}'.format(
             product_images_folder,
             join(upload_records_folder, "image_upload_errors.txt"),
             prod_upload_flag,
