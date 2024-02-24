@@ -1,17 +1,7 @@
 import subprocess
 from pipeline_orchestrators.carthago_create_script import main as carthago_create_script
 import argparse
-
-
-def get_components_from_script(in_filepath: str):
-    com_list = []
-    with open(in_filepath, "r") as file:
-        file_contents = file.read()
-        lines = file_contents.splitlines()
-        for line in lines:
-            if line and not line.startswith("["):
-                com_list.append(line)
-    return com_list
+from custom_helpers_py.pipeline_components_helpers import get_components_from_script
 
 
 """
@@ -40,37 +30,34 @@ def main():
     # Get components from script
     com_list = get_components_from_script(carthago_script_filepath)
 
-    # Run all scripts
-    com_list_len = len(com_list)
-    duckster_script_filepath = None
-    for i, com in enumerate(com_list):
-        if start_index and i < start_index:
-            continue
-
-        is_duckster_call = i + 1 == com_list_len
-
-        print("[ORCHESTRATOR] START script: ", i, com)
-
-        if is_duckster_call:
-            process = subprocess.Popen(com, shell=True, stdout=subprocess.PIPE)
-            output, _ = process.communicate()
-            output = output.decode("utf-8")
-            output = output.strip()
-            duckster_script_filepath = output
-        else:
-            process = subprocess.Popen(com, shell=True)
-            process.wait()
-
-        print("[ORCHESTRATOR] END script: ", i, com)
+    # Get duckster script
+    call_duckster_script = com_list[len(com_list) - 1]
+    process = subprocess.Popen(call_duckster_script, shell=True, stdout=subprocess.PIPE)
+    output, _ = process.communicate()
+    output = output.decode("utf-8")
+    output = output.strip()
+    duckster_script_filepath = output
 
     if not isinstance(duckster_script_filepath, str):
         print("No duckster script created")
         return
+    duckster_com_list = get_components_from_script(duckster_script_filepath)
 
-    com_list = get_components_from_script(duckster_script_filepath)
+    # Run all scripts
+    com_list = com_list + duckster_com_list
     for i, com in enumerate(com_list):
-        process = subprocess.Popen(com, shell=True)
-        process.wait()
+        if start_index and i < start_index:
+            continue
+
+        print("[ORCHESTRATOR] START script: ", i, com)
+
+        process = subprocess.run(com, shell=True)
+        returncode = process.returncode
+        if returncode > 0:
+            print("[ORCHESTRATOR] ERROR", i, com)
+            break
+
+        print("[ORCHESTRATOR] END script: ", i, com)
 
 
 if __name__ == "__main__":

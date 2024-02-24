@@ -40,3 +40,14 @@ def format_component_string(
 
     script_fmt = script_location_data["fmt"]
     return script_fmt.format(script_path=script_path, args_str=script_args_str)
+
+
+def get_components_from_script(in_filepath: str):
+    com_list = []
+    with open(in_filepath, "r") as file:
+        file_contents = file.read()
+        lines = file_contents.splitlines()
+        for line in lines:
+            if line and not line.startswith("["):
+                com_list.append(line)
+    return com_list
