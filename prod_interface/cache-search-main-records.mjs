@@ -28,7 +28,7 @@ async function main() {
   }
 
   // Create CSV writer
-  const csvWriter = createSearchMainRecordsCsvWriter(true, {
+  const csvWriter = createSearchMainRecordsCsvWriter(prod, {
     append: reset ? false : true,
   });
 
