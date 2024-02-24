@@ -8,7 +8,7 @@ import { hideBin } from "yargs/helpers";
 import {
   createSearchMainRecordsCsvWriter,
   readSearchMainRecords,
-} from "../custom_helpers_js/search-main-records-helpers.mjs";
+} from "../custom_helpers_js/cache-folder-helpers.mjs";
 
 /**
  * TODO:
