@@ -16,6 +16,7 @@ def main():
     parser.add_argument("-i", "--in-filepath", type=str)
     parser.add_argument("-o", "--out-filepath", type=str)
     parser.add_argument("-r", "--rejected-filepath", type=str)
+    parser.add_argument("-c", "--col-name", type=str)
     args = parser.parse_args()
 
     in_filepath = args.in_filepath
@@ -28,6 +29,12 @@ def main():
 
     start_time = log_start("filter-indiv-scrape")
     master_df = read_csv_as_df(in_filepath)
+
+    # Handle col_name arg
+    col_name = args.col_name or "domain"
+    if args.col_name:
+        master_df["domain"] = master_df[col_name]
+        master_df = master_df[["domain"]]
 
     # Drop na
     master_df = master_df.dropna(subset="domain")
