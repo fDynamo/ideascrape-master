@@ -21,9 +21,13 @@ def main():
         print("Invalid inputs")
         return
 
-    col_name = args.col_name or "product_url"
-
     master_df = read_csv_as_df(in_filepath)
+
+    # Handle col_name arg
+    col_name = args.col_name or "url"
+    if args.col_name:
+        master_df["url"] = master_df[col_name]
+        master_df = master_df[["url"]]
 
     urls_df = master_df[col_name].to_frame("url")
     urls_df = urls_df.dropna(subset="url")

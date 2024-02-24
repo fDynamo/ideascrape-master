@@ -26,12 +26,16 @@ def main():
         print("Invalid inputs")
         return
 
-    col_name = args.col_name or "url"
-
     master_df = read_csv_as_df(in_filepath)
 
+    # Handle col_name arg
+    col_name = args.col_name or "url"
+    if args.col_name:
+        master_df["url"] = master_df[col_name]
+        master_df = master_df[["url"]]
+
     # Clean and get domains from urls
-    master_df["url"] = master_df[col_name].apply(clean_url)
+    master_df["url"] = master_df["url"].apply(clean_url)
     master_df["domain"] = master_df["url"].apply(get_domain_from_url)
 
     master_df = pd.concat([master_df["url"], master_df["domain"]]).to_frame("url")
