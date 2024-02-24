@@ -126,7 +126,7 @@ def main():
         save_df_as_csv(downloaded_df, RECORD_FILEPATH)
         print(downloaded_df)
     else:
-        print("Nothing to download")
+        raise "No image urls to download"
 
     log_end(start_time)
 

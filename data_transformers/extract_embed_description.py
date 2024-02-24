@@ -90,7 +90,7 @@ def main():
         final_text_df = pd.DataFrame(text_records)
         save_df_as_csv(final_text_df, out_filepath)
     else:
-        print("Nothing to embed")
+        raise "No descriptions to embed"
 
     log_end(start_time)
 
