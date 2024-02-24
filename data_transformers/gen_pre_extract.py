@@ -39,10 +39,6 @@ def main():
     master_df = read_csv_as_df(cc_indiv_scrape_filepath)
 
     if combined_source_filepath:
-        # TODO:
-        # Merge master df with source scrape
-        # Also need to handle better descriptions, titles, and image urls
-        # Also need to handle better image urls here
         combined_source_filepath = read_csv_as_df(combined_source_filepath)
 
         master_df = master_df.merge(
@@ -89,31 +85,34 @@ def main():
         if not isinstance(favicon_url, str):
             favicon_url = None
 
-        aift_image_url = row["aift_image_url"]
-        if not isinstance(aift_image_url, str):
-            aift_image_url = None
-
-        ph_image_url = row["ph_image_url"]
-        if not isinstance(ph_image_url, str):
-            ph_image_url = None
-
-        for substr in banned_image_url_substrings:
-            if favicon_url and substr in favicon_url:
-                favicon_url = None
-            if aift_image_url and substr in aift_image_url:
+        if combined_source_filepath:
+            aift_image_url = row["aift_image_url"]
+            if not isinstance(aift_image_url, str):
                 aift_image_url = None
-            if ph_image_url and substr in ph_image_url:
+
+            ph_image_url = row["ph_image_url"]
+            if not isinstance(ph_image_url, str):
                 ph_image_url = None
 
-        if ph_image_url:
-            return ph_image_url
-        if aift_image_url:
-            return aift_image_url
-        if favicon_url:
-            favicon_url = fix_favicon_url(row)
-            return favicon_url
+            for substr in banned_image_url_substrings:
+                if favicon_url and substr in favicon_url:
+                    favicon_url = None
+                if aift_image_url and substr in aift_image_url:
+                    aift_image_url = None
+                if ph_image_url and substr in ph_image_url:
+                    ph_image_url = None
 
-        return None
+            if ph_image_url:
+                return ph_image_url
+            if aift_image_url:
+                return aift_image_url
+            if favicon_url:
+                favicon_url = fix_favicon_url(row)
+                return favicon_url
+
+            return None
+        else:
+            return favicon_url
 
     master_df["product_image_url"] = master_df.apply(choose_image_url, axis=1)
 
