@@ -55,7 +55,7 @@ export function createSupSimilarwebRecordsCsvWriter(prod, options) {
 
   const CSV_HEADER = [
     { id: "id", title: "id" },
-    { id: "product_url", title: "product_url" },
+    { id: "source_domain", title: "source_domain" },
   ];
 
   const csvWriter = createObjectCsvWriter({
