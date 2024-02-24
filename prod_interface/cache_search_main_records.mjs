@@ -7,8 +7,6 @@ import {
   readSearchMainRecords,
 } from "../custom_helpers_js/search-main-records-helpers.mjs";
 
-/**
- */
 async function main() {
   dotenv.config();
 
