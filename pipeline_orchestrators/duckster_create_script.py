@@ -227,7 +227,7 @@ def main():
             )
             upload_script_component_list.append(to_add)
 
-        upload_images = 'node run pi_upsert_images -- --imagesFolderPath "{}" --errorFile "{}"{}'.format(
+        upload_images = 'npm run pi_upsert_images -- --imagesFolderPath "{}" --errorFile "{}"{}'.format(
             product_images_folder,
             join(upload_records_folder, "image_upload_errors.txt"),
             prod_upload_flag,

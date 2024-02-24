@@ -39,10 +39,10 @@ def main():
     master_df = read_csv_as_df(cc_indiv_scrape_filepath)
 
     if combined_source_filepath:
-        combined_source_filepath = read_csv_as_df(combined_source_filepath)
+        combined_source_df = read_csv_as_df(combined_source_filepath)
 
         master_df = master_df.merge(
-            combined_source_filepath,
+            combined_source_df,
             left_on="url",
             right_on="clean_product_url",
             how="left",

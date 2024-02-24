@@ -135,8 +135,7 @@
     "apps.microsoft.",
     "marketplace.atlassian.",
     ".substack.",
-    "bubbleapps.",
-    "vimeo."
+    "bubbleapps."
   ],
   "starts": [
     "justpaste.",
@@ -249,7 +248,9 @@
     "2.flexiple.",
     "24marketreports.com",
     "smolsite.",
-    "dailymotion."
+    "dailymotion.",
+    "vimeo.",
+    "assetstore."
   ],
   "ends": [".png", ".mp3", ".mp4", ".wav", ".webp", ".jpg", "-review", ".zip"],
   "similarweb": {
