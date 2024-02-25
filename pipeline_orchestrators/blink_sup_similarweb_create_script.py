@@ -125,7 +125,7 @@ def main():
             com_delete_files,
         ]
 
-    if is_dry_run:
+    if is_dry_run and is_prod_env:
         upload_components_list = []
 
     # Write

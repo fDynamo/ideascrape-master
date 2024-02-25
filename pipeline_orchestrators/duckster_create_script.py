@@ -228,7 +228,7 @@ def main():
 
         upload_script_component_list.append(upload_images)
 
-    if is_dry_run:
+    if is_dry_run and is_prod_env:
         upload_script_component_list = []
 
     # Write
