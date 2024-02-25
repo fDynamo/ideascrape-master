@@ -29,3 +29,13 @@ def get_search_main_records_filepath(prod: bool) -> str:
         cache_key += "_local"
 
     return access_cache_folder(cache_key)
+
+
+def get_sup_similarweb_records_filepath(prod: bool) -> str:
+    cache_key = "file_sup_similarweb_records"
+    if prod:
+        cache_key += "_prod"
+    else:
+        cache_key += "_local"
+
+    return access_cache_folder(cache_key)

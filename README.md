@@ -21,3 +21,9 @@ export PYTHONPATH="/c/Users/fdirham/Desktop/code_projects/ideascrape/ideascrape-
 - Similarweb scrape: 73.13 mins
 
 Total for scraping alone: 145.8 mins, or around 2.43 hours
+
+## Daily carthago run
+
+```
+python pipeline_orchestrators/duckster_run.py --prod-env --upload -n
+```
