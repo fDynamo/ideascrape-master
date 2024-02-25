@@ -21,7 +21,8 @@ def concat_folder_into_df(
     print_filename=False,
     enforce_mono_column: (
         None | str
-    ) = None,  # If a string, extracts only this col from all files and raises error if this does not exist
+    ) = None,  # If a string, extracts only this col from all files and raises error if this does not exist.
+    allow_empty_return=False,
 ):
     file_list: list[str] = listdir(folderpath)
     file_list.sort()
@@ -41,6 +42,12 @@ def concat_folder_into_df(
         if enforce_mono_column:
             df = df[[enforce_mono_column]]
         df_list.append(df)
+
+    if len(df_list) == 0:
+        if allow_empty_return:
+            return None
+        else:
+            raise "No files to concat!"
 
     master_df = pd.concat(df_list)
 
