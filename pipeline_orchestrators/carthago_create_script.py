@@ -21,16 +21,17 @@ def main():
 
     # Optional
     add_args_for_out_folder_preset(parser)
-    parser.add_argument("--local-upload", action=argparse.BooleanOptionalAction)
-    parser.add_argument("--prod-upload", action=argparse.BooleanOptionalAction)
     parser.add_argument("--dry-run", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--prod-env", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--upload", action=argparse.BooleanOptionalAction)
+
     args, _ = parser.parse_known_args()
 
     out_folderpath: str = args.out_folderpath
 
-    is_prod_upload: bool = args.prod_upload
-    is_local_upload: bool = args.local_upload
     is_dry_run: bool = args.dry_run
+    is_prod_env: bool = args.prod_env
+    is_upload: bool = args.upload
 
     if not out_folderpath:
         out_folderpath = parse_args_for_out_folder_preset(
@@ -119,12 +120,12 @@ def main():
     )
 
     ending_flags = ""
-    if is_prod_upload:
-        ending_flags += " --prod-upload"
     if is_dry_run:
         ending_flags += " --dry-run"
-    if is_local_upload:
-        ending_flags += " --local-upload"
+    if is_prod_env:
+        ending_flags += " --prod-env"
+    if is_upload:
+        ending_flags += " --upload"
 
     # Call duckster
     duckster_call = 'python pipeline_orchestrators/duckster_create_script.py -i "{}" --combined-source-filepath "{}" -o "{}"{}'.format(

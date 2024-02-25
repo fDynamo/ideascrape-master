@@ -24,10 +24,10 @@ def main():
     # Optional
     add_args_for_out_folder_preset(parser)
     parser.add_argument("--combined-source-filepath", type=str)
-    parser.add_argument("--local-upload", action=argparse.BooleanOptionalAction)
-    parser.add_argument("--prod-upload", action=argparse.BooleanOptionalAction)
     parser.add_argument("--dry-run", action=argparse.BooleanOptionalAction)
     parser.add_argument("--copy-in-filepath", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--prod-env", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--upload", action=argparse.BooleanOptionalAction)
 
     args, _ = parser.parse_known_args()
 
@@ -35,10 +35,10 @@ def main():
     out_folderpath: str = args.out_folderpath
 
     combined_source_filepath: str = args.combined_source_filepath
-    is_prod_upload: bool = args.prod_upload
-    is_local_upload: bool = args.local_upload
     is_dry_run: bool = args.dry_run
     is_copy_in_filepath: bool = args.copy_in_filepath
+    is_prod_env: bool = args.prod_env
+    is_upload: bool = args.upload
 
     if not in_filepath:
         print("Invalid inputs")
@@ -200,11 +200,11 @@ def main():
     # Upload scripts
     # TODO: Make npm scripts here to follow convention
     upload_script_component_list = []
-    if is_local_upload or is_prod_upload:
+    if is_upload:
         upload_script_component_list.append("[Upload]")
 
         prod_upload_flag = ""
-        if is_prod_upload:
+        if is_prod_env:
             prod_upload_flag = " --prod"
 
         # Generate scripts for upload
