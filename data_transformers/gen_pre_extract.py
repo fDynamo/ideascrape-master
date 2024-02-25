@@ -28,11 +28,7 @@ def main():
     combined_source_filepath = args.combined_source_filepath
     out_filepath = args.out_filepath
 
-    if (
-        not cc_indiv_scrape_filepath
-        or not cc_sup_similarweb_scrape_filepath
-        or not out_filepath
-    ):
+    if not cc_indiv_scrape_filepath or not out_filepath:
         print("Invalid inputs")
         return
 
@@ -101,25 +97,34 @@ def main():
     master_df = master_df.dropna(subset="title")
 
     # Merge with seo
-    similarweb_df = read_csv_as_df(cc_sup_similarweb_scrape_filepath)
-    similarweb_df = similarweb_df.add_prefix("similarweb_")
-    master_df = master_df.merge(
-        similarweb_df,
-        left_on="product_domain",
-        right_on="similarweb_domain",
-        how="left",
-    )
+    if cc_sup_similarweb_scrape_filepath:
+        similarweb_df = read_csv_as_df(cc_sup_similarweb_scrape_filepath)
+        similarweb_df = similarweb_df.add_prefix("similarweb_")
+        master_df = master_df.merge(
+            similarweb_df,
+            left_on="product_domain",
+            right_on="similarweb_domain",
+            how="left",
+        )
 
     # Handle duplicates with different urls
     # TODO: Make something more complex here
     master_df["title+description"] = master_df.apply(
         lambda row: row["title"] + row["description"], axis=1
     )
-    master_df = master_df.sort_values("similarweb_total_visits_last_month")
-    master_df = master_df.drop_duplicates("title+description", keep="last")
+
+    if cc_sup_similarweb_scrape_filepath:
+        master_df = master_df.sort_values("similarweb_total_visits_last_month")
+        master_df = master_df.drop_duplicates("title+description", keep="last")
+    else:
+        master_df = master_df.drop_duplicates("title+description", keep="last")
 
     # Drop columns
-    master_df = master_df.drop(columns=["title+description", "similarweb_domain"])
+    cols_to_drop = ["title+description"]
+    if cc_sup_similarweb_scrape_filepath:
+        cols_to_drop.append("similarweb_domain")
+
+    master_df = master_df.drop(columns=cols_to_drop)
 
     master_df = master_df.sort_values("url")
 
