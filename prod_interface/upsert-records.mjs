@@ -6,16 +6,9 @@ import * as dotenv from "dotenv";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 import {
-  createSearchMainRecordsCsvWriter,
-  readSearchMainRecords,
-} from "../custom_helpers_js/cache-folder-helpers.mjs";
-import { appendAndFixSearchMainRecordsCache } from "./cache-search-main-records.mjs";
-
-/**
- * TODO:
- * - Handle duplicate rows
- * - Batch uploads to not do too many changes at once!
- */
+  appendAndFixSearchMainRecordsCache,
+  appendAndFixSupSimilarwebRecordsCache,
+} from "../custom_helpers_js/cache-helpers.mjs";
 
 async function main() {
   dotenv.config();

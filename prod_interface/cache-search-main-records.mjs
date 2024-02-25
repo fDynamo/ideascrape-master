@@ -2,36 +2,8 @@ import createSupabaseClient from "../custom_helpers_js/create-supabase-client.js
 import * as dotenv from "dotenv";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
-import {
-  createSearchMainRecordsCsvWriter,
-  readSearchMainRecords,
-} from "../custom_helpers_js/cache-folder-helpers.mjs";
-
-export async function appendAndFixSearchMainRecordsCache(prod, newRecords) {
-  let recordsList = await readSearchMainRecords(prod);
-  recordsList = [...recordsList, ...newRecords];
-
-  const dupeSet = {};
-  const finalList = [];
-
-  for (let i = 0; i < recordsList.length; i++) {
-    const record = recordsList[i];
-    if (!record.product_url) {
-      continue;
-    }
-    if (dupeSet[record.id]) {
-      continue;
-    }
-    dupeSet[record.id] = true;
-    finalList.push(record);
-  }
-
-  const finalCsvWriter = createSearchMainRecordsCsvWriter(prod, {
-    append: false,
-  });
-
-  await finalCsvWriter.writeRecords(finalList);
-}
+import { createSearchMainRecordsCsvWriter } from "../custom_helpers_js/cache-folder-helpers.mjs";
+import { appendAndFixSearchMainRecordsCache } from "../custom_helpers_js/cache-helpers.mjs";
 
 async function main() {
   dotenv.config();

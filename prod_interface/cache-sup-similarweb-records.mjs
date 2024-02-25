@@ -2,36 +2,8 @@ import createSupabaseClient from "../custom_helpers_js/create-supabase-client.js
 import * as dotenv from "dotenv";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
-import {
-  createSupSimilarwebRecordsCsvWriter,
-  readSupSimilarwebRecords,
-} from "../custom_helpers_js/cache-folder-helpers.mjs";
-
-export async function appendAndFixSupSimilarwebRecordsCache(prod, newRecords) {
-  let recordsList = await readSupSimilarwebRecords(prod);
-  recordsList = [...recordsList, ...newRecords];
-
-  const dupeSet = {};
-  const finalList = [];
-
-  for (let i = 0; i < recordsList.length; i++) {
-    const record = recordsList[i];
-    if (!record.source_domain) {
-      continue;
-    }
-    if (dupeSet[record.id]) {
-      continue;
-    }
-    dupeSet[record.id] = true;
-    finalList.push(record);
-  }
-
-  const finalCsvWriter = createSupSimilarwebRecordsCsvWriter(prod, {
-    append: false,
-  });
-
-  await finalCsvWriter.writeRecords(finalList);
-}
+import { createSupSimilarwebRecordsCsvWriter } from "../custom_helpers_js/cache-folder-helpers.mjs";
+import { appendAndFixSupSimilarwebRecordsCache } from "../custom_helpers_js/cache-helpers.mjs";
 
 async function main() {
   dotenv.config();
