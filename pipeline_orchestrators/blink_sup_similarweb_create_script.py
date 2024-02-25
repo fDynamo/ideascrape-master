@@ -113,10 +113,8 @@ def main():
             to_upload_folder, upload_records_folder, prod_upload_flag
         )
 
-        com_delete_files = (
-            'npm run pi_delete_sup_similarweb -- --rejectedFilepath "{}"{}'.format(
-                rejected_domains_file_path, prod_upload_flag
-            )
+        com_delete_files = 'npm run pi_delete_sup_similarweb -- --rejectedFilePath "{}" --recordsFolder "{}" {}'.format(
+            rejected_domains_file_path, upload_records_folder, prod_upload_flag
         )
 
         upload_components_list = [

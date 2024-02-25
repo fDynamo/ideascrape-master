@@ -9,6 +9,7 @@ import {
   MAX_UPDATE_BATCH_SIZE,
   batchActionIn,
 } from "../custom_helpers_js/prod-interface-helpers.mjs";
+import { writeFileSync } from "fs";
 
 /**
  * TODO:
@@ -20,7 +21,7 @@ async function main() {
   dotenv.config();
 
   const argv = yargs(hideBin(process.argv)).argv;
-  let { rejectedFilePath, prod } = argv;
+  let { rejectedFilePath, prod, recordsFolder } = argv;
   if (!rejectedFilePath) {
     console.error("Invalid inputs");
     process.exit(1);
@@ -32,7 +33,7 @@ async function main() {
 
     // Get all rows first
     const domainsList = rejectedRecords.map((obj) => obj.domain);
-    const getRes = await batchActionIn(supabase, {
+    const fetchRes = await batchActionIn(supabase, {
       action: "fetch",
       tableName: "sup_similarweb",
       selectCols: "id",
@@ -42,11 +43,11 @@ async function main() {
       shouldLog: true,
     });
 
-    if (getRes.error) {
-      throw getRes.error;
+    if (fetchRes.error) {
+      throw fetchRes.error;
     }
 
-    const domainIds = getRes.data.map((obj) => obj.id);
+    const domainIds = fetchRes.data.map((obj) => obj.id);
     if (!domainIds.length) {
       console.log("Nothing to delete");
       process.exit();
@@ -83,12 +84,29 @@ async function main() {
       throw deleteRes.error;
     }
 
-    const toLog = {
-      deleteRes,
-      updateRes,
-      getRes,
-    };
-    console.log(JSON.stringify(toLog));
+    if (recordsFolder) {
+      const countFetched = fetchRes.data.length;
+      const countDeleted = deleteRes.data.length;
+      const countUpdatedInSearchMain = updateRes.data.length;
+
+      const toWriteObj = {
+        countFetched,
+        countDeleted,
+        countUpdatedInSearchMain,
+        fetchRes,
+        deleteRes,
+        updateRes,
+      };
+
+      const toWrite = JSON.stringify(toWriteObj);
+      const fileSuffix = prod ? "prod.json" : "local.json";
+      const recordsFilePath = join(
+        recordsFolder,
+        "delete_sup_similarweb_" + fileSuffix
+      );
+
+      writeFileSync(recordsFilePath, toWrite);
+    }
   } catch (error) {
     console.error(error);
     process.exit(1);

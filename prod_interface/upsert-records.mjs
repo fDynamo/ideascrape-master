@@ -202,7 +202,7 @@ async function main() {
     }
   }
 
-  toWriteObj.numInserted = uploadedIds.length;
+  toWriteObj.numRowsModified = uploadedIds.length;
   toWriteObj.idList = uploadedIds;
 
   // Update cache after upload
