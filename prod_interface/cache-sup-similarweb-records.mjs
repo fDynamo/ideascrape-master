@@ -7,6 +7,32 @@ import {
   readSupSimilarwebRecords,
 } from "../custom_helpers_js/cache-folder-helpers.mjs";
 
+export async function appendAndFixSupSimilarwebRecordsCache(prod, newRecords) {
+  let recordsList = await readSupSimilarwebRecords(prod);
+  recordsList = [...recordsList, ...newRecords];
+
+  const dupeSet = {};
+  const finalList = [];
+
+  for (let i = 0; i < recordsList.length; i++) {
+    const record = recordsList[i];
+    if (!record.source_domain) {
+      continue;
+    }
+    if (dupeSet[record.id]) {
+      continue;
+    }
+    dupeSet[record.id] = true;
+    finalList.push(record);
+  }
+
+  const finalCsvWriter = createSupSimilarwebRecordsCsvWriter(prod, {
+    append: false,
+  });
+
+  await finalCsvWriter.writeRecords(finalList);
+}
+
 async function main() {
   dotenv.config();
 
@@ -74,29 +100,7 @@ async function main() {
 
   // Fix list
   if (!reset) {
-    let recordsList = await readSupSimilarwebRecords(prod);
-    recordsList = [...recordsList, ...downloadedRecords];
-
-    const dupeSet = {};
-    const finalList = [];
-
-    for (let i = 0; i < recordsList.length; i++) {
-      const record = recordsList[i];
-      if (!record.source_domain) {
-        continue;
-      }
-      if (dupeSet[record.id]) {
-        continue;
-      }
-      dupeSet[record.id] = true;
-      finalList.push(record);
-    }
-
-    const finalCsvWriter = createSupSimilarwebRecordsCsvWriter(prod, {
-      append: false,
-    });
-
-    await finalCsvWriter.writeRecords(finalList);
+    await appendAndFixSupSimilarwebRecordsCache(prod, downloadedRecords);
   }
 }
 

@@ -7,6 +7,32 @@ import {
   readSearchMainRecords,
 } from "../custom_helpers_js/cache-folder-helpers.mjs";
 
+export async function appendAndFixSearchMainRecordsCache(prod, newRecords) {
+  let recordsList = await readSearchMainRecords(prod);
+  recordsList = [...recordsList, ...newRecords];
+
+  const dupeSet = {};
+  const finalList = [];
+
+  for (let i = 0; i < recordsList.length; i++) {
+    const record = recordsList[i];
+    if (!record.product_url) {
+      continue;
+    }
+    if (dupeSet[record.id]) {
+      continue;
+    }
+    dupeSet[record.id] = true;
+    finalList.push(record);
+  }
+
+  const finalCsvWriter = createSearchMainRecordsCsvWriter(prod, {
+    append: false,
+  });
+
+  await finalCsvWriter.writeRecords(finalList);
+}
+
 async function main() {
   dotenv.config();
 
@@ -75,29 +101,7 @@ async function main() {
 
   // Fix list
   if (!reset) {
-    let recordsList = await readSearchMainRecords(prod);
-    recordsList = [...recordsList, ...downloadedRecords];
-
-    const dupeSet = {};
-    const finalList = [];
-
-    for (let i = 0; i < recordsList.length; i++) {
-      const record = recordsList[i];
-      if (!record.product_url) {
-        continue;
-      }
-      if (dupeSet[record.id]) {
-        continue;
-      }
-      dupeSet[record.id] = true;
-      finalList.push(record);
-    }
-
-    const finalCsvWriter = createSearchMainRecordsCsvWriter(prod, {
-      append: false,
-    });
-
-    await finalCsvWriter.writeRecords(finalList);
+    await appendAndFixSearchMainRecordsCache(prod, downloadedRecords);
   }
 }
 
