@@ -12,6 +12,7 @@ def main():
 
     parser.add_argument("-i", "--in-filepath", type=str)
     parser.add_argument("-o", "--out-filepath", type=str)
+    parser.add_argument("-c", "--col-name", type=str)
     args = parser.parse_args()
 
     in_filepath = args.in_filepath
@@ -22,6 +23,10 @@ def main():
         return
 
     master_df = read_csv_as_df(in_filepath)
+
+    # Handle col_name arg
+    col_name = args.col_name or "url"
+    master_df["url"] = master_df[col_name]
 
     urls_df = master_df[["url"]]
     urls_df["domain"] = urls_df["url"].apply(get_domain_from_url)
