@@ -53,18 +53,9 @@ def main():
     master_df["product_domain"] = master_df["url"].apply(get_domain_from_url)
 
     # Decide on product image url
-    # Use these substrings for source images and filter out these default images
-    banned_image_url_substrings = [
-        "media.theresanaiforthat.com/assets/favicon-large",
-        "media.theresanaiforthat.com/assets/favicon",
-        "ph-files.imgix.net/ecca7485-4473-4479-84ea-1702b0fe04e5",
-    ]
-
     # Fix image urls
     def fix_favicon_url(row):
-        image_url = row["favicon_url"]
-        if not isinstance(image_url, str) or image_url == "":
-            return None
+        image_url: str = row["favicon_url"]
 
         if image_url.startswith("http"):
             return image_url
@@ -73,46 +64,20 @@ def main():
             return "https:" + image_url
 
         domain = row["product_domain"]
-        try:
-            to_return = "https://" + domain + image_url
-            return to_return
-        except:
-            print("image url failure", row)
-            pass
+        if not domain or not isinstance(domain, str):
+            print(row)
+            raise "Invalid domain!"
+
+        to_return = "https://" + domain + image_url
+        return to_return
 
     def choose_image_url(row) -> str | None:
         favicon_url = row["favicon_url"]
-        if not isinstance(favicon_url, str):
-            favicon_url = None
-
-        if combined_source_filepath:
-            aift_image_url = row["aift_image_url"]
-            if not isinstance(aift_image_url, str):
-                aift_image_url = None
-
-            ph_image_url = row["ph_image_url"]
-            if not isinstance(ph_image_url, str):
-                ph_image_url = None
-
-            for substr in banned_image_url_substrings:
-                if favicon_url and substr in favicon_url:
-                    favicon_url = None
-                if aift_image_url and substr in aift_image_url:
-                    aift_image_url = None
-                if ph_image_url and substr in ph_image_url:
-                    ph_image_url = None
-
-            if ph_image_url:
-                return ph_image_url
-            if aift_image_url:
-                return aift_image_url
-            if favicon_url:
-                favicon_url = fix_favicon_url(row)
-                return favicon_url
-
+        if not isinstance(favicon_url, str) or favicon_url == "":
             return None
-        else:
-            return favicon_url
+        favicon_url = fix_favicon_url(row)
+
+        return favicon_url
 
     master_df["product_image_url"] = master_df.apply(choose_image_url, axis=1)
 
