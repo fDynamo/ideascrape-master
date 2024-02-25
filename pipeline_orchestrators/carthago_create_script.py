@@ -6,7 +6,7 @@ from custom_helpers_py.date_helpers import get_current_date_filename
 from custom_helpers_py.get_paths import get_artifacts_folder_path
 
 CARTHAGO_SCRIPT_FILENAME = "_carthago_list.txt"
-TEST_ARTIFACTS_FOLDERPATH = join(get_artifacts_folder_path(), "test")
+DRY_RUN_CARTHAGO_FOLDERPATH = join(get_artifacts_folder_path(), "_dry_run_carthago")
 
 
 def main():
@@ -56,7 +56,7 @@ def main():
     # Make necessary folders
     folder_source_scrapes = join(out_folderpath, "source_scrapes")
     if is_dry_run:
-        folder_source_scrapes = join(TEST_ARTIFACTS_FOLDERPATH, "source_scrapes")
+        folder_source_scrapes = join(DRY_RUN_CARTHAGO_FOLDERPATH, "source_scrapes")
 
     source_scrape_folders_list = [
         join(folder_source_scrapes, "source_{}_scrape".format(acr))

@@ -4,10 +4,11 @@ import argparse
 from custom_helpers_py.folder_helpers import mkdir_if_not_exists
 from custom_helpers_py.date_helpers import get_current_date_filename
 from custom_helpers_py.get_paths import get_artifacts_folder_path
-from pipeline_orchestrators.carthago_create_script import TEST_ARTIFACTS_FOLDERPATH
+from pipeline_orchestrators.carthago_create_script import DRY_RUN_CARTHAGO_FOLDERPATH
 from shutil import copy
 
 DUCKSTER_SCRIPT_FILENAME = "_duckster_list.txt"
+DRY_RUN_DUCKSTER_FOLDERPATH = DRY_RUN_CARTHAGO_FOLDERPATH
 
 
 def main():
@@ -98,7 +99,7 @@ def main():
     )
     if is_dry_run:
         component_indiv_scrape = ""
-        indiv_scrape_folder = join(TEST_ARTIFACTS_FOLDERPATH, "indiv_scrape")
+        indiv_scrape_folder = join(DRY_RUN_DUCKSTER_FOLDERPATH, "indiv_scrape")
 
     cc_indiv_scrape_outfile = join(out_folderpath, "cc_indiv_scrape.csv")
     component_cc_indiv_scrape = (
@@ -144,7 +145,7 @@ def main():
     if is_dry_run:
         component_sup_similarweb_scrape = ""
         sup_similarweb_scrape_folder = join(
-            TEST_ARTIFACTS_FOLDERPATH, "sup_similarweb_scrape"
+            DRY_RUN_DUCKSTER_FOLDERPATH, "sup_similarweb_scrape"
         )
 
     cc_sup_similarweb_scrape_outfile = join(
@@ -184,7 +185,7 @@ def main():
     if is_dry_run:
         component_extract_embed_description = ""
         extract_embed_description_outfile = join(
-            TEST_ARTIFACTS_FOLDERPATH, "extract_embed_description.csv"
+            DRY_RUN_DUCKSTER_FOLDERPATH, "extract_embed_description.csv"
         )
 
     component_download_product_images = (
@@ -194,7 +195,7 @@ def main():
     )
     if is_dry_run:
         component_download_product_images = ""
-        product_images_folder = join(TEST_ARTIFACTS_FOLDERPATH, "product_images")
+        product_images_folder = join(DRY_RUN_DUCKSTER_FOLDERPATH, "product_images")
 
     # Prodify
     component_prodify = 'python data_transformers/prodify.py -i "{}" --embedding-description-filepath "{}" --product-images-folderpath "{}" -o "{}"'.format(
