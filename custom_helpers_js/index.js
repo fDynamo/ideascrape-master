@@ -44,10 +44,28 @@ const getPercentageString = (currIndex, startIndex, lastIndex) => {
   return donePercentageString;
 };
 
+const batchData = (inData, batchSize) => {
+  const numBatches = Math.ceil(inData.length / batchSize);
+  const batchList = [];
+  for (let i = 0; i < numBatches; i++) {
+    const startIdx = i * batchSize;
+    let endIdx = (i + 1) * batchSize;
+    if (i + 1 == numBatches) {
+      endIdx = numBatches.length;
+    }
+
+    const toAdd = inData.slice(startIdx, endIdx);
+    batchList.push(toAdd);
+  }
+
+  return batchList;
+};
+
 module.exports = {
   timeoutPromise,
   getArgs,
   getDateFilename,
   convertObjKeysToHeader,
   getPercentageString,
+  batchData,
 };

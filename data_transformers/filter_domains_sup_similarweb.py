@@ -50,6 +50,7 @@ def main():
     # Save
     save_df_as_csv(filtered_df, out_filepath)
     if isinstance(rejected_filepath, str):
+        rejected_df = rejected_df.drop(columns=["is_valid"])
         save_df_as_csv(rejected_df, rejected_filepath)
 
     log_end(start_time)

@@ -1,4 +1,4 @@
-import { appendFileSync, readFileSync, readdirSync } from "fs";
+import { appendFileSync, readFileSync } from "fs";
 import { join } from "path";
 import createSupabaseClient from "../custom_helpers_js/create-supabase-client.js";
 import { getPercentageString } from "../custom_helpers_js/string-formatters.js";
@@ -14,7 +14,7 @@ async function main() {
   let RUN_DELAY = 500;
   const argv = yargs(hideBin(process.argv)).argv;
   const { imagesFolderPath, prod, errorFile, startIndex: inStartIndex } = argv;
-  if ((!imagesFolderPath, !errorFile)) {
+  if (!imagesFolderPath || !errorFile) {
     console.log("Invalid inputs");
     return;
   }

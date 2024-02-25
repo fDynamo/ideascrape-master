@@ -11,7 +11,8 @@
     "pi_upsert_records": "node prod_interface/upsert-records.mjs",
     "pi_upsert_images": "node prod_interface/upsert-images.mjs",
     "pi_cache_search_main_records": "node prod_interface/cache-search-main-records.mjs",
-    "pi_cache_sup_similarweb_records": "node prod_interface/cache-sup-similarweb-records.mjs"
+    "pi_cache_sup_similarweb_records": "node prod_interface/cache-sup-similarweb-records.mjs",
+    "pi_delete_sup_similarweb": "node prod_interface/delete-sup-similarweb.mjs"
   },
   "author": "",
   "license": "ISC",
