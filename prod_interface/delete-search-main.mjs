@@ -31,51 +31,15 @@ async function main() {
     const rejectedRecords = await readCsvFile(deleteListFilePath);
     let supabase = createSupabaseClient(prod);
 
-    // Get all rows first
-    const domainsList = rejectedRecords.map((obj) => obj.domain);
-    const fetchRes = await batchActionIn(supabase, {
-      action: "fetch",
-      tableName: "sup_similarweb",
-      selectCols: "id",
-      inColName: "source_domain",
-      inList: domainsList,
-      batchSize: MAX_FETCH_BATCH_SIZE,
-      shouldLog: true,
-    });
-
-    if (fetchRes.error) {
-      throw fetchRes.error;
-    }
-
-    const domainIds = fetchRes.data.map((obj) => obj.id);
-    if (!domainIds.length) {
-      console.log("Nothing to delete");
-      process.exit();
-    }
-
-    // Update search main
-    const updateRes = await batchActionIn(supabase, {
-      action: "update",
-      tableName: "search_main",
-      selectCols: "product_url",
-      inColName: "similarweb_id",
-      inList: domainIds,
-      batchSize: MAX_UPDATE_BATCH_SIZE,
-      shouldLog: true,
-      updateVal: { similarweb_id: null },
-    });
-
-    if (updateRes.error) {
-      throw updateRes.error;
-    }
+    const urlList = rejectedRecords.map((record) => record.url);
 
     // Delete
     const deleteRes = await batchActionIn(supabase, {
       action: "delete",
-      tableName: "sup_similarweb",
-      selectCols: "id,source_domain",
-      inColName: "id",
-      inList: domainIds,
+      tableName: "search_main",
+      selectCols: "id,product_url",
+      inColName: "product_url",
+      inList: urlList,
       batchSize: MAX_DELETE_BATCH_SIZE,
       shouldLog: true,
     });
@@ -85,24 +49,18 @@ async function main() {
     }
 
     if (recordsFolder) {
-      const countFetched = fetchRes.data.length;
       const countDeleted = deleteRes.data.length;
-      const countUpdatedInSearchMain = updateRes.data.length;
 
       const toWriteObj = {
-        countFetched,
         countDeleted,
-        countUpdatedInSearchMain,
-        fetchRes,
         deleteRes,
-        updateRes,
       };
 
       const toWrite = JSON.stringify(toWriteObj);
       const fileSuffix = prod ? "prod.json" : "local.json";
       const recordsFilePath = join(
         recordsFolder,
-        "delete_sup_similarweb_" + fileSuffix
+        "delete_search_main_" + fileSuffix
       );
 
       writeFileSync(recordsFilePath, toWrite);

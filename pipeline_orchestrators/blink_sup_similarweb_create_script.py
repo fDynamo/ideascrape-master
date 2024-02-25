@@ -155,7 +155,7 @@ def main():
             to_upload_folder, upload_records_folder, prod_upload_flag
         )
 
-        com_delete_files = 'npm run pi_delete_sup_similarweb -- --rejectedFilePath "{}" --recordsFolder "{}" {}'.format(
+        com_delete_files = 'npm run pi_delete_sup_similarweb -- --deleteListFilePath "{}" --recordsFolder "{}" {}'.format(
             rejected_domains_file_path, upload_records_folder, prod_upload_flag
         )
 
