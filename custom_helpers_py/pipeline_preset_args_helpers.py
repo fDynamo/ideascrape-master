@@ -8,14 +8,20 @@ from os import listdir
 def add_args_for_out_folder_preset(parser):
     parser.add_argument("-n", "--run-new", action=argparse.BooleanOptionalAction)
     parser.add_argument("-r", "--run-recent", action=argparse.BooleanOptionalAction)
+    parser.add_argument("-t", "--run-test", action=argparse.BooleanOptionalAction)
 
 
 # Returns new folderpath after parsing args
 def parse_args_for_out_folder_preset(args, folder_prefix="") -> str | None:
     is_run_new: bool = args.run_new
     is_run_recent: bool = args.run_recent
+    is_run_test: bool = args.run_test
 
-    if is_run_recent:
+    if is_run_test:
+        folder_name = folder_prefix + "test"
+        artifacts_folder_path = get_artifacts_folder_path()
+        return join(artifacts_folder_path, folder_name)
+    elif is_run_recent:
         artifacts_folder_path = get_artifacts_folder_path()
         artifacts_contents = listdir(artifacts_folder_path)
         most_recent = None
