@@ -1,0 +1,37 @@
+import argparse
+from os.path import join
+from custom_helpers_py.get_paths import get_artifacts_folder_path
+from custom_helpers_py.date_helpers import get_current_date_filename
+from os import listdir
+
+
+def add_args_for_out_folder_preset(parser):
+    parser.add_argument("-n", "--run-new", action=argparse.BooleanOptionalAction)
+    parser.add_argument("-r", "--run-recent", action=argparse.BooleanOptionalAction)
+
+
+# Returns new folderpath after parsing args
+def parse_args_for_out_folder_preset(args, folder_prefix="") -> str | None:
+    is_run_new: bool = args.run_new
+    is_run_recent: bool = args.run_recent
+
+    if is_run_recent:
+        artifacts_folder_path = get_artifacts_folder_path()
+        artifacts_contents = listdir(artifacts_folder_path)
+        most_recent = None
+        for folderpath in artifacts_contents:
+            if folderpath.startswith(folder_prefix):
+                if not most_recent:
+                    most_recent = folderpath
+                elif folderpath > most_recent:
+                    most_recent = folderpath
+        if not most_recent:
+            return None
+
+        return join(artifacts_folder_path, most_recent)
+    elif is_run_new:
+        folder_name = folder_prefix + get_current_date_filename()
+        artifacts_folder_path = get_artifacts_folder_path()
+        return join(artifacts_folder_path, folder_name)
+    else:
+        return None
