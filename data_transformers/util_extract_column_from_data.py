@@ -13,7 +13,7 @@ def main():
     parser.add_argument("-o", "--out-filepath", type=str)
     parser.add_argument("--in-col", type=str)
     parser.add_argument("--out-col", type=str)
-    parser.add_argument("--dont-clean", type=argparse.BooleanOptionalAction)
+    parser.add_argument("--dont-clean", action=argparse.BooleanOptionalAction)
     args = parser.parse_args()
 
     in_filepath = args.in_filepath

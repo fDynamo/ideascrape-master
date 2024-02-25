@@ -13,14 +13,14 @@ def main():
     parser.add_argument("-i", "--in-filepath", type=str)
     parser.add_argument("-o", "--out-filepath", type=str)
     parser.add_argument("-r", "--rejected-filepath", type=str)
-    parser.add_argument("--use-local-cache")  # Just for testing
     parser.add_argument("-c", "--col-name", type=str)
+    parser.add_argument("--prod-env", action=argparse.BooleanOptionalAction)
     args = parser.parse_args()
 
     in_filepath = args.in_filepath
     out_filepath = args.out_filepath
     rejected_filepath = args.rejected_filepath
-    use_local_cache = args.use_local_cache
+    is_prod_env = args.prod_env
 
     if not in_filepath or not out_filepath:
         print("Invalid inputs")
@@ -42,9 +42,7 @@ def main():
     master_df = master_df.sort_values(by="url")
 
     # Get cache filter
-    search_main_records_filepath = get_search_main_records_filepath(
-        prod=not use_local_cache
-    )
+    search_main_records_filepath = get_search_main_records_filepath(prod=is_prod_env)
     search_main_records_df = read_csv_as_df(search_main_records_filepath)
     search_main_records_list = search_main_records_df.to_dict(orient="records")
     in_records_set = set()
