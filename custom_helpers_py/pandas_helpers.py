@@ -19,6 +19,9 @@ def concat_folder_into_df(
     ends_with_filter="-data.csv",
     use_python_engine=False,
     print_filename=False,
+    enforce_mono_column: (
+        None | str
+    ) = None,  # If a string, extracts only this col from all files and raises error if this does not exist
 ):
     file_list: list[str] = listdir(folderpath)
     file_list.sort()
@@ -34,6 +37,9 @@ def concat_folder_into_df(
             df = pd.read_csv(filepath, encoding="utf-8", engine="python")
         else:
             df = pd.read_csv(filepath, encoding="utf-8", low_memory=False)
+
+        if enforce_mono_column:
+            df = df[[enforce_mono_column]]
         df_list.append(df)
 
     master_df = pd.concat(df_list)
