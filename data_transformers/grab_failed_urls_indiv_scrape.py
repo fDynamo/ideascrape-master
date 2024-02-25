@@ -24,8 +24,6 @@ def main():
 
     failed_log_df = concat_folder_into_df(
         in_folderpath,
-        drop_subset="url",
-        use_python_engine=True,
         ends_with_filter="-failed.csv",
         allow_empty_return=True,
     )

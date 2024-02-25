@@ -10,19 +10,19 @@ def main():
     # Get arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-i", "--in-filepath", type=str)
+    parser.add_argument("-i", "--in-folderpath", type=str)
     parser.add_argument("-o", "--out-filepath", type=str)
     args = parser.parse_args()
 
-    in_filepath = args.in_filepath
+    in_folderpath = args.in_folderpath
     out_filepath = args.out_filepath
 
-    if not in_filepath or not out_filepath:
+    if not in_folderpath or not out_filepath:
         print("Invalid inputs")
         return
 
     individual_scrape_df = concat_folder_into_df(
-        in_filepath, drop_subset="url", use_python_engine=True
+        in_folderpath, drop_subset="url", use_python_engine=True
     )
 
     individual_scrape_df["title"] = individual_scrape_df["title"].apply(clean_text)
