@@ -100,6 +100,7 @@ def main():
 
     has_source_aift = "aift_source_url" in cols_list
     has_source_ph = "ph_source_url" in cols_list
+    has_sup_similarweb = "similarweb_data_created_at" in cols_list
 
     # AIFT
     source_aift_df = None
@@ -147,29 +148,35 @@ def main():
     Get sup dfs
     """
     # SimilarWeb
-    similarweb_cols = [
-        "product_domain",
-        "similarweb_total_visits_last_month",
-        "similarweb_data_created_at",
-    ]
-    sup_similarweb_df = master_df[similarweb_cols].reset_index(drop=True)
-    similarweb_cols = [col.removeprefix("similarweb_") for col in similarweb_cols]
-    sup_similarweb_df.columns = similarweb_cols
-    sup_similarweb_df = sup_similarweb_df.rename(
-        columns={"product_domain": "source_domain"}
-    )
-    sup_similarweb_df = sup_similarweb_df.dropna(
-        subset=["source_domain", "data_created_at"]
-    )
-    sup_similarweb_df = sup_similarweb_df.drop_duplicates(subset="source_domain")
-    sup_similarweb_df = sup_similarweb_df.reset_index(drop=True)
-    sup_similarweb_df["total_visits_last_month"] = sup_similarweb_df[
-        "total_visits_last_month"
-    ].astype(int)
-    similarweb_cols = ["source_domain", "total_visits_last_month", "data_created_at"]
-    sup_similarweb_df = sup_similarweb_df[similarweb_cols]
+    sup_similarweb_df = None
+    if has_sup_similarweb:
+        similarweb_cols = [
+            "product_domain",
+            "similarweb_total_visits_last_month",
+            "similarweb_data_created_at",
+        ]
+        sup_similarweb_df = master_df[similarweb_cols].reset_index(drop=True)
+        similarweb_cols = [col.removeprefix("similarweb_") for col in similarweb_cols]
+        sup_similarweb_df.columns = similarweb_cols
+        sup_similarweb_df = sup_similarweb_df.rename(
+            columns={"product_domain": "source_domain"}
+        )
+        sup_similarweb_df = sup_similarweb_df.dropna(
+            subset=["source_domain", "data_created_at"]
+        )
+        sup_similarweb_df = sup_similarweb_df.drop_duplicates(subset="source_domain")
+        sup_similarweb_df = sup_similarweb_df.reset_index(drop=True)
+        sup_similarweb_df["total_visits_last_month"] = sup_similarweb_df[
+            "total_visits_last_month"
+        ].astype(int)
+        similarweb_cols = [
+            "source_domain",
+            "total_visits_last_month",
+            "data_created_at",
+        ]
+        sup_similarweb_df = sup_similarweb_df[similarweb_cols]
 
-    validate_prod_sup_similarweb_df(sup_similarweb_df)
+        validate_prod_sup_similarweb_df(sup_similarweb_df)
 
     print("start search main")
 
@@ -210,18 +217,21 @@ def main():
         master_df["ph_id"] = None
 
     # SimilarWeb
-    similarweb_id_df = sup_similarweb_df.rename_axis("similarweb_id").reset_index()
-    similarweb_id_df["similarweb_id"] = similarweb_id_df["similarweb_id"].apply(
-        lambda x: x + 1
-    )
-    similarweb_id_df = similarweb_id_df[["similarweb_id", "source_domain"]]
-    master_df = master_df.merge(
-        similarweb_id_df,
-        left_on="product_domain",
-        right_on="source_domain",
-        how="left",
-        suffixes=("", "_similarweb"),
-    )
+    if has_sup_similarweb:
+        similarweb_id_df = sup_similarweb_df.rename_axis("similarweb_id").reset_index()
+        similarweb_id_df["similarweb_id"] = similarweb_id_df["similarweb_id"].apply(
+            lambda x: x + 1
+        )
+        similarweb_id_df = similarweb_id_df[["similarweb_id", "source_domain"]]
+        master_df = master_df.merge(
+            similarweb_id_df,
+            left_on="product_domain",
+            right_on="source_domain",
+            how="left",
+            suffixes=("", "_similarweb"),
+        )
+    else:
+        master_df["similarweb_id"] = None
 
     # Drop duplicates
     master_df = master_df.drop_duplicates(subset="url")
@@ -251,9 +261,14 @@ def main():
     search_main_df.columns = search_main_cols
 
     # Set types
-    search_main_df["aift_id"] = search_main_df["aift_id"].astype("Int64")
-    search_main_df["ph_id"] = search_main_df["ph_id"].astype("Int64")
-    search_main_df["similarweb_id"] = search_main_df["similarweb_id"].astype("Int64")
+    if has_source_aift:
+        search_main_df["aift_id"] = search_main_df["aift_id"].astype("Int64")
+    if has_source_ph:
+        search_main_df["ph_id"] = search_main_df["ph_id"].astype("Int64")
+    if has_sup_similarweb:
+        search_main_df["similarweb_id"] = search_main_df["similarweb_id"].astype(
+            "Int64"
+        )
 
     print("start saving")
     """
@@ -278,8 +293,9 @@ def main():
         source_ph_df_savepath = join(out_folderpath, "source_ph.csv")
         save_df_as_csv(source_ph_df, source_ph_df_savepath)
 
-    sup_similarweb_df_savepath = join(out_folderpath, "sup_similarweb.csv")
-    save_df_as_csv(sup_similarweb_df, sup_similarweb_df_savepath)
+    if has_sup_similarweb:
+        sup_similarweb_df_savepath = join(out_folderpath, "sup_similarweb.csv")
+        save_df_as_csv(sup_similarweb_df, sup_similarweb_df_savepath)
 
     log_end(start_time)
 
