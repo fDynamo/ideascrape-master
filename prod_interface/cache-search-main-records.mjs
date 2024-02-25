@@ -12,9 +12,20 @@ async function main() {
 
   const argv = yargs(hideBin(process.argv)).argv;
   let { startIndex, endIndex, prod, reset } = argv;
-  if (!startIndex || !endIndex || startIndex > endIndex || startIndex < 1) {
-    console.log("Invalid inputs, HINT: start index has to start at 1");
-    return;
+
+  // Validate inputs
+  if (startIndex && !endIndex) {
+    console.log("No end index provided");
+    process.exit(1);
+  }
+
+  if (endIndex && !startIndex) {
+    startIndex = 0;
+  }
+
+  if (!startIndex && !endIndex) {
+    startIndex = 0;
+    endIndex = 999999; // Arbitrarily high number signalling max amount
   }
 
   const MAX_RECORDS = 1000;
@@ -49,15 +60,16 @@ async function main() {
       throw error;
     }
 
+    if (data.length == 0) {
+      break;
+    }
+
     await csvWriter.writeRecords(data);
 
     data.forEach((record) => {
       downloadedRecords.push(record);
     });
 
-    if (data.length == 0) {
-      break;
-    }
     console.log("Downloaded ", i);
   }
 
