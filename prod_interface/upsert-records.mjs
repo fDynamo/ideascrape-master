@@ -14,7 +14,8 @@ async function main() {
   dotenv.config();
 
   const argv = yargs(hideBin(process.argv)).argv;
-  let { toUploadFolderPath, fileName, recordsFolder, prod } = argv;
+  let { toUploadFolderPath, fileName, recordsFolder, prod, searchMainOnly } =
+    argv;
   const TABLE_DICT = {
     source_aift: {
       name: "source_aift",
@@ -80,66 +81,86 @@ async function main() {
   let supabase = createSupabaseClient(prod);
 
   if (tableDictObj.name == TABLE_DICT.search_main.name) {
-    // Read other record files
-    let source_aift_record = null;
-    let aiftIdList = [];
-    const source_aift_record_file = join(
-      recordsFolder,
-      TABLE_DICT.source_aift.recordFilename
-    );
-    if (existsSync(source_aift_record_file)) {
-      source_aift_record = JSON.parse(readFileSync(source_aift_record_file));
-      aiftIdList = source_aift_record.idList;
-    }
+    if (searchMainOnly) {
+      inDataList = inDataList.map((record) => {
+        delete record.aift_id;
+        delete record.ph_id;
+        delete record.similarweb_id;
+        return record;
+      });
+    } else {
+      // Read other record files
+      let source_aift_record = null;
+      let aiftIdList = [];
 
-    let source_ph_record = null;
-    let phIdList = [];
-    const source_ph_record_file = join(
-      recordsFolder,
-      TABLE_DICT.source_ph.recordFilename
-    );
-    if (existsSync(source_ph_record_file)) {
-      source_ph_record = JSON.parse(readFileSync(source_ph_record_file));
-      phIdList = source_ph_record.idList;
-    }
+      let source_ph_record = null;
+      let phIdList = [];
 
-    let sup_similarweb_record = null;
-    const sup_similarweb_record_file = join(
-      recordsFolder,
-      TABLE_DICT.sup_similarweb.recordFilename
-    );
-    let similarwebIdList = [];
-    if (existsSync(sup_similarweb_record_file)) {
-      sup_similarweb_record = JSON.parse(
-        readFileSync(sup_similarweb_record_file)
+      let sup_similarweb_record = null;
+      let similarwebIdList = [];
+
+      const source_aift_record_file = join(
+        recordsFolder,
+        TABLE_DICT.source_aift.recordFilename
       );
-      similarwebIdList = sup_similarweb_record.idList;
+      if (existsSync(source_aift_record_file)) {
+        source_aift_record = JSON.parse(readFileSync(source_aift_record_file));
+        aiftIdList = source_aift_record.idList;
+      }
+
+      const source_ph_record_file = join(
+        recordsFolder,
+        TABLE_DICT.source_ph.recordFilename
+      );
+      if (existsSync(source_ph_record_file)) {
+        source_ph_record = JSON.parse(readFileSync(source_ph_record_file));
+        phIdList = source_ph_record.idList;
+      }
+
+      const sup_similarweb_record_file = join(
+        recordsFolder,
+        TABLE_DICT.sup_similarweb.recordFilename
+      );
+      if (existsSync(sup_similarweb_record_file)) {
+        sup_similarweb_record = JSON.parse(
+          readFileSync(sup_similarweb_record_file)
+        );
+        similarwebIdList = sup_similarweb_record.idList;
+      }
+
+      // Modify ids in data
+      inDataList = inDataList.map((record) => {
+        let aiftId = record.aift_id || null;
+        let phId = record.ph_id || null;
+        let similarwebId = record.similarweb_id || null;
+
+        if (source_aift_record && aiftId) {
+          aiftId = aiftIdList[parseInt(aiftId) - 1];
+        }
+
+        if (source_ph_record && phId) {
+          phId = phIdList[parseInt(phId) - 1];
+        }
+
+        if (sup_similarweb_record && similarwebId) {
+          similarwebId = similarwebIdList[parseInt(similarwebId) - 1];
+        }
+
+        record = {
+          ...record,
+          similarweb_id: similarwebId,
+          aift_id: aiftId,
+          ph_id: phId,
+        };
+
+        return record;
+      });
     }
-
-    // Modify ids in data
-    inDataList = inDataList.map((record) => {
-      let aiftId = record.aift_id || null;
-      if (source_aift_record && aiftId) {
-        aiftId = aiftIdList[parseInt(aiftId) - 1];
-      }
-
-      let phId = record.ph_id || null;
-      if (source_ph_record && phId) {
-        phId = phIdList[parseInt(phId) - 1];
-      }
-
-      let similarwebId = record.similarweb_id || null;
-      if (sup_similarweb_record && similarwebId) {
-        similarwebId = similarwebIdList[parseInt(similarwebId) - 1];
-      }
-
-      return {
-        ...record,
-        similarweb_id: similarwebId,
-        aift_id: aiftId,
-        ph_id: phId,
-      };
-    });
+  } else {
+    if (searchMainOnly) {
+      console.log("searchMainOnly used incorrectly");
+      process.exit(1);
+    }
   }
 
   // Break apart and try one by one

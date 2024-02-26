@@ -5,8 +5,6 @@ import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 import {
   MAX_DELETE_BATCH_SIZE,
-  MAX_FETCH_BATCH_SIZE,
-  MAX_UPDATE_BATCH_SIZE,
   batchActionIn,
 } from "../custom_helpers_js/prod-interface-helpers.mjs";
 import { writeFileSync } from "fs";

@@ -28,7 +28,7 @@ def main():
         allow_empty_return=True,
     )
 
-    if failed_log_df == None:
+    if failed_log_df is None:
         to_save_df = pd.DataFrame([{"url": ""}])
         save_df_as_csv(to_save_df, out_filepath)
         return
@@ -44,6 +44,7 @@ def main():
             urls_list.append(to_add)
 
     new_df = pd.DataFrame(urls_list)
+    new_df = new_df.drop_duplicates(subset="url")
 
     save_df_as_csv(new_df, out_filepath)
 
