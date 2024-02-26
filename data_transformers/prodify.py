@@ -76,6 +76,8 @@ def main():
         how="left",
     )
 
+    master_df = master_df[~master_df["description_embedding"].isna()]
+
     # Drop columns
     cols_to_remove = [col for col in master_df.columns if col.startswith("tmp_")]
     master_df = master_df.drop(columns=cols_to_remove)

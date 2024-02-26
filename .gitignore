@@ -12,3 +12,5 @@ node_modules/
 tmp/
 run_artifacts/
 cache_folder/files/
+zzz_run_artifacts/
+z_tmp/
