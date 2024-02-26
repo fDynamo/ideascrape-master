@@ -11,14 +11,21 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-s", "--start-index", type=int)
+    parser.add_argument(
+        "--dont-run", action=argparse.BooleanOptionalAction, default=False
+    )
     args, _ = parser.parse_known_args()
 
     start_index = args.start_index
+    is_dont_run = args.dont_run
 
     # Generate blink_search_main script
     blink_search_main_script_filepath = blink_search_main_create_script()
     if not blink_search_main_script_filepath:
-        return
+        exit()
+
+    if is_dont_run:
+        exit()
 
     # Get components from script
     com_list = get_components_from_script(blink_search_main_script_filepath)

@@ -1,6 +1,7 @@
 from os.path import join, abspath
 import argparse
 from custom_helpers_py.folder_helpers import mkdir_if_not_exists
+from custom_helpers_py.pipeline_components_helpers import SCRIPT_RUN_STOPPER
 from custom_helpers_py.pipeline_preset_args_helpers import (
     add_args_for_out_folder_preset,
     parse_args_for_out_folder_preset,
@@ -39,6 +40,9 @@ def main():
     parser.add_argument(
         "--skip-cache", action=argparse.BooleanOptionalAction, default=False
     )
+    parser.add_argument(
+        "--dont-run-upload", action=argparse.BooleanOptionalAction, default=False
+    )
 
     args, _ = parser.parse_known_args()
 
@@ -48,6 +52,7 @@ def main():
     is_prod_env: bool = args.prod_env
     is_upload: bool = args.upload
     is_skip_cache: bool = args.skip_cache
+    is_dont_run_upload: bool = args.dont_run_upload
 
     if not out_folderpath:
         out_folderpath = parse_args_for_out_folder_preset(
@@ -253,6 +258,9 @@ def main():
             com_upsert_records,
             com_delete_rejected,
         ]
+
+        if is_dont_run_upload:
+            upload_components_list = [SCRIPT_RUN_STOPPER] + upload_components_list
 
     if is_dry_run and is_prod_env:
         upload_components_list = []
