@@ -222,9 +222,9 @@ def main():
             )
             upload_script_com_list.append(to_add)
 
-        upload_images = 'npm run pi_upsert_images -- --imagesFolderPath "{}" --errorFile "{}"{}'.format(
+        upload_images = 'npm run pi_upsert_images -- --imagesFolderPath "{}" --recordsFolder "{}"{}'.format(
             product_images_folder,
-            join(upload_records_folder, "image_upload_errors.txt"),
+            upload_records_folder,
             prod_upload_flag,
         )
 

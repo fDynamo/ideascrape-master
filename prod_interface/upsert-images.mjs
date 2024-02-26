@@ -1,4 +1,4 @@
-import { appendFileSync, readFileSync } from "fs";
+import { appendFileSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import createSupabaseClient from "../custom_helpers_js/create-supabase-client.js";
 import { getPercentageString } from "../custom_helpers_js/string-formatters.js";
@@ -13,10 +13,15 @@ async function main() {
 
   let RUN_DELAY = 500;
   const argv = yargs(hideBin(process.argv)).argv;
-  const { imagesFolderPath, prod, errorFile, startIndex: inStartIndex } = argv;
-  if (!imagesFolderPath || !errorFile) {
-    console.log("Invalid inputs");
-    return;
+  const {
+    imagesFolderPath,
+    prod,
+    recordsFolder,
+    startIndex: inStartIndex,
+  } = argv;
+  if (!imagesFolderPath) {
+    console.error("Invalid inputs");
+    process.exit(1);
   }
 
   let supabase = createSupabaseClient(prod);
@@ -26,6 +31,10 @@ async function main() {
   const recordsList = await readCsvFile(recordFile);
 
   const startIndex = inStartIndex ? parseInt(inStartIndex) : 0;
+
+  const errorRecordsList = [];
+  let countSuccess = 0;
+  let countError = 0;
 
   for (let i = startIndex; i < recordsList.length; i++) {
     const file = recordsList[i].image_filename;
@@ -58,6 +67,7 @@ async function main() {
     }
 
     const PRODUCT_IMAGES_BUCKET = "product_images";
+
     try {
       const { data, error } = await supabase.storage
         .from(PRODUCT_IMAGES_BUCKET)
@@ -70,17 +80,45 @@ async function main() {
       const percentage = getPercentageString(i + 1, 0, recordsList.length);
       console.log("done", i, percentage);
       console.log("done file", file);
+      countSuccess += 1;
     } catch (error) {
+      console.error("Error", i, file);
       console.error(error);
-      const toWriteString = `
-      file: ${file}
-      index: ${i}
-      error: ${error}
-      `;
-      appendFileSync(errorFile, toWriteString);
+      countError += 1;
+      errorRecordsList.push({
+        file,
+        index: i,
+        error,
+      });
     }
 
     await timeoutPromise(RUN_DELAY);
+  }
+
+  if (recordsFolder) {
+    let errorFile = join(recordsFolder, "upsert_images_errors");
+    let uploadRecordsFile = join(recordsFolder, "upsert_images_records");
+
+    if (prod) {
+      errorFile += "_prod.json";
+      uploadRecordsFile += "_prod.json";
+    } else {
+      errorFile += "_local.json";
+      uploadRecordsFile += "_local.json";
+    }
+
+    const errorToWrite = {
+      errorRecordsList,
+      countError,
+    };
+
+    const recordsToWrite = {
+      countError,
+      countSuccess,
+    };
+
+    writeFileSync(errorFile, JSON.stringify(errorToWrite));
+    writeFileSync(uploadRecordsFile, JSON.stringify(recordsToWrite));
   }
 }
 
