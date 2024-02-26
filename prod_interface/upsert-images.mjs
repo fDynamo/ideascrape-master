@@ -1,4 +1,4 @@
-import { appendFileSync, readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import createSupabaseClient from "../custom_helpers_js/create-supabase-client.js";
 import { getPercentageString } from "../custom_helpers_js/string-formatters.js";
@@ -7,6 +7,7 @@ import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 import { timeoutPromise } from "../custom_helpers_js/index.js";
 import { readCsvFile } from "../custom_helpers_js/read-csv.js";
+import registerGracefulExit from "../custom_helpers_js/graceful-exit.js";
 
 async function main() {
   dotenv.config();
@@ -35,8 +36,18 @@ async function main() {
   const errorRecordsList = [];
   let countSuccess = 0;
   let countError = 0;
+  let lastIndex = 0;
+
+  let forcedToQuit = false;
+  registerGracefulExit(() => {
+    forcedToQuit = true;
+  });
 
   for (let i = startIndex; i < recordsList.length; i++) {
+    if (forcedToQuit) {
+      break;
+    }
+    lastIndex = i;
     const file = recordsList[i].image_filename;
     if (!file || file.endsWith("svg") || file.endsWith("csv") || file == "ER") {
       console.log("skipping", i, file);
@@ -115,11 +126,14 @@ async function main() {
     const recordsToWrite = {
       countError,
       countSuccess,
+      lastIndex,
     };
 
     writeFileSync(errorFile, JSON.stringify(errorToWrite));
     writeFileSync(uploadRecordsFile, JSON.stringify(recordsToWrite));
   }
+
+  process.exit();
 }
 
 main();
