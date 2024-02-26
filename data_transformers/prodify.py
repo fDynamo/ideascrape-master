@@ -53,13 +53,20 @@ def main():
     embeddings_df = embeddings_df.rename(
         columns={
             "embedding": "description_embedding",
-            "text_to_embed": "tmp_text_to_embed",
+            "text": "tmp_text_to_embed",
         }
     )
-    embeddings_df = embeddings_df.drop(columns="text")
+    embeddings_df = embeddings_df.drop(columns="text_to_embed")
+    embeddings_df["tmp_text_to_embed"] = embeddings_df["tmp_text_to_embed"].apply(
+        lambda x: clean_text(
+            x, remove_html=True, remove_non_alpha=True, remove_commas=True
+        )
+    )
 
     pre_extraction_df["tmp_clean_description"] = pre_extraction_df["description"].apply(
-        lambda x: clean_text(x, remove_html=True, remove_non_alpha=True)
+        lambda x: clean_text(
+            x, remove_html=True, remove_non_alpha=True, remove_commas=True
+        )
     )
 
     master_df = pre_extraction_df.merge(

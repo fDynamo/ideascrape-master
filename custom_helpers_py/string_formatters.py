@@ -40,7 +40,11 @@ This code is lowkey shit, need to fix somehow
 
 
 def clean_text(
-    in_text: str, remove_html=False, remove_non_alpha=False, invalid_return_none=True
+    in_text: str,
+    remove_html=False,
+    remove_non_alpha=False,
+    invalid_return_none=True,
+    remove_commas=False,
 ) -> str:
     if not in_text or not isinstance(in_text, str):
         if invalid_return_none:
@@ -63,6 +67,8 @@ def clean_text(
         )
 
         new_text = re.sub(CLEANASCII, " ", new_text)
+    if remove_commas:
+        new_text = new_text.replace(",", " ")
 
     new_text = re.sub(" +", " ", new_text)
     new_text = new_text.strip()

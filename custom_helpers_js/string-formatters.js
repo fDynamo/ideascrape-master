@@ -11,7 +11,7 @@ const cleanTextForCsv = (inText, options) => {
   if (!inText) return "";
 
   let newText = inText;
-  newText = newText.replace(/,/g, " ");
+  newText = newText.replace(/","/g, " ");
 
   if (options) {
     if (options.removeNewLine) {
