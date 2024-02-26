@@ -3,7 +3,7 @@ from os import environ
 from os.path import join
 import json
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 def access_cache_folder(key: str) -> str:
