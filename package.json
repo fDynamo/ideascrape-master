@@ -13,7 +13,8 @@
     "pi_cache_search_main_records": "node prod_interface/cache-search-main-records.mjs",
     "pi_cache_sup_similarweb_records": "node prod_interface/cache-sup-similarweb-records.mjs",
     "pi_delete_sup_similarweb": "node prod_interface/delete-sup-similarweb.mjs",
-    "pi_delete_search_main": "node prod_interface/delete-search-main.mjs"
+    "pi_delete_search_main": "node prod_interface/delete-search-main.mjs",
+    "pi_update_search_main_ids": "node prod_interface/update-search-main-ids.mjs"
   },
   "author": "",
   "license": "ISC",
