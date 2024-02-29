@@ -1,6 +1,6 @@
 import pandas as pd
 from os.path import join
-from datetime import datetime
+from datetime import datetime, timedelta
 from custom_helpers_py.url_formatters import clean_url
 from custom_helpers_py.pandas_helpers import concat_folder_into_df
 from custom_helpers_py.pandas_helpers import (
@@ -54,6 +54,21 @@ def main():
 
     # Convert listed at to datetime
     def fix_listed_at(launch_date: str):
+        if "added" in launch_date.lower():
+            # Get the value in between
+            time_added_str = (
+                launch_date.lower().replace("added", "").replace("ago", "").strip()
+            )
+
+            if "h" in time_added_str:
+                today = datetime.today().date()
+                return today.strftime("%Y-%m-%d")
+
+            if "d" in time_added_str:
+                days_ago = time_added_str.removesuffix("d")
+                date_days_ago = datetime.today() - timedelta(days=int(days_ago))
+                return date_days_ago.strftime("%Y-%m-%d")
+
         if len(launch_date) > 10:
             non_year_date = launch_date[4:]
             non_year_date = non_year_date.replace("0", "")
@@ -61,7 +76,7 @@ def main():
         return launch_date
 
     master_df["listed_at"] = pd.to_datetime(
-        master_df["listed_at"].apply(fix_listed_at), utc=True
+        master_df["listed_at"].apply(fix_listed_at), utc=True, format="%Y-%m-%d"
     )
 
     # Conver updated at to datetime
