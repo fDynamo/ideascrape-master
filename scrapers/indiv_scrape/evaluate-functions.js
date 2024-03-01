@@ -2,6 +2,11 @@ const evaluateGenericPage = async () => {
   // Helper functions
   function getAllComments(node) {
     if (node.nodeType === Node.COMMENT_NODE) {
+      const nodeValue = node.nodeValue;
+      const MAX_VALUE_LENGTH = 80;
+      if (nodeValue.length > MAX_VALUE_LENGTH) {
+        return [];
+      }
       return [node.nodeValue];
     }
 
