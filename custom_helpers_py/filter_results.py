@@ -7,10 +7,10 @@ from langdetect import detect
 dir_path = dirname(realpath(__file__))
 
 # Open url filters
-url_filters_path = join(dir_path, "url_filters.json")
-url_filters_file = open(url_filters_path)
-url_filters = json.load(url_filters_file)
-url_filters_file.close()
+result_filters_path = join(dir_path, "result_filters.json")
+result_filters_file = open(result_filters_path)
+result_filters = json.load(result_filters_file)
+result_filters_file.close()
 
 invalid_description_contents_path = join(dir_path, "invalid_description_contents.json")
 invalid_description_contents_file = open(invalid_description_contents_path)
@@ -25,17 +25,17 @@ def is_url_valid(in_clean_url: str) -> bool:
     if not validators.url("https://" + in_clean_url):
         return False
 
-    substrings = url_filters["substrings"]
+    substrings = result_filters["substrings"]
     for substring in substrings:
         if substring in in_clean_url:
             return False
 
-    starts = url_filters["starts"]
+    starts = result_filters["starts"]
     for start in starts:
         if in_clean_url.startswith(start):
             return False
 
-    ends = url_filters["ends"]
+    ends = result_filters["ends"]
     for end in ends:
         if in_clean_url.endswith(end):
             return False
@@ -89,7 +89,7 @@ def is_page_description_valid(in_desc: str) -> bool:
 
 
 def is_domain_similarweb_scrapable(in_domain):
-    substrings = url_filters["similarweb"]["substrings"]
+    substrings = result_filters["similarweb"]["substrings"]
     for substring in substrings:
         if substring in in_domain:
             return False
