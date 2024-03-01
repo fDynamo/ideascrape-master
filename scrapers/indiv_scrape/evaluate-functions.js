@@ -125,10 +125,12 @@ const evaluateGenericPage = async () => {
   const anchorTagsList = document.querySelectorAll("a");
   anchorTagsList.forEach((aTag) => {
     const href = aTag.href;
-    outLinksList.push(href);
+    if (href && !outLinksList.includes(href)) {
+      outLinksList.push(href);
+    }
   });
 
-  const commentsList = getAllComments(document);
+  const commentsList = [...new Set(getAllComments(document))];
 
   const pageCopy = document.body.innerText;
 
