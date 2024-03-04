@@ -259,6 +259,6 @@
   ],
   "ends": [".png", ".mp3", ".mp4", ".wav", ".webp", ".jpg", "-review", ".zip"],
   "similarweb": {
-    "substrings": []
+    "substrings": ["vercel", "google"]
   }
 }
