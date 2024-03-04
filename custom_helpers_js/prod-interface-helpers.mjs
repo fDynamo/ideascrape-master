@@ -1,7 +1,7 @@
 import { batchData } from "./index.js";
 
 export const MAX_FETCH_BATCH_SIZE = 1000;
-export const MAX_DELETE_BATCH_SIZE = 10000;
+export const MAX_DELETE_BATCH_SIZE = 100;
 export const MAX_UPDATE_BATCH_SIZE = 10000;
 
 export async function batchActionIn(supabaseObj, otherArgs) {
@@ -47,7 +47,7 @@ export async function batchActionIn(supabaseObj, otherArgs) {
     } else if (action == ACCEPTED_ACTIONS.delete) {
       res = await supabaseObj
         .from(tableName)
-        .delete(selectCols)
+        .delete()
         .in(inColName, batch)
         .select(selectCols);
     } else if (action == ACCEPTED_ACTIONS.update) {

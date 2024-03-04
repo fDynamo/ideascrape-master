@@ -72,11 +72,10 @@ def main():
     # Download
     allowed_extensions = [".svg", ".png", ".gif", ".ico", ".jpg", ".jpeg", ".webp"]
     to_download_list: list[str] = images_df.to_dict(orient="records")
-    i = 0
     count_to_download = len(to_download_list)
 
     if count_to_download > 0:
-        for entry in to_download_list:
+        for i, entry in enumerate(to_download_list):
             image_url = entry["image_url"]
 
             if not image_url or not isinstance(image_url, str) or image_url == "":
@@ -111,8 +110,6 @@ def main():
 
             # Save filepath in entry
             entry["image_filename"] = transformed_filename
-
-            i += 1
 
             pct = format_count_percentage(i + 1, count_to_download)
             print("progress", pct)
