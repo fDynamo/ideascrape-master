@@ -20,9 +20,9 @@ async function main() {
     // Update in search_main
     const updateRes = await supabase
       .from("search_main")
-      .update({ similarweb_id: toKeepId })
-      .eq("similarweb_id", toRemoveId)
-      .select("id, similarweb_id");
+      .update({ sup_similarweb_id: toKeepId })
+      .eq("sup_similarweb_id", toRemoveId)
+      .select("id, sup_similarweb_id");
 
     console.log(i, "updated");
 

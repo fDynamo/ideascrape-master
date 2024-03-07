@@ -31,16 +31,16 @@ async function main() {
       const record = inRecords[i];
       console.log("Updating", i, record);
 
-      let { id, similarweb_id } = record;
-      if (!similarweb_id) {
-        similarweb_id = null;
+      let { id, sup_similarweb_id } = record;
+      if (!sup_similarweb_id) {
+        sup_similarweb_id = null;
       } else {
-        similarweb_id = Math.floor(similarweb_id);
+        sup_similarweb_id = Math.floor(sup_similarweb_id);
       }
 
       const { error } = await supabase
         .from("search_main")
-        .update({ similarweb_id })
+        .update({ sup_similarweb_id })
         .eq("id", id);
 
       if (error) {

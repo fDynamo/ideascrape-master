@@ -58,7 +58,7 @@ def main():
     )
 
     # Merge together
-    sup_similarweb_df = sup_similarweb_df.rename(columns={"id": "similarweb_id"})
+    sup_similarweb_df = sup_similarweb_df.rename(columns={"id": "sup_similarweb_id"})
 
     master_df = search_main_df.merge(sup_similarweb_df, on="source_domain", how="left")
 

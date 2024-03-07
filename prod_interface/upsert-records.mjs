@@ -83,9 +83,9 @@ async function main() {
   if (tableDictObj.name == TABLE_DICT.search_main.name) {
     if (searchMainOnly) {
       inDataList = inDataList.map((record) => {
-        delete record.aift_id;
-        delete record.ph_id;
-        delete record.similarweb_id;
+        delete record.source_aift_id;
+        delete record.source_ph_id;
+        delete record.sup_similarweb_id;
         return record;
       });
     } else {
@@ -130,9 +130,9 @@ async function main() {
 
       // Modify ids in data
       inDataList = inDataList.map((record) => {
-        let aiftId = record.aift_id || null;
-        let phId = record.ph_id || null;
-        let similarwebId = record.similarweb_id || null;
+        let aiftId = record.source_aift_id || null;
+        let phId = record.source_ph_id || null;
+        let similarwebId = record.sup_similarweb_id || null;
 
         if (source_aift_record && aiftId) {
           aiftId = aiftIdList[parseInt(aiftId) - 1];
@@ -148,9 +148,9 @@ async function main() {
 
         record = {
           ...record,
-          similarweb_id: similarwebId,
-          aift_id: aiftId,
-          ph_id: phId,
+          sup_similarweb_id: similarwebId,
+          source_aift_id: aiftId,
+          source_ph_id: phId,
         };
 
         return record;

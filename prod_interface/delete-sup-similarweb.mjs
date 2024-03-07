@@ -58,11 +58,11 @@ async function main() {
       action: "update",
       tableName: "search_main",
       selectCols: "product_url",
-      inColName: "similarweb_id",
+      inColName: "sup_similarweb_id",
       inList: domainIds,
       batchSize: MAX_UPDATE_BATCH_SIZE,
       shouldLog: true,
-      updateVal: { similarweb_id: null },
+      updateVal: { sup_similarweb_id: null },
     });
 
     if (updateRes.error) {

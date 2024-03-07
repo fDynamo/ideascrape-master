@@ -22,7 +22,7 @@ async function main() {
       .from("search_main")
       .update({ product_image_filename: newFilename })
       .eq("product_image_filename", oldFilename)
-      .select("id, similarweb_id");
+      .select("id, sup_similarweb_id");
 
     console.log(i, "updated");
 

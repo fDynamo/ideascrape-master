@@ -197,50 +197,58 @@ def main():
     """
     # AIFT
     if has_source_aift:
-        aift_id_df = source_aift_df.rename_axis("aift_id").reset_index()
-        aift_id_df["aift_id"] = aift_id_df["aift_id"].apply(lambda x: x + 1)
-        aift_id_df = aift_id_df[["aift_id", "source_url"]]
+        source_aift_id_df = source_aift_df.rename_axis("source_aift_id").reset_index()
+        source_aift_id_df["source_aift_id"] = source_aift_id_df["source_aift_id"].apply(
+            lambda x: x + 1
+        )
+        source_aift_id_df = source_aift_id_df[["source_aift_id", "source_url"]]
         master_df = master_df.merge(
-            aift_id_df,
+            source_aift_id_df,
             left_on="aift_source_url",
             right_on="source_url",
             how="left",
             suffixes=("", "_aift"),
         )
     else:
-        master_df["aift_id"] = None
+        master_df["source_aift_id"] = None
 
     # PH
     if has_source_ph:
-        ph_id_df = source_ph_df.rename_axis("ph_id").reset_index()
-        ph_id_df["ph_id"] = ph_id_df["ph_id"].apply(lambda x: x + 1)
-        ph_id_df = ph_id_df[["ph_id", "source_url"]]
+        source_ph_id_df = source_ph_df.rename_axis("source_ph_id").reset_index()
+        source_ph_id_df["source_ph_id"] = source_ph_id_df["source_ph_id"].apply(
+            lambda x: x + 1
+        )
+        source_ph_id_df = source_ph_id_df[["source_ph_id", "source_url"]]
         master_df = master_df.merge(
-            ph_id_df,
+            source_ph_id_df,
             left_on="ph_source_url",
             right_on="source_url",
             how="left",
             suffixes=("", "_ph"),
         )
     else:
-        master_df["ph_id"] = None
+        master_df["source_ph_id"] = None
 
     # SimilarWeb
     if has_sup_similarweb:
-        similarweb_id_df = sup_similarweb_df.rename_axis("similarweb_id").reset_index()
-        similarweb_id_df["similarweb_id"] = similarweb_id_df["similarweb_id"].apply(
-            lambda x: x + 1
-        )
-        similarweb_id_df = similarweb_id_df[["similarweb_id", "source_domain"]]
+        sup_similarweb_id_df = sup_similarweb_df.rename_axis(
+            "sup_similarweb_id"
+        ).reset_index()
+        sup_similarweb_id_df["sup_similarweb_id"] = sup_similarweb_id_df[
+            "sup_similarweb_id"
+        ].apply(lambda x: x + 1)
+        sup_similarweb_id_df = sup_similarweb_id_df[
+            ["sup_similarweb_id", "source_domain"]
+        ]
         master_df = master_df.merge(
-            similarweb_id_df,
+            sup_similarweb_id_df,
             left_on="product_domain",
             right_on="source_domain",
             how="left",
             suffixes=("", "_similarweb"),
         )
     else:
-        master_df["similarweb_id"] = None
+        master_df["sup_similarweb_id"] = None
 
     # Drop duplicates
     master_df = master_df.drop_duplicates(subset="url")
@@ -252,9 +260,9 @@ def main():
         "description",
         "image_filename",
         "description_embedding",
-        "aift_id",
-        "ph_id",
-        "similarweb_id",
+        "source_aift_id",
+        "source_ph_id",
+        "sup_similarweb_id",
     ]
     search_main_df = master_df[search_main_cols]
     search_main_cols = [
@@ -263,21 +271,23 @@ def main():
         "product_description",
         "product_image_filename",
         "product_description_embedding",
-        "aift_id",
-        "ph_id",
-        "similarweb_id",
+        "source_aift_id",
+        "source_ph_id",
+        "sup_similarweb_id",
     ]
     search_main_df.columns = search_main_cols
 
     # Set types
     if has_source_aift:
-        search_main_df["aift_id"] = search_main_df["aift_id"].astype("Int64")
-    if has_source_ph:
-        search_main_df["ph_id"] = search_main_df["ph_id"].astype("Int64")
-    if has_sup_similarweb:
-        search_main_df["similarweb_id"] = search_main_df["similarweb_id"].astype(
+        search_main_df["source_aift_id"] = search_main_df["source_aift_id"].astype(
             "Int64"
         )
+    if has_source_ph:
+        search_main_df["source_ph_id"] = search_main_df["source_ph_id"].astype("Int64")
+    if has_sup_similarweb:
+        search_main_df["sup_similarweb_id"] = search_main_df[
+            "sup_similarweb_id"
+        ].astype("Int64")
 
     print("start saving")
     """

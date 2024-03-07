@@ -4,7 +4,7 @@
 2. Add this to the bottom of activate script:
 
 ```
-export PYTHONPATH="/c/Users/fdirham/Desktop/code_projects/ideascrape/ideascrape-master"
+export PYTHONPATH="<path to project folder>"
 ```
 
 3. `pip install -r requirements.txt`
