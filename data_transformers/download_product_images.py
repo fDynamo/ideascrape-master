@@ -81,7 +81,7 @@ def main():
             if not image_url or not isinstance(image_url, str) or image_url == "":
                 continue
 
-            print("downloading", i, image_url)
+            print("downloading", i)
 
             # Convert url to image name
             save_image_name = convert_url_to_filename(entry["url"])
