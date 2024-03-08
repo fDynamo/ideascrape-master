@@ -58,8 +58,8 @@ def main():
 
     mkdir_if_not_exists(
         [
-            cache_domains_folder,
             out_folderpath,
+            cache_domains_folder,
             sup_similarweb_scrape_folder,
             to_upload_folder,
             upload_records_folder,
@@ -69,7 +69,7 @@ def main():
     # Call cache search main records
     com_cache_search_main_records = "npm run pi_cache_search_main_records -- --reset"
     if is_prod_env:
-        com_cache_search_main_records += "--prod"
+        com_cache_search_main_records += " --prod"
 
     if is_skip_cache:
         com_cache_search_main_records = ""
@@ -88,7 +88,7 @@ def main():
         "npm run pi_cache_sup_similarweb_records -- --reset"
     )
     if is_prod_env:
-        com_cache_sup_similarweb_records += "--prod"
+        com_cache_sup_similarweb_records += " --prod"
 
     if is_skip_cache:
         com_cache_sup_similarweb_records = ""
