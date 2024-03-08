@@ -106,7 +106,7 @@ def main():
     # Combine data
     combined_source_filepath = join(out_folderpath, "combined_source.csv")
     combine_source_component = (
-        'python data_transformers/gen_combined_source.py -i "{}" -o "{}"'.format(
+        'python data_transformers/combine_source_cc.py -i "{}" -o "{}"'.format(
             folder_cc_source_scrapes, combined_source_filepath
         )
     )
