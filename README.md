@@ -5,6 +5,7 @@
 
 ```
 export PYTHONPATH="<path to project folder>"
+export PYTHONUNBUFFERED=TRUE
 ```
 
 3. `pip install -r requirements.txt`
