@@ -54,3 +54,6 @@ class ScriptComponent:
     def erase_component(self):
         self.args: list[list[str]] = []
         self.body = ""
+
+    def get_debug_str(self) -> str:
+        return "\n".join([self.component_name, str(self)])

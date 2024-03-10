@@ -47,6 +47,12 @@ class DataPipeline(ABC):
             default=False,
             dest="use_dev_scrape",
         )
+        parser.add_argument(
+            "--printSteps",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+            dest="print_steps",
+        )
 
     def run_steps(self, steps: list[ScriptComponent], **kwargs):
         start_index, end_index = kwargs["start_index"], kwargs["end_index"]
@@ -79,11 +85,21 @@ class DataPipeline(ABC):
             print("[ORCHESTRATOR] END script", i, com)
             pass
 
+    def print_steps(self, **kwargs):
+        steps_to_run: list[ScriptComponent] = self.get_steps(**kwargs)
+        for step in steps_to_run:
+            print(step.get_debug_str())
+            print()
+
     def run_from_cli(self):
         parser = argparse.ArgumentParser()
         self.add_cli_args(parser)
 
         cli_args, _ = parser.parse_known_args()
+
+        if cli_args.print_steps:
+            self.print_steps(**vars(cli_args))
+            exit()
 
         pipeline_name = self.get_pipeline_name()
         root_pipeline_folder_path = join(get_artifacts_folder_path(), pipeline_name)
