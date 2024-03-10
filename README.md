@@ -10,6 +10,13 @@ export PYTHONUNBUFFERED=TRUE
 
 3. `pip install -r requirements.txt`
 4. `npm install`
+5. Add to .env:
+
+```
+IDEASCRAPE_CACHE_FOLDER=
+RUN_ARTIFACTS_FOLDER=
+OPENAI_API_KEY=
+```
 
 ## First carthago run
 
