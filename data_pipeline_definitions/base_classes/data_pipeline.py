@@ -3,7 +3,7 @@ from data_pipeline_definitions.base_classes.script_component import ScriptCompon
 import argparse
 import subprocess
 from custom_helpers_py.get_paths import get_artifacts_folder_path
-from os.path import join, exists
+from os.path import join, exists, abspath
 from os import mkdir
 from custom_helpers_py.folder_helpers import mkdir_if_not_exists
 from custom_helpers_py.date_helpers import get_current_date_filename
@@ -13,7 +13,7 @@ import argparse
 class DataPipeline(ABC):
     def __init__(self) -> None:
         super().__init__()
-        self.out_folder_path: str = ""
+        self.pipeline_run_folder_path: str = ""
         self.run_info_folder_path: str = ""
 
     @abstractmethod
@@ -23,6 +23,30 @@ class DataPipeline(ABC):
     @abstractmethod
     def get_steps(self, **kwargs) -> list[ScriptComponent]:
         pass
+
+    def add_cli_args(self, parser):
+        parser.add_argument("-o", "--outName", type=str, dest="out_name")
+        parser.add_argument(
+            "-n", "--newName", action=argparse.BooleanOptionalAction, dest="new_name"
+        )
+        parser.add_argument(
+            "-t", "--testName", action=argparse.BooleanOptionalAction, dest="test_name"
+        )
+        parser.add_argument("-r", "--retryName", type=str, dest="retry_name")
+        parser.add_argument("--startIndex", type=int, dest="start_index", default=0)
+        parser.add_argument("--endIndex", type=int, dest="end_index", default=None)
+        parser.add_argument(
+            "--prod", action=argparse.BooleanOptionalAction, default=False
+        )
+        parser.add_argument(
+            "--upsync", action=argparse.BooleanOptionalAction, default=False
+        )
+        parser.add_argument(
+            "--useDevScrape",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+            dest="use_dev_scrape",
+        )
 
     def run_steps(self, steps: list[ScriptComponent], **kwargs):
         start_index, end_index = kwargs["start_index"], kwargs["end_index"]
@@ -52,27 +76,8 @@ class DataPipeline(ABC):
                 print("[ORCHESTRATOR] ERROR", i, com)
                 break
 
-
             print("[ORCHESTRATOR] END script", i, com)
             pass
-
-    def add_cli_args(self, parser):
-        parser.add_argument("-o", "--outName", type=str, dest="out_name")
-        parser.add_argument(
-            "-n", "--newName", action=argparse.BooleanOptionalAction, dest="new_name"
-        )
-        parser.add_argument(
-            "-t", "--testName", action=argparse.BooleanOptionalAction, dest="test_name"
-        )
-        parser.add_argument("-r", "--retryName", type=str, dest="retry_name")
-        parser.add_argument("--startIndex", type=int, dest="start_index", default=0)
-        parser.add_argument("--endIndex", type=int, dest="end_index", default=None)
-        parser.add_argument(
-            "--prod", action=argparse.BooleanOptionalAction, default=False
-        )
-        parser.add_argument(
-            "--upsync", action=argparse.BooleanOptionalAction, default=False
-        )
 
     def run_from_cli(self):
         parser = argparse.ArgumentParser()
@@ -82,9 +87,7 @@ class DataPipeline(ABC):
 
         pipeline_name = self.get_pipeline_name()
         root_pipeline_folder_path = join(get_artifacts_folder_path(), pipeline_name)
-        mkdir_if_not_exists(
-            root_pipeline_folder_path
-        )
+        mkdir_if_not_exists(root_pipeline_folder_path)
 
         # Get run folder name
         run_name = None
@@ -105,7 +108,7 @@ class DataPipeline(ABC):
                 run_name = "test"
             elif is_run_new:
                 run_name = get_current_date_filename()
-        
+
         if run_name is None:
             print("No name provided.")
             exit(1)
@@ -113,12 +116,15 @@ class DataPipeline(ABC):
         pipeline_run_folder_path = join(root_pipeline_folder_path, run_name)
         run_info_folder_path = join(pipeline_run_folder_path, "run_info")
 
+        self.pipeline_run_folder_path = pipeline_run_folder_path
+        self.run_info_folder_path = run_info_folder_path
         steps_to_run = []
         if exists(run_info_folder_path) and is_retry:
             print("TODO: IMPLEMENT RETRIES")
             exit(1)
-        
+
         mkdir_if_not_exists([pipeline_run_folder_path, run_info_folder_path])
+
         steps_to_run = self.get_steps(**vars(cli_args))
 
         # Run steps
