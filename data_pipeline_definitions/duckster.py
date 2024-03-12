@@ -1,6 +1,10 @@
 from data_pipeline_definitions.base_classes.data_pipeline import DataPipeline
-from data_pipeline_definitions.base_classes.script_component import ScriptComponent
+from data_pipeline_definitions.base_classes.script_component import (
+    ScriptComponent,
+    ComponentArg,
+)
 from os.path import join
+import argparse
 
 
 class DucksterPipeline(DataPipeline):
@@ -8,9 +12,20 @@ class DucksterPipeline(DataPipeline):
         return "duckster"
 
     def add_cli_args(self, parser):
-        parser.add_argument("-i", "--inUrlFileName", type=str, dest="in_file_path")
         parser.add_argument(
-            "--combinedSourceFilePath", type=str, dest="combined_source_file_path"
+            "-i", "--inUrlFileName", type=str, dest="in_file_path", required=True
+        )
+        parser.add_argument(
+            "--combinedSourceFilePath",
+            type=str,
+            dest="combined_source_file_path",
+        )
+        parser.add_argument(
+            "--skipUrlFilter",
+            type=bool,
+            action=argparse.BooleanOptionalAction,
+            dest="skip_url_filter",
+            default=False,
         )
         super().add_cli_args(parser)
 
@@ -24,19 +39,20 @@ class DucksterPipeline(DataPipeline):
             component_name="filter urls",
             body="python data_transformers/filter_urls_indiv.py",
             args=[
-                ["i", kwargs["in_file_path"]],
-                ["o", file_path_urls_for_indiv_scrape],
-                ["prod-env", kwargs["prod"]],
+                ComponentArg(
+                    arg_name="i", arg_val=kwargs["in_file_path"], is_path=True
+                ),
+                ComponentArg(
+                    arg_name="o", arg_val=file_path_urls_for_indiv_scrape, is_path=True
+                ),
+                ComponentArg(arg_name="prod-env", arg_val=kwargs["prod"]),
+                ComponentArg(
+                    arg_name="disable-filter", arg_val=kwargs["skip_url_filter"]
+                ),
             ],
         )
 
         folder_path_indiv_scrape = join(out_folder_path, "indiv_scrape")
-        com_create_folder_indiv_scrape = ScriptComponent(
-            component_name="create folder indiv scrape",
-            body="python data_transformers/create_folder.py",
-            args=[["i", folder_path_indiv_scrape]],
-        )
-
         com_indiv_scrape = ScriptComponent(
             component_name="indiv scrape",
             body="npm run indiv_scrape",
@@ -96,12 +112,6 @@ class DucksterPipeline(DataPipeline):
         folder_path_sup_similarweb_scrape = join(
             out_folder_path, "sup_similarweb_scrape"
         )
-        com_create_folder_sup_similarweb_scrape = ScriptComponent(
-            component_name="create folder sup similarweb scrape",
-            body="python data_transformers/create_folder.py",
-            args=[["i", folder_path_sup_similarweb_scrape]],
-        )
-
         com_scrape_sup_similarweb = ScriptComponent(
             component_name="scrape sup similarweb",
             body="npm run sup_similarweb_scrape",
@@ -118,8 +128,8 @@ class DucksterPipeline(DataPipeline):
             component_name="cc sup similarweb scrape",
             body="python data_transformers/cc_sup_similarweb_scrape.py",
             args=[
-                ["domainListFilepath", file_path_domains_for_sup_similarweb_scrape],
-                ["outFolder", folder_path_sup_similarweb_scrape],
+                ["i", folder_path_sup_similarweb_scrape],
+                ["o", file_path_cc_sup_similarweb_scrape],
             ],
         )
 
@@ -155,12 +165,6 @@ class DucksterPipeline(DataPipeline):
         )
 
         folder_path_product_images = join(out_folder_path, "product_images")
-        com_create_folder_product_images = ScriptComponent(
-            component_name="create folder product images",
-            body="python data_transformers/create_folder.py",
-            args=[["i", folder_path_product_images]],
-        )
-
         com_download_product_images = ScriptComponent(
             component_name="download product images",
             body="python data_transformers/download_product_images.py",
@@ -171,12 +175,6 @@ class DucksterPipeline(DataPipeline):
         )
 
         folder_path_prod_tables = join(out_folder_path, "prod_tables")
-        com_create_folder_prod_tables = ScriptComponent(
-            component_name="create folder prod tables",
-            body="python data_transformers/create_folder.py",
-            args=[["i", folder_path_prod_tables]],
-        )
-
         com_prodify = ScriptComponent(
             component_name="prodify",
             body="python data_transformers/prodify.py",
@@ -188,23 +186,22 @@ class DucksterPipeline(DataPipeline):
             ],
         )
 
-        return [
+        to_return = [
             com_filter_urls_indiv,
-            com_create_folder_indiv_scrape,
             com_indiv_scrape,
             com_cc_indiv_scrape,
             com_filter_indiv_scrape,
             com_get_filtered_indiv_scrape_domains,
             com_filter_domains_for_sup_similarweb,
-            com_create_folder_sup_similarweb_scrape,
             com_scrape_sup_similarweb,
             com_cc_sup_similarweb_scrape,
+            com_gen_pre_extract,
             com_extract_embed_description,
-            com_create_folder_product_images,
             com_download_product_images,
-            com_create_folder_prod_tables,
             com_prodify,
         ]
+
+        return to_return
 
 
 if __name__ == "__main__":

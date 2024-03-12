@@ -1,5 +1,8 @@
 from data_pipeline_definitions.base_classes.data_pipeline import DataPipeline
-from data_pipeline_definitions.base_classes.script_component import ScriptComponent
+from data_pipeline_definitions.base_classes.script_component import (
+    ScriptComponent,
+    ComponentArg,
+)
 
 
 class TestPipeline(DataPipeline):
@@ -14,7 +17,11 @@ class TestPipeline(DataPipeline):
         com_cache_sup_similarweb_records = ScriptComponent(
             component_name="test",
             body="echo ",
-            args=[["prod", kwargs["some_input"]]],
+            args=[
+                ComponentArg(arg_name="box", arg_val="boom"),
+                ComponentArg(arg_name="second", arg_val="lol"),
+                ComponentArg(arg_name="whaT", arg_val=False),
+            ],
         )
         return [com_cache_sup_similarweb_records]
 
