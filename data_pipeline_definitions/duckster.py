@@ -45,9 +45,10 @@ class DucksterPipeline(DataPipeline):
                 ComponentArg(
                     arg_name="o", arg_val=file_path_urls_for_indiv_scrape, is_path=True
                 ),
-                ComponentArg(arg_name="prod-env", arg_val=kwargs["prod"]),
+                ComponentArg(arg_name="prod-env", arg_val=kwargs.get("prod", False)),
                 ComponentArg(
-                    arg_name="disable-filter", arg_val=kwargs["skip_url_filter"]
+                    arg_name="disable-filter",
+                    arg_val=kwargs.get("skip_url_filter", False),
                 ),
             ],
         )
@@ -147,9 +148,9 @@ class DucksterPipeline(DataPipeline):
             ],
         )
 
-        if kwargs["combined_source_file_path"]:
+        if kwargs.get("combined_source_file_path", False):
             com_gen_pre_extract.add_arg(
-                ["combined-source-filepath", kwargs["combined_source_file_path"]]
+                ["combined-source-filepath", kwargs.get("combined_source_file_path")]
             )
 
         file_path_embedded_descriptions = join(

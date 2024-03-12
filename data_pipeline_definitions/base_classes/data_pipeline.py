@@ -10,10 +10,9 @@ import argparse
 
 
 class DataPipeline(ABC):
-    def __init__(self) -> None:
+    def __init__(self, pipeline_run_folder_path="") -> None:
         super().__init__()
-        self.pipeline_run_folder_path: str = ""
-        self.run_info_folder_path: str = ""
+        self.set_pipeline_run_folder_path(pipeline_run_folder_path)
 
     @abstractmethod
     def get_pipeline_name(self) -> str:
@@ -98,6 +97,11 @@ class DataPipeline(ABC):
             print(step.get_debug_str())
             print()
 
+    def set_pipeline_run_folder_path(self, value: str):
+        self.pipeline_run_folder_path = value
+        run_info_folder_path = join(value, "run_info")
+        self.run_info_folder_path = run_info_folder_path
+
     def run_from_cli(self):
         parser = argparse.ArgumentParser()
         self.add_cli_args(parser)
@@ -137,10 +141,9 @@ class DataPipeline(ABC):
             exit(1)
 
         pipeline_run_folder_path = join(root_pipeline_folder_path, run_name)
-        run_info_folder_path = join(pipeline_run_folder_path, "run_info")
+        self.set_pipeline_run_folder_path(pipeline_run_folder_path)
+        run_info_folder_path = self.run_info_folder_path
 
-        self.pipeline_run_folder_path = pipeline_run_folder_path
-        self.run_info_folder_path = run_info_folder_path
         steps_to_run = []
         if exists(run_info_folder_path) and is_retry:
             print("TODO: IMPLEMENT RETRIES")

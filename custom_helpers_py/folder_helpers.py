@@ -26,4 +26,11 @@ def mkdir_to_ensure_path(some_path: str):
     if has_extension:
         dir_to_ensure = dirname(dir_to_ensure)
 
-    mkdir_if_not_exists(dir_to_ensure)
+    ensure_list = [dir_to_ensure]
+    RECURSION_DEPTH = 2
+    for _ in range(RECURSION_DEPTH):
+        dir_to_ensure = dirname(dir_to_ensure)
+        ensure_list.append(dir_to_ensure)
+
+    ensure_list.reverse()
+    mkdir_if_not_exists(ensure_list)
