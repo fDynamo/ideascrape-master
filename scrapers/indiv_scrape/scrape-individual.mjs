@@ -95,7 +95,7 @@ const main = async () => {
 
   // Log start
   await runLogger.addToStartLog({
-    argv,
+    argv: JSON.stringify(argv),
     urlListFilepath,
     countUrlsToScrape: lastIndex - startIndex,
     startIndex,

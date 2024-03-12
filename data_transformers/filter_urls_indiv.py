@@ -20,6 +20,9 @@ def main():
     parser.add_argument(
         "--prod-env", action=argparse.BooleanOptionalAction, default=False
     )
+    parser.add_argument(
+        "--disable-filter", action=argparse.BooleanOptionalAction, default=False
+    )
     args = parser.parse_args()
 
     in_filepath = args.in_filepath
@@ -27,6 +30,7 @@ def main():
     rejected_filepath = args.rejected_filepath
     is_prod_env = args.prod_env
     is_ignore_cache = args.ignore_cache
+    is_disable_filter = args.disable_filter
 
     if not in_filepath or not out_filepath:
         print("Invalid inputs")
@@ -61,6 +65,9 @@ def main():
 
     # Filter
     def is_url_valid_helper(in_url):
+        if is_disable_filter:
+            return True
+
         if not is_ignore_cache and in_url in in_records_set:
             return False
 
