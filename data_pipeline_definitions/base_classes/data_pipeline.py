@@ -3,9 +3,8 @@ from data_pipeline_definitions.base_classes.script_component import ScriptCompon
 import argparse
 import subprocess
 from custom_helpers_py.get_paths import get_artifacts_folder_path
-from os.path import join, exists, abspath
-from os import mkdir
-from custom_helpers_py.folder_helpers import mkdir_if_not_exists
+from os.path import join, exists
+from custom_helpers_py.folder_helpers import mkdir_if_not_exists, mkdir_to_ensure_path
 from custom_helpers_py.date_helpers import get_current_date_filename
 import argparse
 
@@ -74,12 +73,20 @@ class DataPipeline(ABC):
             print("[ORCHESTRATOR] START script", i, com)
 
             try:
-                process = subprocess.run(com, shell=True)
+                # Make all directories as needed
+                path_in_args = com.get_paths_in_args()
+                for in_path in path_in_args:
+                    mkdir_to_ensure_path(in_path)
+
+                # Run
+                script_to_run = str(com)
+                process = subprocess.run(script_to_run, shell=True)
                 returncode = process.returncode
                 if returncode > 0:
-                    raise "Script failed"
+                    raise Exception("Script failed")
             except Exception as error:
                 print("[ORCHESTRATOR] ERROR", i, com)
+                print(error)
                 break
 
             print("[ORCHESTRATOR] END script", i, com)
