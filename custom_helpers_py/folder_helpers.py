@@ -1,5 +1,5 @@
-from os import mkdir
-from os.path import isdir, dirname
+from os import mkdir, listdir, remove
+from os.path import isdir, dirname, join, isfile
 
 
 def mkdir_if_not_exists(in_dir: str | list[str]):
@@ -34,3 +34,11 @@ def mkdir_to_ensure_path(some_path: str):
 
     ensure_list.reverse()
     mkdir_if_not_exists(ensure_list)
+
+
+def delete_folder_contents(folder_path):
+    file_list = listdir(folder_path)
+    for file in file_list:
+        file_path = join(folder_path, file)
+        if isfile(file_path):
+            remove(file_path)
