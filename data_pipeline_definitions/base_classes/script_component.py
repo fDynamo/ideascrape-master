@@ -56,7 +56,7 @@ class ComponentArg:
 
 class ScriptComponent:
     def __init__(
-        self, component_name: str, body: str, args: list[ComponentArg]
+        self, component_name: str, body: str, args: list[ComponentArg] = []
     ) -> None:
         self.component_name = component_name
         self.body = body.strip()
