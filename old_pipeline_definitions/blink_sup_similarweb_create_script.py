@@ -9,7 +9,7 @@ from custom_helpers_py.get_paths import (
     get_sup_similarweb_records_filepath,
     get_search_main_records_filepath,
 )
-from pipeline_orchestrators.carthago_create_script import DRY_RUN_CARTHAGO_FOLDERPATH
+from old_pipeline_definitions.carthago_create_script import DRY_RUN_CARTHAGO_FOLDERPATH
 
 BLINK_SUP_SIMILARWEB_SCRIPT_FILENAME = "_blink_sup_similarweb_list.txt"
 BLINK_SUP_SIMILARWEB_FOLDER_PREFIX = "blink_sup_similarweb_"
@@ -79,7 +79,7 @@ def main():
     search_main_domains_file_path = join(
         cache_domains_folder, "search_main_domains.csv"
     )
-    com_get_domains_from_search_main_records = 'python data_transformers/util_domains_from_urls.py -i "{}" -o "{}" -c "product_url"'.format(
+    com_get_domains_from_search_main_records = 'python com_utils/util_domains_from_urls.py -i "{}" -o "{}" -c "product_url"'.format(
         cached_search_main_records_file_path, search_main_domains_file_path
     )
 
@@ -100,13 +100,13 @@ def main():
     sup_similarweb_domains_file_path = join(
         cache_domains_folder, "sup_similarweb_domains.csv"
     )
-    com_get_domains_from_sup_similarweb_records = 'python data_transformers/util_extract_column_from_data.py -i "{}" -o "{}" --in-col "source_domain" --out-col "domain"'.format(
+    com_get_domains_from_sup_similarweb_records = 'python com_utils/util_extract_column_from_data.py -i "{}" -o "{}" --in-col "source_domain" --out-col "domain"'.format(
         cached_sup_similarweb_records_file_path, sup_similarweb_domains_file_path
     )
 
     # Combine domains folder
     initial_domains_file_path = join(out_folderpath, "initial_domains.csv")
-    com_get_initial_domains = 'python data_transformers/util_combine_columns_from_folder.py -i "{}" -o "{}" -c "domain"'.format(
+    com_get_initial_domains = 'python com_utils/util_combine_columns_from_folder.py -i "{}" -o "{}" -c "domain"'.format(
         cache_domains_folder, initial_domains_file_path
     )
 
@@ -114,7 +114,7 @@ def main():
     domains_to_scrape_file_path = join(out_folderpath, "domains_to_scrape.csv")
     rejected_domains_file_path = join(out_folderpath, "rejected_domains.csv")
 
-    com_filter_domains_sup_similarweb = 'python data_transformers/filter_domains_sup_similarweb.py -i "{}" --col-name "domain" -o "{}" -r "{}"'.format(
+    com_filter_domains_sup_similarweb = 'python com_filters/filter_domains_sup_similarweb.py -i "{}" --col-name "domain" -o "{}" -r "{}"'.format(
         initial_domains_file_path,
         domains_to_scrape_file_path,
         rejected_domains_file_path,
@@ -132,17 +132,13 @@ def main():
 
     # Clean compress
     cc_file_path = join(out_folderpath, "cc_sup_similarweb_scrape.csv")
-    com_cc = (
-        'python data_transformers/cc_sup_similarweb_scrape.py -i "{}" -o "{}"'.format(
-            sup_similarweb_scrape_folder, cc_file_path
-        )
+    com_cc = 'python com_cc/cc_sup_similarweb_scrape.py -i "{}" -o "{}"'.format(
+        sup_similarweb_scrape_folder, cc_file_path
     )
 
     # Prodify
-    com_prodify = (
-        'python data_transformers/prodify_sup_similarweb.py -i "{}" -o "{}"'.format(
-            cc_file_path, to_upload_folder
-        )
+    com_prodify = 'python com_special/prodify_sup_similarweb.py -i "{}" -o "{}"'.format(
+        cc_file_path, to_upload_folder
     )
 
     upload_components_list = []

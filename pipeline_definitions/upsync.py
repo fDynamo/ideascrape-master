@@ -1,5 +1,5 @@
-from data_pipeline_definitions.base_classes.data_pipeline import DataPipeline
-from data_pipeline_definitions.base_classes.script_component import (
+from pipeline_definitions.base_classes.data_pipeline import DataPipeline
+from pipeline_definitions.base_classes.script_component import (
     ScriptComponent,
     ComponentArg,
 )

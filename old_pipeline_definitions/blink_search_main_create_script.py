@@ -9,7 +9,7 @@ from custom_helpers_py.pipeline_preset_args_helpers import (
 from custom_helpers_py.get_paths import (
     get_search_main_records_filepath,
 )
-from pipeline_orchestrators.carthago_create_script import DRY_RUN_CARTHAGO_FOLDERPATH
+from old_pipeline_definitions.carthago_create_script import DRY_RUN_CARTHAGO_FOLDERPATH
 from custom_helpers_py.custom_classes.script_component import ScriptComponent
 
 BLINK_SEARCH_MAIN_SCRIPT_FILENAME = "_blink_search_main_list.txt"
@@ -98,7 +98,7 @@ def main():
         rejected_urls_folder, "from_filter_urls.csv"
     )
     com_filter_urls_indiv = ScriptComponent(
-        body="python data_transformers/filter_urls_indiv.py",
+        body="python com_filters/filter_urls_indiv.py",
         args=[
             ["i", cached_search_main_records_file_path],
             ["o", urls_to_scrape_filepath],
@@ -126,7 +126,7 @@ def main():
         rejected_urls_folder, "from_failed_scrape.csv"
     )
     com_grab_failed_urls = ScriptComponent(
-        body="python data_transformers/grab_failed_urls_indiv_scrape.py",
+        body="python com_special/grab_failed_urls_indiv_scrape.py",
         args=[
             ["i", indiv_scrape_folder],
             ["o", rejected_urls_from_failed_scrape_filepath],
@@ -136,7 +136,7 @@ def main():
     # Clean compress
     cc_indiv_scrape_filepath = join(out_folderpath, "cc_indiv_scrape.csv")
     com_cc_indiv_scrape = ScriptComponent(
-        body="python data_transformers/cc_indiv_scrape.py",
+        body="python com_cc/cc_indiv_scrape.py",
         args=[["i", indiv_scrape_folder], ["o", cc_indiv_scrape_filepath]],
     )
 
@@ -146,7 +146,7 @@ def main():
         rejected_urls_folder, "from_filter_indiv_scrape.csv"
     )
     com_filter_indiv_scrape = ScriptComponent(
-        body="python data_transformers/filter_indiv_scrape.py",
+        body="python com_filters/filter_indiv_scrape.py",
         args=[
             ["i", cc_indiv_scrape_filepath],
             ["o", filtered_indiv_scrape_filepath],
@@ -157,7 +157,7 @@ def main():
     # Combine failed urls
     full_rejected_urls_filepath = join(out_folderpath, "full_rejected_urls.csv")
     com_combine_rejected_urls = ScriptComponent(
-        body="python data_transformers/util_combine_columns_from_folder.py",
+        body="python com_utils/util_combine_columns_from_folder.py",
         args=[
             ["i", rejected_urls_folder],
             ["o", full_rejected_urls_filepath],
@@ -168,7 +168,7 @@ def main():
     # Generate pre extract
     pre_extract_filepath = join(out_folderpath, "pre_extract.csv")
     com_pre_extract = ScriptComponent(
-        body="python data_transformers/gen_pre_extract.py",
+        body="python com_special/gen_pre_extract.py",
         args=[
             ["cc-indiv-scrape-filepath", cc_indiv_scrape_filepath],
             ["o", pre_extract_filepath],
@@ -178,7 +178,7 @@ def main():
     # Extract embeddings
     desc_embeddings_filepath = join(out_folderpath, "extract_embed_description.csv")
     com_extract_embed_description = ScriptComponent(
-        body="python data_transformers/extract_embed_description.py",
+        body="python com_search_extract/extract_embed_description.py",
         args=[
             ["i", pre_extract_filepath],
             ["o", desc_embeddings_filepath],
@@ -192,7 +192,7 @@ def main():
 
     # Download product images
     com_download_product_images = ScriptComponent(
-        body="python data_transformers/download_product_images.py",
+        body="python com_search_extract/download_product_images.py",
         args=[
             ["i", pre_extract_filepath],
             ["o", product_images_folder],
@@ -206,7 +206,7 @@ def main():
 
     # Prodify
     com_prodify = ScriptComponent(
-        body="python data_transformers/prodify.py",
+        body="python com_special/prodify.py",
         args=[
             ["i", pre_extract_filepath],
             ["o", to_upload_folder],

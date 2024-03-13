@@ -1,7 +1,7 @@
 from os.path import join
 from custom_helpers_py.string_formatters import clean_text
 from custom_helpers_py.basic_time_logger import log_start, log_end
-from download_product_images import ERROR_FILENAME, RECORD_FILENAME
+from com_search_extract.download_product_images import ERROR_FILENAME, RECORD_FILENAME
 from custom_helpers_py.pandas_helpers import (
     read_csv_as_df,
     save_df_as_csv,

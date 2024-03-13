@@ -5,7 +5,7 @@ from custom_helpers_py.pipeline_preset_args_helpers import (
     add_args_for_out_folder_preset,
     parse_args_for_out_folder_preset,
 )
-from pipeline_orchestrators.carthago_create_script import DRY_RUN_CARTHAGO_FOLDERPATH
+from old_pipeline_definitions.carthago_create_script import DRY_RUN_CARTHAGO_FOLDERPATH
 from shutil import copy
 
 DUCKSTER_SCRIPT_FILENAME = "_duckster_list.txt"
@@ -78,7 +78,7 @@ def main():
 
     filter_urls_indiv_outfile = join(out_folderpath, "urls_4_indiv_scrape.csv")
     com_filter_urls_indiv = (
-        'python data_transformers/filter_urls_indiv.py -i "{}" -o "{}"'.format(
+        'python com_filters/filter_urls_indiv.py -i "{}" -o "{}"'.format(
             in_filepath, filter_urls_indiv_outfile
         )
     )
@@ -95,15 +95,13 @@ def main():
         indiv_scrape_folder = join(DRY_RUN_DUCKSTER_FOLDERPATH, "indiv_scrape")
 
     cc_indiv_scrape_outfile = join(out_folderpath, "cc_indiv_scrape.csv")
-    com_cc_indiv_scrape = (
-        'python data_transformers/cc_indiv_scrape.py -i "{}" -o "{}"'.format(
-            indiv_scrape_folder, cc_indiv_scrape_outfile
-        )
+    com_cc_indiv_scrape = 'python com_cc/cc_indiv_scrape.py -i "{}" -o "{}"'.format(
+        indiv_scrape_folder, cc_indiv_scrape_outfile
     )
 
     filter_indiv_scrape_outfile = join(out_folderpath, "filter_indiv_scrape.csv")
     com_filter_indiv_scrape = (
-        'python data_transformers/filter_indiv_scrape.py -i "{}" -o "{}"'.format(
+        'python com_filters/filter_indiv_scrape.py -i "{}" -o "{}"'.format(
             cc_indiv_scrape_outfile, filter_indiv_scrape_outfile
         )
     )
@@ -112,7 +110,7 @@ def main():
         out_folderpath, "filter_indiv_scrape_urls.csv"
     )
     com_filter_indiv_scrape_urls = (
-        'python data_transformers/util_urls_from_data.py -i "{}" -o "{}" -c url'.format(
+        'python com_utils/util_urls_from_data.py -i "{}" -o "{}" -c url'.format(
             filter_indiv_scrape_outfile, filter_indiv_scrape_urls_outfile
         )
     )
@@ -121,15 +119,17 @@ def main():
         out_folderpath, "filter_indiv_scrape_domains.csv"
     )
     com_filter_indiv_scrape_domains = (
-        'python data_transformers/util_domains_from_urls.py -i "{}" -o "{}"'.format(
+        'python com_utils/util_domains_from_urls.py -i "{}" -o "{}"'.format(
             filter_indiv_scrape_urls_outfile, filter_indiv_scrape_domains_outfile
         )
     )
 
     # Similarweb
     similarweb_domains_file = join(out_folderpath, "filter_sup_similarweb_domains.csv")
-    com_filter_domains_sup_similarweb = 'python data_transformers/filter_domains_sup_similarweb.py -i "{}" -o "{}"'.format(
-        filter_indiv_scrape_domains_outfile, similarweb_domains_file
+    com_filter_domains_sup_similarweb = (
+        'python com_filters/filter_domains_sup_similarweb.py -i "{}" -o "{}"'.format(
+            filter_indiv_scrape_domains_outfile, similarweb_domains_file
+        )
     )
 
     com_sup_similarweb_scrape = 'npm run sup_similarweb_scrape -- --domainListFilepath "{}" --outFolder "{}"'.format(
@@ -145,21 +145,21 @@ def main():
         out_folderpath, "cc_sup_similarweb_scrape.csv"
     )
     com_cc_sup_similarweb_scrape = (
-        'python data_transformers/cc_sup_similarweb_scrape.py -i "{}" -o "{}"'.format(
+        'python com_cc/cc_sup_similarweb_scrape.py -i "{}" -o "{}"'.format(
             sup_similarweb_scrape_folder, cc_sup_similarweb_scrape_outfile
         )
     )
 
     # Pre extract
     gen_pre_extract_outfile = join(out_folderpath, "pre_extract.csv")
-    com_gen_pre_extract = 'python data_transformers/gen_pre_extract.py --cc-indiv-scrape-filepath "{}" --cc-sup-similarweb-scrape-filepath "{}" -o "{}"'.format(
+    com_gen_pre_extract = 'python com_special/gen_pre_extract.py --cc-indiv-scrape-filepath "{}" --cc-sup-similarweb-scrape-filepath "{}" -o "{}"'.format(
         filter_indiv_scrape_outfile,
         cc_sup_similarweb_scrape_outfile,
         gen_pre_extract_outfile,
     )
 
     if combined_source_filepath:
-        com_gen_pre_extract = 'python data_transformers/gen_pre_extract.py --cc-indiv-scrape-filepath "{}" --cc-sup-similarweb-scrape-filepath "{}" --combined-source-filepath "{}" -o "{}"'.format(
+        com_gen_pre_extract = 'python com_special/gen_pre_extract.py --cc-indiv-scrape-filepath "{}" --cc-sup-similarweb-scrape-filepath "{}" --combined-source-filepath "{}" -o "{}"'.format(
             filter_indiv_scrape_outfile,
             cc_sup_similarweb_scrape_outfile,
             combined_source_filepath,
@@ -171,7 +171,7 @@ def main():
         out_folderpath, "extract_embed_description.csv"
     )
     com_extract_embed_description = (
-        'python data_transformers/extract_embed_description.py -i "{}" -o "{}"'.format(
+        'python com_search_extract/extract_embed_description.py -i "{}" -o "{}"'.format(
             gen_pre_extract_outfile, extract_embed_description_outfile
         )
     )
@@ -182,7 +182,7 @@ def main():
         )
 
     com_download_product_images = (
-        'python data_transformers/download_product_images.py -i "{}" -o "{}"'.format(
+        'python com_search_extract/download_product_images.py -i "{}" -o "{}"'.format(
             gen_pre_extract_outfile, product_images_folder
         )
     )
@@ -191,7 +191,7 @@ def main():
         product_images_folder = join(DRY_RUN_DUCKSTER_FOLDERPATH, "product_images")
 
     # Prodify
-    com_prodify = 'python data_transformers/prodify.py -i "{}" --embedding-description-filepath "{}" --product-images-folderpath "{}" -o "{}"'.format(
+    com_prodify = 'python com_special/prodify.py -i "{}" --embedding-description-filepath "{}" --product-images-folderpath "{}" -o "{}"'.format(
         gen_pre_extract_outfile,
         extract_embed_description_outfile,
         product_images_folder,

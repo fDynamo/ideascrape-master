@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from data_pipeline_definitions.base_classes.script_component import ScriptComponent
+from pipeline_definitions.base_classes.script_component import ScriptComponent
 import argparse
 import subprocess
 from custom_helpers_py.get_paths import get_artifacts_folder_path

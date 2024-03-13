@@ -1,10 +1,10 @@
-from data_pipeline_definitions.base_classes.data_pipeline import DataPipeline
-from data_pipeline_definitions.base_classes.script_component import (
+from pipeline_definitions.base_classes.data_pipeline import DataPipeline
+from pipeline_definitions.base_classes.script_component import (
     ScriptComponent,
     ComponentArg,
 )
 from os.path import join
-from data_pipeline_definitions.duckster import DucksterPipeline
+from pipeline_definitions.duckster import DucksterPipeline
 from custom_helpers_py.get_paths import get_dev_scrape_folder_path
 
 
@@ -52,7 +52,7 @@ class CarthagoPipeline(DataPipeline):
             )
             com_cc = ScriptComponent(
                 component_name="cc source " + acr + " scrape",
-                body="python data_transformers/cc_source_" + acr + "_scrape.py",
+                body="python com_cc/cc_source_" + acr + "_scrape.py",
                 args=[
                     ComponentArg(
                         arg_name="i",
@@ -76,7 +76,7 @@ class CarthagoPipeline(DataPipeline):
         file_path_combined_data = join(out_folder_path, "combined_data.csv")
         com_combine_data = ScriptComponent(
             component_name="combine source data",
-            body="python data_transformers/combine_source_cc.py",
+            body="python com_cc/combine_source_cc.py",
             args=[
                 ComponentArg(
                     arg_name="i",
@@ -95,7 +95,7 @@ class CarthagoPipeline(DataPipeline):
         file_path_combined_urls = join(out_folder_path, "combined_urls.csv")
         com_get_urls = ScriptComponent(
             component_name="grab urls from combined source",
-            body="python data_transformers/util_extract_column_from_data.py",
+            body="python com_utils/util_extract_column_from_data.py",
             args=[
                 ComponentArg(
                     arg_name="i",
