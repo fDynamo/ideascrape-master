@@ -17,7 +17,7 @@ async function main() {
   const {
     imagesFolderPath,
     prod,
-    recordsFolder,
+    recordsFolderPath,
     startIndex: inStartIndex,
   } = argv;
   if (!imagesFolderPath) {
@@ -106,9 +106,9 @@ async function main() {
     await timeoutPromise(RUN_DELAY);
   }
 
-  if (recordsFolder) {
-    let errorFile = join(recordsFolder, "upsert_images_errors");
-    let uploadRecordsFile = join(recordsFolder, "upsert_images_records");
+  if (recordsFolderPath) {
+    let errorFile = join(recordsFolderPath, "upsert_images_errors");
+    let uploadRecordsFile = join(recordsFolderPath, "upsert_images_records");
 
     if (prod) {
       errorFile += "_prod.json";

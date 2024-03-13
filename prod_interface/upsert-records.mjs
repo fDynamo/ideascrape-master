@@ -10,41 +10,49 @@ import {
   appendAndFixSupSimilarwebRecordsCache,
 } from "../custom_helpers_js/cache-helpers.mjs";
 
+const TABLE_DICT = {
+  source_aift: {
+    name: "source_aift",
+    table: "source_aift",
+    recordFilename: "source_aift",
+    conflictVal: "source_url",
+  },
+  source_ph: {
+    name: "source_ph",
+    table: "source_ph",
+    recordFilename: "source_ph",
+    conflictVal: "source_url",
+  },
+  sup_similarweb: {
+    name: "sup_similarweb",
+    table: "sup_similarweb",
+    recordFilename: "sup_similarweb",
+    conflictVal: "source_domain",
+  },
+  search_main: {
+    name: "search_main",
+    table: "search_main",
+    recordFilename: "search_main",
+    conflictVal: "product_url",
+  },
+};
+const ACCEPTED_FILENAMES = Object.keys(TABLE_DICT);
+
 async function main() {
-  dotenv.config();
-
   const argv = yargs(hideBin(process.argv)).argv;
-  let { toUploadFolderPath, fileName, recordsFolder, prod, searchMainOnly } =
-    argv;
-  const TABLE_DICT = {
-    source_aift: {
-      name: "source_aift",
-      table: "source_aift",
-      recordFilename: "source_aift",
-      conflictVal: "source_url",
-    },
-    source_ph: {
-      name: "source_ph",
-      table: "source_ph",
-      recordFilename: "source_ph",
-      conflictVal: "source_url",
-    },
-    sup_similarweb: {
-      name: "sup_similarweb",
-      table: "sup_similarweb",
-      recordFilename: "sup_similarweb",
-      conflictVal: "source_domain",
-    },
-    search_main: {
-      name: "search_main",
-      table: "search_main",
-      recordFilename: "search_main",
-      conflictVal: "product_url",
-    },
-  };
-  const ACCEPTED_FILENAMES = Object.keys(TABLE_DICT);
+  let {
+    toUploadFolderPath,
+    fileName,
+    recordsFolderPath,
+    prod,
+    searchMainOnly,
+  } = argv;
 
-  if (!toUploadFolderPath || !fileName || !recordsFolder) {
+  if (
+    !toUploadFolderPath ||
+    !recordsFolderPath ||
+    (fileName && !ACCEPTED_FILENAMES.includes(fileName))
+  ) {
     console.log("Invalid inputs");
     process.exit(1);
   }
@@ -61,6 +69,37 @@ async function main() {
     TABLE_DICT[keyStr].recordFilename = newRecordFilename;
   });
 
+  if (fileName) {
+    await upsertTable(
+      fileName,
+      toUploadFolderPath,
+      recordsFolderPath,
+      prod,
+      searchMainOnly
+    );
+  } else {
+    for (let i = 0; i < ACCEPTED_FILENAMES.length; i++) {
+      const fileName = ACCEPTED_FILENAMES[i];
+      await upsertTable(
+        fileName,
+        toUploadFolderPath,
+        recordsFolderPath,
+        prod,
+        searchMainOnly
+      );
+    }
+  }
+
+  process.exit(0);
+}
+
+async function upsertTable(
+  fileName,
+  toUploadFolderPath,
+  recordsFolderPath,
+  prod = false,
+  searchMainOnly = false
+) {
   let tableDictObj = TABLE_DICT.search_main;
   if (fileName == TABLE_DICT.search_main.name) {
   } else if (fileName == TABLE_DICT.source_aift.name) {
@@ -75,7 +114,7 @@ async function main() {
   }
 
   const inDataFilePath = join(toUploadFolderPath, fileName + ".csv");
-  const recordsFilePath = join(recordsFolder, tableDictObj.recordFilename);
+  const recordsFilePath = join(recordsFolderPath, tableDictObj.recordFilename);
 
   let inDataList = await readCsvFile(inDataFilePath);
   let supabase = createSupabaseClient(prod);
@@ -100,7 +139,7 @@ async function main() {
       let similarwebIdList = [];
 
       const source_aift_record_file = join(
-        recordsFolder,
+        recordsFolderPath,
         TABLE_DICT.source_aift.recordFilename
       );
       if (existsSync(source_aift_record_file)) {
@@ -109,7 +148,7 @@ async function main() {
       }
 
       const source_ph_record_file = join(
-        recordsFolder,
+        recordsFolderPath,
         TABLE_DICT.source_ph.recordFilename
       );
       if (existsSync(source_ph_record_file)) {
@@ -118,7 +157,7 @@ async function main() {
       }
 
       const sup_similarweb_record_file = join(
-        recordsFolder,
+        recordsFolderPath,
         TABLE_DICT.sup_similarweb.recordFilename
       );
       if (existsSync(sup_similarweb_record_file)) {
@@ -180,6 +219,7 @@ async function main() {
   const table = tableDictObj.table;
   const onConflictVal = tableDictObj.conflictVal;
 
+  let isSuccessful = true;
   for (let i = 0; i < BREAK_NUM; i++) {
     const startIndex = i * BREAK_SIZE;
     const isLastSlice = i + 1 == BREAK_NUM;
@@ -205,6 +245,7 @@ async function main() {
         endIndex,
         error,
       };
+      isSuccessful = false;
       break;
     }
 
@@ -245,6 +286,12 @@ async function main() {
 
   const toWrite = JSON.stringify(toWriteObj);
   writeFileSync(recordsFilePath, toWrite);
+
+  if (isSuccessful) {
+    process.exit(0);
+  } else {
+    process.exit(1);
+  }
 }
 
 main();

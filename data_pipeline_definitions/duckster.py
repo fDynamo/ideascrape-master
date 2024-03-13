@@ -6,6 +6,7 @@ from data_pipeline_definitions.base_classes.script_component import (
 from os.path import join
 import argparse
 from custom_helpers_py.get_paths import get_dev_scrape_folder_path
+from data_pipeline_definitions.upsync import UpsyncPipeline
 
 
 class DucksterPipeline(DataPipeline):
@@ -227,6 +228,19 @@ class DucksterPipeline(DataPipeline):
             com_download_product_images,
             com_prodify,
         ]
+
+        if kwargs.get("upsync"):
+            # Call upsync
+            upsync_args = {
+                **kwargs,
+                "upsert_folder_path": folder_path_prod_tables,
+                "upsert_images_folder_path": folder_path_product_images,
+            }
+            upsync_steps = UpsyncPipeline(
+                pipeline_run_folder_path=self.pipeline_run_folder_path
+            ).get_steps(**upsync_args)
+
+            to_return += upsync_steps
 
         return to_return
 
