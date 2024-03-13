@@ -33,5 +33,5 @@ Total for scraping alone: 145.8 mins, or around 2.43 hours
 ## Daily carthago run
 
 ```
-python pipeline_orchestrators/carthago_run.py --prod-env --upload -n
+python data_pipeline_definitions/carthago.py -n --prod --upsync
 ```
