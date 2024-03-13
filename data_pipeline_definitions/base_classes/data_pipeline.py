@@ -5,11 +5,15 @@ import subprocess
 from custom_helpers_py.get_paths import get_artifacts_folder_path
 from os.path import join, exists
 from custom_helpers_py.folder_helpers import mkdir_if_not_exists, mkdir_to_ensure_path
-from custom_helpers_py.date_helpers import get_current_date_filename
+from custom_helpers_py.date_helpers import (
+    get_current_date_filename,
+    get_date_diff_string,
+)
 import argparse
 from typing import Any
 import json
 import sys
+from datetime import datetime
 
 
 class Tee:
@@ -48,7 +52,7 @@ class RunInfoFolder:
 
     def add_step_to_progress(self, step_id: int, com: ScriptComponent):
         with open(join(self.folder_path, "progress.txt"), "a") as outfile:
-            outfile.write("\n" + str(step_id) + " : " + str(com))
+            outfile.write(str(step_id) + " : " + str(com) + "\n")
 
     def open_pipeline_log(self):
         run_log_file = open(join(self.folder_path, "run_log.txt"), "a")
@@ -75,8 +79,21 @@ class RunInfoFolder:
         self.run_log_file = None
         self.error_log_file = None
 
-    def add_to_metrics_log(self):
-        pass
+    def add_to_timing(self, message: str, start_time: datetime, end_time: datetime):
+        to_write = (
+            "\n".join(
+                [
+                    message,
+                    "start: " + start_time.isoformat(),
+                    "end: " + end_time.isoformat(),
+                    "duration: " + get_date_diff_string(end_time, start_time),
+                ]
+            )
+            + "\n\n"
+        )
+
+        with open(join(self.folder_path, "timing.txt"), "a") as outfile:
+            outfile.write(to_write)
 
 
 class DataPipeline(ABC):
@@ -127,11 +144,10 @@ class DataPipeline(ABC):
         start_index, end_index = kwargs["start_index"], kwargs["end_index"]
         self.run_info_folder.open_pipeline_log()
 
-        """
-        TODO:
-        - Time start and end of step
-        - Time start and end of entire run
-        """
+        print("[ORCHESTRATOR] Pipeline run started", self.get_pipeline_name())
+        run_start_time = datetime.now()
+
+        is_success_run = True
         for i, com in enumerate(steps):
             if i < start_index:
                 continue
@@ -139,8 +155,10 @@ class DataPipeline(ABC):
             if end_index and i >= end_index:
                 continue
 
-            print("[ORCHESTRATOR] START step", i, com)
+            print("\n[STEP START]", i, com)
 
+            com_start_time = datetime.now()
+            execution_error = None
             try:
                 # Make all directories as needed
                 path_in_args = com.get_paths_in_args()
@@ -166,13 +184,29 @@ class DataPipeline(ABC):
 
                 self.run_info_folder.add_step_to_progress(i, com)
             except Exception as error:
-                print("[ORCHESTRATOR] ERROR step", i, com)
-                print(error, file=sys.stderr)
+                execution_error = error
+
+            com_end_time = datetime.now()
+            self.run_info_folder.add_to_timing(
+                str(i) + " " + com.component_name, com_start_time, com_end_time
+            )
+
+            if execution_error:
+                is_success_run = False
+                print("[ERROR STEP]", i, com, "\n")
+                print(execution_error, file=sys.stderr)
                 break
 
-            print("[ORCHESTRATOR] END step", i, com)
+            print("[STEP SUCCESS]", i, com, "\n")
 
-        print("[ORCHESTRATOR] Pipeline Run Finished")
+        run_end_time = datetime.now()
+        self.run_info_folder.add_to_timing("Pipeline run", run_start_time, run_end_time)
+
+        if is_success_run:
+            print("[ORCHESTRATOR] Pipeline run completed successfully")
+        else:
+            print("[ORCHESTRATOR] Pipeline Run FAILED!")
+
         self.run_info_folder.close_pipleline_log()
 
     def print_steps(self, **kwargs):
