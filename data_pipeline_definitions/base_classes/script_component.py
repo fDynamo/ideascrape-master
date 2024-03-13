@@ -1,3 +1,6 @@
+from custom_helpers_py.utilities import is_windows
+
+
 class ComponentArg:
     def __init__(
         self, arg_name: str, arg_val: str | bool | None = True, is_path=None
@@ -73,11 +76,26 @@ class ScriptComponent:
                 args_to_add.append(to_add)
 
         self.args: list[ComponentArg] = args_to_add
+        self.erased = False
 
     def __str__(self) -> str:
+        if self.erased:
+            return ""
+
+        if not is_windows():
+            raise Exception("Script str not built for non windows!")
+
         to_return = self.body
+
         if to_return.startswith("npm run") and len(self.args) > 0:
-            to_return += " --"
+            if is_windows():
+                to_return = to_return.replace("npm run", "npm.cmd run")
+            if len(self.args) > 0:
+                to_return += " --"
+        elif to_return.startswith("python "):
+            if is_windows():
+                to_return = to_return.removeprefix("python")
+                to_return = ".venv/Scripts/python.exe" + to_return
 
         if len(self.args):
             arg_str = " ".join([str(arg) for arg in self.args])
@@ -102,3 +120,6 @@ class ScriptComponent:
 
     def get_paths_in_args(self) -> list[str]:
         return [arg.arg_val for arg in self.args if arg.is_path]
+
+    def erase(self):
+        self.erased = True

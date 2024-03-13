@@ -5,6 +5,7 @@ from data_pipeline_definitions.base_classes.script_component import (
 )
 from os.path import join
 import argparse
+from custom_helpers_py.get_paths import get_dev_scrape_folder_path
 
 
 class DucksterPipeline(DataPipeline):
@@ -27,6 +28,7 @@ class DucksterPipeline(DataPipeline):
             dest="skip_url_filter",
             default=False,
         )
+
         super().add_cli_args(parser)
 
     def get_steps(self, **kwargs) -> list[ScriptComponent]:
@@ -62,6 +64,12 @@ class DucksterPipeline(DataPipeline):
                 ["outFolder", folder_path_indiv_scrape],
             ],
         )
+        if kwargs["use_dev_scrape"]:
+            folder_path_indiv_scrape = join(
+                get_dev_scrape_folder_path(),
+                "indiv_scrape",
+            )
+            com_indiv_scrape.erase()
 
         file_path_cc_indiv_scrape = join(out_folder_path, "cc_indiv_scrape.csv")
         com_cc_indiv_scrape = ScriptComponent(
@@ -121,6 +129,12 @@ class DucksterPipeline(DataPipeline):
                 ["outFolder", folder_path_sup_similarweb_scrape],
             ],
         )
+        if kwargs["use_dev_scrape"]:
+            folder_path_sup_similarweb_scrape = join(
+                get_dev_scrape_folder_path(),
+                "sup_similarweb_scrape",
+            )
+            com_scrape_sup_similarweb.erase()
 
         file_path_cc_sup_similarweb_scrape = join(
             out_folder_path, "cc_sup_similarweb_scrape.csv"
@@ -164,6 +178,12 @@ class DucksterPipeline(DataPipeline):
                 ["o", file_path_embedded_descriptions],
             ],
         )
+        if kwargs["use_dev_scrape"]:
+            file_path_embedded_descriptions = join(
+                get_dev_scrape_folder_path(),
+                "extract_embed_description.csv",
+            )
+            com_extract_embed_description.erase()
 
         folder_path_product_images = join(out_folder_path, "product_images")
         com_download_product_images = ScriptComponent(
@@ -174,6 +194,12 @@ class DucksterPipeline(DataPipeline):
                 ["o", folder_path_product_images],
             ],
         )
+        if kwargs["use_dev_scrape"]:
+            folder_path_product_images = join(
+                get_dev_scrape_folder_path(),
+                "product_images",
+            )
+            com_download_product_images.erase()
 
         folder_path_prod_tables = join(out_folder_path, "prod_tables")
         com_prodify = ScriptComponent(

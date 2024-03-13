@@ -208,6 +208,11 @@ const main = async () => {
 
   await runLogger.addToEndLog(endLogContents);
   await runLogger.stopRunLogger();
+
+  if (forcedStop || endLogContents.error) {
+    process.exit(1);
+  }
+
   process.exit();
 };
 

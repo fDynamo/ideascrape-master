@@ -21,6 +21,10 @@ def get_artifacts_folder_path() -> str:
     return environ.get("RUN_ARTIFACTS_FOLDER")
 
 
+def get_dev_scrape_folder_path() -> str:
+    return join(get_artifacts_folder_path(), "dev_scrape_files")
+
+
 def get_search_main_records_filepath(prod: bool) -> str:
     cache_key = "file_search_main_records"
     if prod:

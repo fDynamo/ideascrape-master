@@ -3,9 +3,9 @@ from data_pipeline_definitions.base_classes.script_component import (
     ScriptComponent,
     ComponentArg,
 )
-from os.path import join, abspath
-from custom_helpers_py.get_paths import get_artifacts_folder_path
+from os.path import join
 from data_pipeline_definitions.duckster import DucksterPipeline
+from custom_helpers_py.get_paths import get_dev_scrape_folder_path
 
 
 class CarthagoPipeline(DataPipeline):
@@ -38,6 +38,14 @@ class CarthagoPipeline(DataPipeline):
                     ),
                 ],
             )
+
+            if kwargs["use_dev_scrape"]:
+                folder_path_scrape = join(
+                    get_dev_scrape_folder_path(),
+                    "source_scrapes",
+                    "source_{}_scrape".format(acr),
+                )
+                com_scrape.erase()
 
             file_path_cc = join(
                 folder_path_cc_source_scrapes, "cc_source_" + acr + "_scrape.csv"

@@ -18,6 +18,7 @@ from typing import Any
 import json
 import sys
 from datetime import datetime
+import shutil
 
 
 class Tee:
@@ -28,6 +29,9 @@ class Tee:
     def __init__(self, out1, out2):
         self.out1 = out1
         self.out2 = out2
+
+    def flush(self):
+        pass
 
 
 class RunInfoFolder:
@@ -161,6 +165,12 @@ class DataPipeline(ABC):
             default=False,
             dest="reset_run_info",
         )
+        parser.add_argument(
+            "--resetTest",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+            dest="reset_test",
+        )
 
     def run_steps(self, steps: list[ScriptComponent], **kwargs):
         start_index, end_index = kwargs["start_index"], kwargs["end_index"]
@@ -177,6 +187,11 @@ class DataPipeline(ABC):
             if end_index and i >= end_index:
                 continue
 
+            script_to_run = str(com)
+            if not script_to_run:
+                print("[SKIPPING ERASED STEP]")
+                continue
+
             print("\n[STEP START]", i, com)
 
             com_start_time = datetime.now()
@@ -188,16 +203,18 @@ class DataPipeline(ABC):
                     mkdir_to_ensure_path(in_path)
 
                 # Run
-                script_to_run = str(com)
                 process = subprocess.Popen(
-                    script_to_run, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                    script_to_run,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                 )
 
                 for line in iter(process.stdout.readline, b""):
-                    print(">>> " + str(line.rstrip()))
+                    if line:
+                        print(">>> " + str(line.rstrip().decode()))
 
                 for line in iter(process.stderr.readline, b""):
-                    print(">>> " + str(line.rstrip()), file=sys.stderr)
+                    print(">>> " + str(line.rstrip().decode()), file=sys.stderr)
 
                 process.wait()
                 returncode = process.returncode
@@ -205,8 +222,15 @@ class DataPipeline(ABC):
                     raise Exception("Step failed")
 
                 self.run_info_folder.add_step_to_progress(i, com)
+                process = None
             except Exception as error:
                 execution_error = error
+            except KeyboardInterrupt as error:
+                execution_error = "Force quit"
+
+            # In case process still running
+            if process:
+                process.kill()
 
             com_end_time = datetime.now()
             self.run_info_folder.add_to_timing(
@@ -307,7 +331,11 @@ class DataPipeline(ABC):
                 print("Use -r to retry a run")
                 exit(1)
 
+        if is_run_test and cli_args.reset_test:
+            shutil.rmtree(pipeline_run_folder_path)
+
         self.set_pipeline_run_folder_path(pipeline_run_folder_path)
+
         steps_to_run = self.get_steps(**in_kwargs)
 
         if cli_args.reset_run_info:
