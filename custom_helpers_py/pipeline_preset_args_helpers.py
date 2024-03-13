@@ -22,22 +22,10 @@ def parse_args_for_out_folder_preset(args, folder_prefix="") -> str | None:
         artifacts_folder_path = get_artifacts_folder_path()
         return join(artifacts_folder_path, folder_name)
     elif is_run_recent:
-        artifacts_folder_path = get_artifacts_folder_path()
-        artifacts_contents = listdir(artifacts_folder_path)
-        most_recent = None
-        for folderpath in artifacts_contents:
-            if folderpath.startswith(folder_prefix):
-                if not most_recent:
-                    most_recent = folderpath
-                elif folderpath > most_recent:
-                    most_recent = folderpath
-        if not most_recent:
-            return None
-
-        return join(artifacts_folder_path, most_recent)
+        raise Exception("Not implemented!")
     elif is_run_new:
-        folder_name = folder_prefix + get_current_date_filename()
+        folder_name = get_current_date_filename()
         artifacts_folder_path = get_artifacts_folder_path()
-        return join(artifacts_folder_path, folder_name)
+        return join(artifacts_folder_path, folder_prefix, folder_name)
     else:
         return None

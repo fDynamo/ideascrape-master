@@ -9,7 +9,6 @@ from pipeline_orchestrators.carthago_create_script import DRY_RUN_CARTHAGO_FOLDE
 from shutil import copy
 
 DUCKSTER_SCRIPT_FILENAME = "_duckster_list.txt"
-DUCKSTER_FOLDER_PREFIX = "duckster_"
 DRY_RUN_DUCKSTER_FOLDERPATH = DRY_RUN_CARTHAGO_FOLDERPATH
 
 
@@ -46,7 +45,7 @@ def main():
 
     if not out_folderpath:
         out_folderpath = parse_args_for_out_folder_preset(
-            args, folder_prefix=DUCKSTER_FOLDER_PREFIX
+            args, folder_prefix="duckster"
         )
         if not out_folderpath:
             print("Invalid inputs")

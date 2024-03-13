@@ -8,7 +8,6 @@ from custom_helpers_py.pipeline_preset_args_helpers import (
 )
 
 CARTHAGO_SCRIPT_FILENAME = "_carthago_list.txt"
-CARTHAGO_FOLDER_PREFIX = "carthago_"
 DRY_RUN_CARTHAGO_FOLDERPATH = join(get_artifacts_folder_path(), "_dry_run_carthago")
 
 
@@ -22,7 +21,7 @@ def main():
     # Optional
     add_args_for_out_folder_preset(parser)
     parser.add_argument("--dry-run", action=argparse.BooleanOptionalAction)
-    parser.add_argument("--prod-env", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--prod", action=argparse.BooleanOptionalAction)
     parser.add_argument("--upload", action=argparse.BooleanOptionalAction)
 
     args, _ = parser.parse_known_args()
@@ -30,12 +29,12 @@ def main():
     out_folderpath: str = args.out_folderpath
 
     is_dry_run: bool = args.dry_run
-    is_prod_env: bool = args.prod_env
+    is_prod_env: bool = args.prod
     is_upload: bool = args.upload
 
     if not out_folderpath:
         out_folderpath = parse_args_for_out_folder_preset(
-            args, folder_prefix=CARTHAGO_FOLDER_PREFIX
+            args, folder_prefix="carthago"
         )
         if not out_folderpath:
             print("Invalid inputs")
