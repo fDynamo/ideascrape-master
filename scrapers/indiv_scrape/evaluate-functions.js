@@ -1,4 +1,4 @@
-const evaluateGenericPage = async () => {
+const evaluateGenericPage = () => {
   // Helper functions
   function getAllComments(node) {
     if (node.nodeType === Node.COMMENT_NODE) {
@@ -134,7 +134,9 @@ const evaluateGenericPage = async () => {
 
   const pageCopy = document.body.innerText;
 
+  const locationUrl = window.location.toString();
   return {
+    locationUrl,
     pageTitle,
     canonicalUrl,
     pageDescription,
@@ -154,6 +156,11 @@ const evaluateGenericPage = async () => {
   };
 };
 
+const evaluateGenericPageCopy = () => {
+  return document.body.innerHTML.toString();
+};
+
 module.exports = {
   evaluateGenericPage,
+  evaluateGenericPageCopy,
 };

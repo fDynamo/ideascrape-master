@@ -78,6 +78,7 @@ async function main() {
       searchMainOnly
     );
   } else {
+    // NOTE: Filenames constructured so that search main is always last
     for (let i = 0; i < ACCEPTED_FILENAMES.length; i++) {
       const fileName = ACCEPTED_FILENAMES[i];
       await upsertTable(

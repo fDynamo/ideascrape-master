@@ -25,4 +25,11 @@ const cleanTextForCsv = (inText, options) => {
   return newText;
 };
 
-module.exports = { getPercentageString, cleanTextForCsv };
+const getFileNameFromUrl = (inUrl) => {
+  if (!inUrl) return "";
+  inUrl = inUrl.replace(".", "_");
+  inUrl = inUrl.replace("/", "_");
+  return inUrl;
+};
+
+module.exports = { getPercentageString, cleanTextForCsv, getFileNameFromUrl };

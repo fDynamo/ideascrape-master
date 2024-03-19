@@ -1,5 +1,8 @@
 import puppeteer from "puppeteer-extra";
-import { evaluateGenericPage } from "./evaluate-functions.js";
+import {
+  evaluateGenericPage,
+  evaluateGenericPageCopy,
+} from "./evaluate-functions.js";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import {
   getPercentageString,
@@ -11,15 +14,16 @@ import { createRunLogger } from "../../custom_helpers_js/run-logger.mjs";
 import UserAgent from "user-agents";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
-import { cleanTextForCsv } from "../../custom_helpers_js/string-formatters.js";
+import { getFileNameFromUrl } from "../../custom_helpers_js/string-formatters.js";
 import { join } from "path";
-import { createObjectCsvWriter } from "csv-writer";
+import { writeFileSync } from "fs";
+import { mkdirIfNotExists } from "../../custom_helpers_js/file-helpers.js";
 
 const main = async () => {
   // Process input arguments
   const argv = yargs(hideBin(process.argv)).argv;
-  let { outFolder, urlListFilepath, startIndex, endIndex } = argv;
-  if (!outFolder || !urlListFilepath) {
+  let { outFolder, urlListFilePath, startIndex, endIndex } = argv;
+  if (!outFolder || !urlListFilePath) {
     console.log("Invalid arguments");
     return;
   }
@@ -27,9 +31,17 @@ const main = async () => {
   if (!endIndex) endIndex = 0;
 
   // Read url file
-  const urlsFileContents = await readCsvFile(urlListFilepath);
+  const urlsFileContents = await readCsvFile(urlListFilePath);
   const urls = urlsFileContents.map((row) => row.url);
   let lastIndex = endIndex ? Math.min(endIndex, urls.length) : urls.length;
+
+  // Make directories and folders
+  const ESSENTIAL_DATA_FOLDER = join(outFolder, "essential_data");
+  mkdirIfNotExists(ESSENTIAL_DATA_FOLDER);
+  const PAGE_COPY_FOLDER = join(outFolder, "page_copy");
+  mkdirIfNotExists(PAGE_COPY_FOLDER);
+  const HEAD_INFO_FOLDER = join(outFolder, "head_info");
+  mkdirIfNotExists(HEAD_INFO_FOLDER);
 
   // Create runLogger
   const dataHeaders = [
@@ -52,21 +64,6 @@ const main = async () => {
     outFolder
   );
 
-  // Page copy
-  const PAGE_COPY_FILEPATH = join(
-    outFolder,
-    runLogger.baseFileName + "-page_copy.csv"
-  );
-  const PAGE_COPY_HEADER = [
-    { id: "url", title: "url" },
-    { id: "page_copy", title: "page_copy" },
-  ];
-
-  const pageCopyCsvWriter = createObjectCsvWriter({
-    path: PAGE_COPY_FILEPATH,
-    header: PAGE_COPY_HEADER,
-  });
-
   // Run constants
   const NAV_TIMEOUT = 30 * 1000;
   const RUN_DELAY = 100;
@@ -77,12 +74,14 @@ const main = async () => {
   const REQUESTS_PER_REFRESH = 10;
   const JUST_A_MOMENT_DELAY = 10 * 1000;
   const DISCONNECTED_DELAY = 20 * 1000;
+  const MAX_LOADING_WAIT_CYCLES = 5;
 
   // Error constants
   const FORCED_STOP_ERROR_STRING = "Forced stop";
   const SUCCESSIVE_ERROR_STRING = "Max successive errors reached!";
   const NAV_ERROR_SUBSTRING = " Navigation timeout of";
   const INTERNET_DISCONNECTED_ERROR_STRING = "net::ERR_INTERNET_DISCONNECTED";
+  const LOADING_TIMEOUT_ERROR_STRING = "Loading for too long";
 
   // Variables
   let urlToScrape = "";
@@ -96,7 +95,7 @@ const main = async () => {
   // Log start
   await runLogger.addToStartLog({
     argv: JSON.stringify(argv),
-    urlListFilepath,
+    urlListFilePath,
     countUrlsToScrape: lastIndex - startIndex,
     startIndex,
     lastIndex,
@@ -197,12 +196,33 @@ const main = async () => {
         let results = await page.evaluate(evaluateGenericPage);
 
         // Check if we are told to wait
-        if (results.pageTitle && results.pageTitle.includes("Just a moment")) {
-          await runLogger.addToActionLog({
-            message: "waiting for page...",
+        const isPageStillLoading = (results) => {
+          if (!results.pageTitle) return true;
+          const upperPageTitle = results.pageTitle.toUpperCase();
+          const substringsToTest = ["JUST A MOMENT", "LOADING"];
+
+          const toReturn = false;
+          substringsToTest.forEach((substr) => {
+            if (upperPageTitle.includes(substr)) toReturn = true;
           });
-          await timeoutPromise(JUST_A_MOMENT_DELAY);
-          results = await page.evaluate(evaluateGenericPage);
+
+          return toReturn;
+        };
+
+        for (let i = 0; i < MAX_LOADING_WAIT_CYCLES; i++) {
+          if (isPageStillLoading(results)) {
+            await runLogger.addToActionLog({
+              message: "waiting for page...",
+            });
+            await timeoutPromise(JUST_A_MOMENT_DELAY);
+            results = await page.evaluate(evaluateGenericPage);
+          } else {
+            break;
+          }
+        }
+
+        if (isPageStillLoading(results)) {
+          throw LOADING_TIMEOUT_ERROR_STRING;
         }
 
         const requestEndedDate = new Date();
@@ -210,12 +230,28 @@ const main = async () => {
         const requestDurationS =
           (requestEndedDate.getTime() - requestStartedDate.getTime()) / 1000;
 
+        const saveFileName = getFileNameFromUrl(urlToScrape);
+        const essentialDataSavePath = join(
+          ESSENTIAL_DATA_FOLDER,
+          saveFileName + ".json"
+        );
+        const pageCopySavePath = join(PAGE_COPY_FOLDER, saveFileName + ".txt");
+        const headInfoSavePath = join(HEAD_INFO_FOLDER, saveFileName + ".json");
+
         // Process results
-        const recordToWrite = {
-          url: urlToScrape,
+        const toWriteEssentialData = {
+          init_url: urlToScrape,
+          end_url: results.locationUrl,
           title: results.pageTitle,
-          description: cleanTextForCsv(results.pageDescription),
-          favicon_url: results.faviconUrl,
+          description: results.pageDescription,
+          page_image_url: results.faviconUrl,
+        };
+
+        const toWritePageCopy =
+          "type: generic\n---\n" +
+          (await page.evaluate(evaluateGenericPageCopy));
+
+        const toWriteHeadInfo = {
           twitter_meta_tags: results.twitterMetaTags,
           og_meta_tags: results.ogMetaTags,
           canonical_url: results.canonicalUrl,
@@ -227,15 +263,15 @@ const main = async () => {
         };
 
         // Write results
-        await runLogger.addToData([recordToWrite]);
-        await pageCopyCsvWriter.writeRecords([
-          {
-            url: urlToScrape,
-            page_copy: cleanTextForCsv(results.pageCopy, {
-              removeNewLine: true,
-            }),
-          },
-        ]);
+        writeFileSync(
+          essentialDataSavePath,
+          JSON.stringify(toWriteEssentialData, null, 4)
+        );
+        writeFileSync(pageCopySavePath, toWritePageCopy);
+        writeFileSync(
+          headInfoSavePath,
+          JSON.stringify(toWriteHeadInfo, null, 4)
+        );
 
         // Print progress
         const donePercentageString = getPercentageString(
@@ -365,7 +401,11 @@ const main = async () => {
   await runLogger.addToEndLog(endLogContents);
   await runLogger.stopRunLogger();
 
-  process.exit();
+  if (forcedStop || endLogContents.error) {
+    process.exit(1);
+  } else {
+    process.exit();
+  }
 };
 
 main();
