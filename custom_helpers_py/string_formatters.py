@@ -80,7 +80,7 @@ def cleanhtml(raw_html):
     return cleantext
 
 
-def convert_url_to_filename(in_url: str):
+def convert_url_to_file_name(in_url: str):
     in_url = clean_url(in_url)
     in_url = clean_text(in_url, remove_html=True, remove_non_alpha=True)
     return in_url.replace(".", "_").replace(" ", "_").replace("/", "_")

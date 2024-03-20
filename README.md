@@ -18,17 +18,11 @@ RUN_ARTIFACTS_FOLDER=
 OPENAI_API_KEY=
 ```
 
-## First carthago run
+## Common pipeline args
 
-- AIFT scrapes: 18.81 mins
-  - 0.07 for lists
-  - 18.74 mins for posts
-- PH scrapes: 0.43 mins
-  - Only for like 5 items, but usually AIFT scrapes > PH so that's bottleneck
-- Indiv scrape: 53.42 mins
-- Similarweb scrape: 73.13 mins
-
-Total for scraping alone: 145.8 mins, or around 2.43 hours
+-r: retry, supply name of pipeline run to retry
+-t: use test pipeline folder
+--resetTest: resets test folder
 
 ## Daily carthago run
 

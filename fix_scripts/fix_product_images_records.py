@@ -1,8 +1,4 @@
 from custom_helpers_py.pandas_helpers import read_csv_as_df, save_df_as_csv
-from custom_helpers_py.string_formatters import convert_url_to_filename
-from os import rename
-from os.path import join, exists
-import pandas as pd
 
 fix_map_file = "./tmp/images_fix_map.csv"
 fix_map_df = read_csv_as_df(fix_map_file)

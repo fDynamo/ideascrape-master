@@ -1,8 +1,7 @@
 from custom_helpers_py.pandas_helpers import read_csv_as_df, save_df_as_csv
-from custom_helpers_py.string_formatters import convert_url_to_filename
+from custom_helpers_py.string_formatters import convert_url_to_file_name
 from os import rename
 from os.path import join, exists
-import pandas as pd
 
 search_main_file = "./test/to_upload/search_main.csv"
 search_main_df = read_csv_as_df(search_main_file)
@@ -24,7 +23,7 @@ def fix_image_filename(row):
     if "svg" in extension:
         extension = extension.replace("svg", "png")
 
-    new_name = convert_url_to_filename(in_url) + extension
+    new_name = convert_url_to_file_name(in_url) + extension
     return new_name
 
 

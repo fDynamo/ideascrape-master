@@ -2,14 +2,6 @@ from urllib.parse import urlparse
 import re
 
 
-def calculate_unique_url(in_url: str) -> str:
-    in_url = clean_url(in_url)  # Replace slash with underscore
-
-    in_url = in_url.replace("/", "_")
-
-    return in_url
-
-
 def clean_url(in_url: str) -> str:
     # Lowercase url
     in_url = in_url.lower()
