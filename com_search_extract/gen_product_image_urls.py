@@ -15,16 +15,16 @@ def main():
     # Get arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("i", "--inFilePath", type=str, dest="in_file_path")
-    parser.add_argument("-o", "--outFilePath", type=str, dest="out_file_path")
+    parser.add_argument(
+        "-i", "--inFilePath", type=str, dest="in_file_path", required=True
+    )
+    parser.add_argument(
+        "-o", "--outFilePath", type=str, dest="out_file_path", required=True
+    )
     args = parser.parse_args()
 
     in_file_path = args.in_file_path
     out_file_path = args.out_file_path
-
-    if not in_file_path or not out_file_path:
-        print("Invalid inputs")
-        exit(1)
 
     indiv_scrape_df = read_csv_as_df(in_file_path)
     indiv_scrape_list = indiv_scrape_df.to_dict(orient="records")

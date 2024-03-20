@@ -54,7 +54,9 @@ class RunInfoFolder:
             outfile.write(full_command_str + "\n" + inputs_str)
 
         # Create full_script
-        full_script = "\n\n".join([step.get_debug_str() for step in steps])
+        full_script = "\n\n".join(
+            [str(i) + " " + step.get_debug_str() for i, step in enumerate(steps)]
+        )
         with open(join(self.folder_path, "full_script.txt"), "w") as outfile:
             outfile.write(full_script)
 
@@ -251,7 +253,7 @@ class DataPipeline(ABC):
         if is_success_run:
             print("[ORCHESTRATOR] Pipeline run completed successfully")
         else:
-            print("[ORCHESTRATOR] Pipeline Run FAILED!")
+            print("[ORCHESTRATOR] Pipeline Run FAILED! Last step:", i)
 
         self.run_info_folder.close_pipeline_log()
 

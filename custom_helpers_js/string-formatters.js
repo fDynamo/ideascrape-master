@@ -27,8 +27,7 @@ const cleanTextForCsv = (inText, options) => {
 
 const getFileNameFromUrl = (inUrl) => {
   if (!inUrl) return "";
-  inUrl = inUrl.replace(".", "_");
-  inUrl = inUrl.replace("/", "_");
+  inUrl = inUrl.replace(/[./]/g, "_");
   return inUrl;
 };
 

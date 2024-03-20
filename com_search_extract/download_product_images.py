@@ -29,11 +29,11 @@ def download_image(to_download_url: str, save_file_path: str):
 
 
 def transform_image(in_image_path: str, save_file_path: str):
-    with Image(file_name=in_image_path) as img:
+    with Image(filename=in_image_path) as img:
         if in_image_path.endswith(".svg"):
             save_file_path = save_file_path.replace("svg", "png")
         img.resize(width=32, height=32)
-        img.save(file_name=save_file_path)
+        img.save(filename=save_file_path)
 
     return save_file_path
 
@@ -42,16 +42,16 @@ def main():
     # Get arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("i", "--infile_path", type=str, dest="in_file_path")
-    parser.add_argument("-o", "--outFolderPath", type=str, dest="out_folder_path")
+    parser.add_argument(
+        "-i", "--inFilePath", type=str, dest="in_file_path", required=True
+    )
+    parser.add_argument(
+        "-o", "--outFolderPath", type=str, dest="out_folder_path", required=True
+    )
     args = parser.parse_args()
 
     in_file_path = args.in_file_path
     out_folder_path = args.out_folder_path
-
-    if not in_file_path or not out_folder_path:
-        print("Invalid inputs")
-        exit(1)
 
     RECORD_FILE_PATH = join(out_folder_path, RECORD_FILE_NAME)
     RUN_DELAY = 0
@@ -67,6 +67,7 @@ def main():
         print("Nothing to download")
         exit(1)
 
+    atleast_one_success = False
     for i, entry in enumerate(to_download_list):
         image_url = entry["image_url"]
 
@@ -96,7 +97,9 @@ def main():
             download_image(image_url, save_file_path)
             transformed_file_path = transform_image(save_file_path, save_file_path)
             transformed_file_name = basename(transformed_file_path)
-        except:
+            atleast_one_success = True
+        except Exception as error:
+            print(error)
             entry["image_file_name"] = ERROR_FILE_NAME
             continue
 
@@ -107,6 +110,10 @@ def main():
         print("progress", pct)
         if RUN_DELAY > 0:
             sleep(RUN_DELAY)
+
+    if not atleast_one_success:
+        print("All downloads failed!")
+        exit(1)
 
     downloaded_df = pd.DataFrame(to_download_list)
     downloaded_df = downloaded_df.dropna(subset="image_file_name")

@@ -47,7 +47,7 @@ def main():
     for file_name in essential_data_file_list:
         file_obj = None
         file_path = join(essential_data_folder_path, file_name)
-        with open(file_path, "r") as in_file:
+        with open(file_path, "r", encoding="utf-8") as in_file:
             file_obj = json.loads(in_file.read())
 
         title = file_obj["title"]

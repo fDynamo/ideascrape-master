@@ -16,25 +16,25 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--ccIndivScrapeFilePath", type=str, dest="cc_indiv_scrape_file_path"
+        "--ccIndivScrapeFilePath",
+        type=str,
+        dest="cc_indiv_scrape_file_path",
+        required=True,
     )
     parser.add_argument(
-        "--analyzedPageCopyFolderPath", type=str, dest="analyzed_page_copy_folder_path"
+        "--analyzedPageCopyFolderPath",
+        type=str,
+        dest="analyzed_page_copy_folder_path",
+        required=True,
     )
-    parser.add_argument("-o", "--outFilePath", type=str, dest="out_file_path")
+    parser.add_argument(
+        "-o", "--outFilePath", type=str, dest="out_file_path", required=True
+    )
     args = parser.parse_args()
 
     cc_indiv_scrape_file_path = args.cc_indiv_scrape_file_path
     analyzed_page_copy_folder_path = args.analyzed_page_copy_folder_path
     out_file_path = args.out_file_path
-
-    if (
-        not cc_indiv_scrape_file_path
-        or not analyzed_page_copy_folder_path
-        or not out_file_path
-    ):
-        print("Invalid inputs")
-        exit(1)
 
     indiv_scrape_df = read_csv_as_df(cc_indiv_scrape_file_path)
     indiv_scrape_list = indiv_scrape_df.to_dict(orient="records")

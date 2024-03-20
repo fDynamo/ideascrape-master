@@ -16,7 +16,7 @@ def main():
     # Get arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("i", "--inFolderPath", type=str, dest="in_folder_path")
+    parser.add_argument("-i", "--inFolderPath", type=str, dest="in_folder_path")
     parser.add_argument("-o", "--outFolderPath", type=str, dest="out_folder_path")
     args = parser.parse_args()
 

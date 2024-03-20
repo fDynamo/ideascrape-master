@@ -73,7 +73,7 @@ class CarthagoPipeline(DataPipeline):
             ]
 
         # Combine data
-        file_path_combined_data = join(out_folder_path, "combined_data.csv")
+        file_path_combined_data = join(out_folder_path, "combined_source_data.csv")
         com_combine_data = ScriptComponent(
             component_name="combine source data",
             body="python com_cc/combine_source_cc.py",
@@ -92,7 +92,7 @@ class CarthagoPipeline(DataPipeline):
         )
 
         # Combine urls
-        file_path_combined_urls = join(out_folder_path, "combined_urls.csv")
+        file_path_combined_urls = join(out_folder_path, "combined_source_urls.csv")
         com_get_urls = ScriptComponent(
             component_name="grab urls from combined source",
             body="python com_utils/util_extract_column_from_data.py",

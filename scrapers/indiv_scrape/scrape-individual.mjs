@@ -25,7 +25,7 @@ const main = async () => {
   let { outFolder, urlListFilePath, startIndex, endIndex } = argv;
   if (!outFolder || !urlListFilePath) {
     console.log("Invalid arguments");
-    return;
+    process.exit(1);
   }
   if (!startIndex) startIndex = 0;
   if (!endIndex) endIndex = 0;
@@ -201,7 +201,7 @@ const main = async () => {
           const upperPageTitle = results.pageTitle.toUpperCase();
           const substringsToTest = ["JUST A MOMENT", "LOADING"];
 
-          const toReturn = false;
+          let toReturn = false;
           substringsToTest.forEach((substr) => {
             if (upperPageTitle.includes(substr)) toReturn = true;
           });
@@ -211,6 +211,9 @@ const main = async () => {
 
         for (let i = 0; i < MAX_LOADING_WAIT_CYCLES; i++) {
           if (isPageStillLoading(results)) {
+            if (forcedStop) {
+              throw new Error(FORCED_STOP_ERROR_STRING);
+            }
             await runLogger.addToActionLog({
               message: "waiting for page...",
             });
@@ -265,12 +268,14 @@ const main = async () => {
         // Write results
         writeFileSync(
           essentialDataSavePath,
-          JSON.stringify(toWriteEssentialData, null, 4)
+          JSON.stringify(toWriteEssentialData, null, 4),
+          { encoding: "utf-8" }
         );
-        writeFileSync(pageCopySavePath, toWritePageCopy);
+        writeFileSync(pageCopySavePath, toWritePageCopy, { encoding: "utf-8" });
         writeFileSync(
           headInfoSavePath,
-          JSON.stringify(toWriteHeadInfo, null, 4)
+          JSON.stringify(toWriteHeadInfo, null, 4),
+          { encoding: "utf-8" }
         );
 
         // Print progress

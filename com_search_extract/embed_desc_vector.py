@@ -22,7 +22,7 @@ def main():
     # Get arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("i", "--inFilePath", type=str, dest="in_file_path")
+    parser.add_argument("-i", "--inFilePath", type=str, dest="in_file_path")
     parser.add_argument("-o", "--outFolderPath", type=str, dest="out_folder_path")
     args = parser.parse_args()
 
