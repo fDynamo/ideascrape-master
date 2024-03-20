@@ -288,9 +288,7 @@ async function upsertTable(
   const toWrite = JSON.stringify(toWriteObj);
   writeFileSync(recordsFilePath, toWrite);
 
-  if (isSuccessful) {
-    process.exit(0);
-  } else {
+  if (!isSuccessful) {
     process.exit(1);
   }
 }
