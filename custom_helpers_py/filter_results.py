@@ -44,7 +44,7 @@ def is_url_valid(in_clean_url: str) -> bool:
 
 
 def is_page_title_valid(page_title: str):
-    if not page_title:
+    if not page_title or not isinstance(page_title, str):
         return False
 
     str_to_test = page_title.lower()
@@ -67,7 +67,7 @@ def is_page_title_valid(page_title: str):
 
 
 def is_page_description_valid(in_desc: str) -> bool:
-    if not in_desc or in_desc == "":
+    if not in_desc or not isinstance(in_desc, str):
         return False
 
     # Is language english
