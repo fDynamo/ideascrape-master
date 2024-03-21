@@ -90,15 +90,49 @@ const main = async () => {
       height: 1080,
       deviceScaleFactor: 1,
     });
-    await page.setRequestInterception(true);
     await page.setDefaultNavigationTimeout(NAV_TIMEOUT);
 
+    await page.setRequestInterception(true);
+    const blockResourceType = [
+      "beacon",
+      "csp_report",
+      "font",
+      "image",
+      "imageset",
+      "media",
+      "object",
+      "texttrack",
+    ];
+    const blockResourceName = [
+      "adition",
+      "adzerk",
+      "analytics",
+      "cdn.api.twitter",
+      "clicksor",
+      "clicktale",
+      "doubleclick",
+      "exelator",
+      "facebook",
+      "fontawesome",
+      "google",
+      "google-analytics",
+      "googletagmanager",
+      "mixpanel",
+      "optimizely",
+      "quantserve",
+      "sharethrough",
+      "tiqcdn",
+      "zedo",
+    ];
+
     page.on("request", (request) => {
-      if (request.resourceType() === "image") {
-        // If the request is for an image, block it
+      const requestUrl = request._url ? request._url.split("?")[0] : "";
+      if (
+        request.resourceType() in blockResourceType ||
+        blockResourceName.some((resource) => requestUrl.includes(resource))
+      ) {
         request.abort();
       } else {
-        // If it's not an image request, allow it to continue
         request.continue();
       }
     });

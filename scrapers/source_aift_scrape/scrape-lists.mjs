@@ -33,6 +33,7 @@ const main = async () => {
     "corner_icon_url",
     "price_text",
   ];
+
   const runLogger = await createRunLogger(
     "aift-scrape-lists",
     dataHeaders,
@@ -92,8 +93,45 @@ const main = async () => {
     });
     await page.setDefaultNavigationTimeout(NAV_TIMEOUT);
     await page.setRequestInterception(true);
+    const blockResourceType = [
+      "beacon",
+      "csp_report",
+      "font",
+      "image",
+      "imageset",
+      "media",
+      "object",
+      "texttrack",
+      "stylesheet",
+    ];
+    const blockResourceName = [
+      "adition",
+      "adzerk",
+      "analytics",
+      "cdn.api.twitter",
+      "clicksor",
+      "clicktale",
+      "doubleclick",
+      "exelator",
+      "facebook",
+      "fontawesome",
+      "google",
+      "google-analytics",
+      "googletagmanager",
+      "mixpanel",
+      "optimizely",
+      "quantserve",
+      "sharethrough",
+      "tiqcdn",
+      "zedo",
+    ];
+
     page.on("request", (request) => {
-      if (request.resourceType() === "image") {
+      const requestUrl = request._url ? request._url.split("?")[0] : "";
+      if (
+        request.resourceType() in blockResourceType ||
+        blockResourceName.some((resource) => requestUrl.includes(resource))
+      ) {
         request.abort();
       } else {
         request.continue();

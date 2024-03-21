@@ -54,7 +54,7 @@ const main = async () => {
   const WAIT_TIMEOUT = 10 * 1000;
   const RUN_DELAY = 1 * 1000;
   const RETRY_DELAY = 5 * 1000;
-  const MAX_RETRIES = 3;
+  const MAX_RETRIES = 1;
 
   // Error strings
   const ERROR_STRING_NAVIGATION = "Navigation timeout of";
@@ -112,8 +112,45 @@ const main = async () => {
     });
     await page.setDefaultNavigationTimeout(NAV_TIMEOUT);
     await page.setRequestInterception(true);
+    const blockResourceType = [
+      "beacon",
+      "csp_report",
+      "font",
+      "image",
+      "imageset",
+      "media",
+      "object",
+      "texttrack",
+      "stylesheet",
+    ];
+    const blockResourceName = [
+      "adition",
+      "adzerk",
+      "analytics",
+      "cdn.api.twitter",
+      "clicksor",
+      "clicktale",
+      "doubleclick",
+      "exelator",
+      "facebook",
+      "fontawesome",
+      "google",
+      "google-analytics",
+      "googletagmanager",
+      "mixpanel",
+      "optimizely",
+      "quantserve",
+      "sharethrough",
+      "tiqcdn",
+      "zedo",
+    ];
+
     page.on("request", (request) => {
-      if (request.resourceType() === "image") {
+      const requestUrl = request._url ? request._url.split("?")[0] : "";
+      if (
+        request.resourceType() in blockResourceType ||
+        blockResourceName.some((resource) => requestUrl.includes(resource))
+      ) {
         request.abort();
       } else {
         request.continue();
