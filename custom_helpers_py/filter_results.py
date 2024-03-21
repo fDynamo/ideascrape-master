@@ -18,29 +18,31 @@ invalid_description_contents = json.load(invalid_description_contents_file)
 invalid_description_contents_file.close()
 
 
-def is_url_valid(in_clean_url: str) -> bool:
+# Returns 'y' if valid
+# Returns a cause string if not valid
+def is_url_valid(in_clean_url: str) -> str:
     if not in_clean_url or not isinstance(in_clean_url, str):
-        return False
+        return "Malformed url"
 
     if not validators.url("https://" + in_clean_url):
-        return False
+        return "Validator"
 
     substrings = result_filters["substrings"]
     for substring in substrings:
         if substring in in_clean_url:
-            return False
+            return "Substring"
 
     starts = result_filters["starts"]
     for start in starts:
         if in_clean_url.startswith(start):
-            return False
+            return "Starts"
 
     ends = result_filters["ends"]
     for end in ends:
         if in_clean_url.endswith(end):
-            return False
+            return "Ends"
 
-    return True
+    return "y"
 
 
 def is_page_title_valid(page_title: str):
@@ -98,14 +100,6 @@ def is_domain_similarweb_scrapable(in_domain):
 
 
 if __name__ == "__main__":
-    test_url = "amazon.com/ai/songwraiter/?ref=alternative"
+    test_url = "www.milestoneflow.io"
 
-    desc_valid = is_page_description_valid(
-        "辨識並去除音檔中的背景雜音，提升人聲的清晰程度。 Identify and extract the background noise to improve the human voice clarity in the uploaded audio file."
-    )
-    # print(desc_valid)
-
-    # print(detect(" bn vn bi kha bi vn nguyn vn nguyn bn vn bn bi c ti liu "))
-
-    print(detect("Projectsveltos"))
-    print(detect("随机密码"))
+    print(is_url_valid(test_url))

@@ -12,12 +12,12 @@ def clean_url(in_url: str) -> str:
     if question_mark_index > -1:
         in_url = in_url[:question_mark_index]
 
-    # Replace beginning https
-    if in_url.startswith("https://"):
-        in_url = in_url[8:]
+    # Remove beginning https
+    in_url = in_url.removeprefix("https://")
+    in_url = in_url.removeprefix("http://")
 
-    if in_url.startswith("http://"):
-        in_url = in_url[7:]
+    # Remove www
+    in_url = in_url.removeprefix("www.")
 
     # Remove product hunt
     # TODO: Make this part extendable

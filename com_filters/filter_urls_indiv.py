@@ -66,16 +66,16 @@ def main():
     # Filter
     def is_url_valid_helper(in_url):
         if is_disable_filter:
-            return True
+            return "y"
 
         if not is_ignore_cache and in_url in in_records_set:
-            return False
+            return "Cached"
 
         return is_url_valid(in_url)
 
     master_df["is_valid"] = master_df["url"].apply(is_url_valid_helper)
-    filtered_df = master_df[master_df["is_valid"]][["url"]]
-    rejected_df = master_df[~master_df["is_valid"]][["url"]]
+    filtered_df = master_df[master_df["is_valid"] == "y"][["url"]]
+    rejected_df = master_df[master_df["is_valid"] != "y"][["url", "is_valid"]]
 
     # Save
     save_df_as_csv(filtered_df, out_filepath)
