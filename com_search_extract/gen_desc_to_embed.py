@@ -4,6 +4,9 @@ from custom_helpers_py.pandas_helpers import (
     save_df_as_csv,
 )
 import argparse
+from custom_helpers_py.string_formatters import convert_url_to_file_name
+import json
+from os.path import join
 
 """
 TODO:
@@ -41,8 +44,14 @@ def main():
     to_return_list = []
 
     for obj in indiv_scrape_list:
-        # TODO: Read from analyzed page copy folder path for page gist
-        page_gist = ""
+        url_file_name = convert_url_to_file_name(obj["init_url"])
+        page_copy_file_path = join(
+            analyzed_page_copy_folder_path, url_file_name + ".json"
+        )
+        with open(page_copy_file_path, "r", encoding="utf-8") as page_copy_file:
+            page_copy = json.loads(page_copy_file.read())
+
+        page_gist = page_copy["page_gist"]
         desc: str = obj["description"] + " " + page_gist
         desc = desc.strip()
         to_add = {"product_url": obj["init_url"], "desc": desc}

@@ -140,7 +140,8 @@
     "apps.microsoft.",
     "marketplace.atlassian.",
     ".substack.",
-    "bubbleapps."
+    "bubbleapps.",
+    "/products"
   ],
   "starts": [
     "justpaste.",
