@@ -144,9 +144,9 @@
     "/products"
   ],
   "starts": [
-    "justpaste.",
     "http",
     "ww",
+    "justpaste.",
     "itch.",
     "discord.",
     "slack.",

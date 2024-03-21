@@ -228,10 +228,10 @@ class DataPipeline(ABC):
 
                 for line in iter(process.stdout.readline, b""):
                     if line:
-                        print(">>> " + str(line.rstrip().decode()))
+                        print("> " + str(line.rstrip().decode()))
 
                 for line in iter(process.stderr.readline, b""):
-                    print(">>> " + str(line.rstrip().decode()), file=sys.stderr)
+                    print("> " + str(line.rstrip().decode()), file=sys.stderr)
 
                 process.wait()
                 returncode = process.returncode
