@@ -160,7 +160,48 @@ const evaluateGenericPageCopy = () => {
   return document.body.innerHTML.toString();
 };
 
+const evaluateStillLoading = () => {
+  const titleEl = document.querySelector("head title");
+  let pageTitle = "";
+  if (titleEl) {
+    pageTitle = titleEl.innerText;
+  }
+  if (!pageTitle) return true;
+  const upperPageTitle = pageTitle.toUpperCase();
+  const substringsToTest = ["JUST A MOMENT", "LOADING"];
+
+  let toReturn = false;
+  substringsToTest.forEach((substr) => {
+    if (upperPageTitle.includes(substr)) toReturn = true;
+  });
+
+  return toReturn;
+};
+
+const evaluateScrollAllTheWayDown = async () => {
+  const distance = 100;
+  const delay = 100;
+  const MAX_SCROLL_CYCLES = 30;
+
+  for (let i = 0; i < MAX_SCROLL_CYCLES; i++) {
+    const keepGoing =
+      document.scrollingElement.scrollTop + window.innerHeight <
+      document.scrollingElement.scrollHeight;
+
+    if (!keepGoing) break;
+
+    document.scrollingElement.scrollBy(0, distance);
+    await new Promise((resolve) => {
+      setTimeout(resolve, delay);
+    });
+  }
+
+  return true;
+};
+
 module.exports = {
   evaluateGenericPage,
   evaluateGenericPageCopy,
+  evaluateStillLoading,
+  evaluateScrollAllTheWayDown,
 };

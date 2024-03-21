@@ -2,6 +2,8 @@ import puppeteer from "puppeteer-extra";
 import {
   evaluateGenericPage,
   evaluateGenericPageCopy,
+  evaluateScrollAllTheWayDown,
+  evaluateStillLoading,
 } from "./evaluate-functions.js";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import {
@@ -74,7 +76,7 @@ const main = async () => {
   const REQUESTS_PER_REFRESH = 10;
   const JUST_A_MOMENT_DELAY = 10 * 1000;
   const DISCONNECTED_DELAY = 20 * 1000;
-  const MAX_LOADING_WAIT_CYCLES = 5;
+  const MAX_LOADING_WAIT_CYCLES = 3;
 
   // Error constants
   const FORCED_STOP_ERROR_STRING = "Forced stop";
@@ -115,10 +117,40 @@ const main = async () => {
       height: 1080,
       deviceScaleFactor: 1,
     });
-    await page.setRequestInterception(true);
     await page.setDefaultNavigationTimeout(NAV_TIMEOUT);
+
+    await page.setRequestInterception(true);
+
+    const blockResourceType = ["font", "image", "imageset", "media"];
+
+    const blockResourceName = [
+      "adition",
+      "adzerk",
+      "analytics",
+      "cdn.api.twitter",
+      "clicksor",
+      "clicktale",
+      "doubleclick",
+      "exelator",
+      "facebook",
+      "fontawesome",
+      "google",
+      "google-analytics",
+      "googletagmanager",
+      "mixpanel",
+      "optimizely",
+      "quantserve",
+      "sharethrough",
+      "tiqcdn",
+      "zedo",
+    ];
+
     page.on("request", (request) => {
-      if (request.resourceType() === "image") {
+      const requestUrl = request._url ? request._url.split("?")[0] : "";
+      if (
+        request.resourceType() in blockResourceType ||
+        blockResourceName.some((resource) => requestUrl.includes(resource))
+      ) {
         request.abort();
       } else {
         request.continue();
@@ -193,45 +225,49 @@ const main = async () => {
           message: "navigated to " + urlToScrape,
         });
 
-        let results = await page.evaluate(evaluateGenericPage);
+        // Check if page is still making us wait
+        let isStillLoading = await page.evaluate(evaluateStillLoading);
 
-        // Check if we are told to wait
-        const isPageStillLoading = (results) => {
-          if (!results.pageTitle) return true;
-          const upperPageTitle = results.pageTitle.toUpperCase();
-          const substringsToTest = ["JUST A MOMENT", "LOADING"];
-
-          let toReturn = false;
-          substringsToTest.forEach((substr) => {
-            if (upperPageTitle.includes(substr)) toReturn = true;
-          });
-
-          return toReturn;
-        };
-
-        for (let i = 0; i < MAX_LOADING_WAIT_CYCLES; i++) {
-          if (isPageStillLoading(results)) {
+        if (isStillLoading) {
+          for (let i = 0; i < MAX_LOADING_WAIT_CYCLES; i++) {
             if (forcedStop) {
               throw new Error(FORCED_STOP_ERROR_STRING);
             }
-            await runLogger.addToActionLog({
-              message: "waiting for page...",
-            });
-            await timeoutPromise(JUST_A_MOMENT_DELAY);
-            results = await page.evaluate(evaluateGenericPage);
-          } else {
-            break;
-          }
-        }
 
-        if (isPageStillLoading(results)) {
-          throw LOADING_TIMEOUT_ERROR_STRING;
+            await runLogger.addToActionLog({
+              message: "waiting for page load...",
+            });
+
+            await timeoutPromise(JUST_A_MOMENT_DELAY);
+
+            isStillLoading = await page.evaluate(evaluateStillLoading);
+            if (!isStillLoading) {
+              break;
+            }
+          }
+
+          if (isStillLoading) {
+            throw LOADING_TIMEOUT_ERROR_STRING;
+          }
         }
 
         const requestEndedDate = new Date();
         const requestEndedStr = requestEndedDate.toISOString();
         const requestDurationS =
           (requestEndedDate.getTime() - requestStartedDate.getTime()) / 1000;
+
+        // Evaluate contents
+        const evalStartedDate = new Date();
+        const evalStartedStr = evalStartedDate.toISOString();
+
+        await page.evaluate(evaluateScrollAllTheWayDown);
+        const results = await page.evaluate(evaluateGenericPage);
+        const pageCopyResults = await page.evaluate(evaluateGenericPageCopy);
+
+        const evalEndedDate = new Date();
+        const evalEndedStr = evalEndedDate.toISOString();
+        const evalDurationS =
+          (evalEndedDate.getTime() - evalStartedDate.getTime()) / 1000;
 
         const saveFileName = getFileNameFromUrl(urlToScrape);
         const essentialDataSavePath = join(
@@ -248,11 +284,10 @@ const main = async () => {
           title: results.pageTitle,
           description: results.pageDescription,
           page_image_url: results.faviconUrl,
+          request_duration_s: requestDurationS,
         };
 
-        const toWritePageCopy =
-          "type: generic\n---\n" +
-          (await page.evaluate(evaluateGenericPageCopy));
+        const toWritePageCopy = "type: generic\n---\n" + pageCopyResults;
 
         const toWriteHeadInfo = {
           twitter_meta_tags: results.twitterMetaTags,
@@ -293,6 +328,9 @@ const main = async () => {
           reqStartedAt: requestStartedStr,
           reqEndedAt: requestEndedStr,
           reqDurationS: requestDurationS,
+          reqStartedAt: evalStartedStr,
+          reqEndedAt: evalEndedStr,
+          reqDurationS: evalDurationS,
         });
 
         // Reset variables
