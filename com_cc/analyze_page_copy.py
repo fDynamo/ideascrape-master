@@ -1,14 +1,7 @@
 from os import listdir
 from os.path import join
-import argparse
-import json
 from bs4 import BeautifulSoup
 import re
-
-
-"""
-Analyzes page copies.
-"""
 
 
 def analyze_page_copy(in_file_path: str):
@@ -23,6 +16,11 @@ def analyze_page_copy(in_file_path: str):
     meta_info = page_copy[:meta_end_idx].strip()
     content = page_copy[content_start_idx:].strip()
 
+    if "generic" in meta_info:
+        return analyze_generic(meta_info, content)
+
+
+def analyze_generic(meta_info: str, content: str):
     soup = BeautifulSoup(content, features="lxml")
 
     to_return = {"page_gist": "", "link_list": []}
@@ -97,34 +95,3 @@ def analyze_page_copy(in_file_path: str):
     to_return["link_list"] = link_list
 
     return to_return
-
-
-def main():
-    # Get arguments
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("-i", "--inFolderPath", type=str, dest="in_folder_path")
-    parser.add_argument("-o", "--outFolderPath", type=str, dest="out_folder_path")
-    args = parser.parse_args()
-
-    in_folder_path = args.in_folder_path
-    out_folder_path = args.out_folder_path
-
-    if not in_folder_path or not out_folder_path:
-        print("Invalid inputs")
-        exit(1)
-
-    page_copy_folder_path = join(in_folder_path, "page_copy")
-
-    page_copy_file_list = listdir(page_copy_folder_path)
-    for file_name in page_copy_file_list:
-        in_file_path = join(page_copy_folder_path, file_name)
-        to_save = analyze_page_copy(in_file_path)
-
-        save_file_path = join(out_folder_path, file_name.replace(".txt", ".json"))
-        with open(save_file_path, "w") as out_file:
-            out_file.write(json.dumps(to_save, indent=4))
-
-
-if __name__ == "__main__":
-    main()

@@ -82,26 +82,24 @@ class DucksterPipeline(DataPipeline):
         file_path_rejected_indiv_scrape = join(
             folder_path_rejected, "rejected_indiv_scrape.csv"
         )
-        com_filter_and_cc_indiv_scrape = ScriptComponent(
-            component_name="filter and cc indiv scrape",
-            body="python com_filters/filter_and_cc_indiv_scrape.py",
-            args=[
-                ["i", folder_path_indiv_scrape],
-                ["o", file_path_cc_indiv_scrape],
-                ["r", file_path_rejected_indiv_scrape],
-            ],
-        )
-
         folder_path_analyzed_page_copy = join(out_folder_path, "analyzed_page_copy")
-        com_analyze_page_copy = ScriptComponent(
-            component_name="analyze page copy",
-            body="python com_special/analyze_page_copy.py",
+        com_analyze_and_cc_indiv_scrape = ScriptComponent(
+            component_name="analyze and cc indiv scrape",
+            body="python com_cc/analyze_and_cc_indiv_scrape.py",
             args=[
                 ComponentArg(
                     arg_name="i", arg_val=folder_path_indiv_scrape, is_path=True
                 ),
                 ComponentArg(
-                    arg_name="o", arg_val=folder_path_analyzed_page_copy, is_path=True
+                    arg_name="o", arg_val=file_path_cc_indiv_scrape, is_path=True
+                ),
+                ComponentArg(
+                    arg_name="r", arg_val=file_path_rejected_indiv_scrape, is_path=True
+                ),
+                ComponentArg(
+                    arg_name="analyzedPageCopyFolderPath",
+                    arg_val=folder_path_analyzed_page_copy,
+                    is_path=True,
                 ),
             ],
         )
@@ -167,13 +165,8 @@ class DucksterPipeline(DataPipeline):
             body="python com_search_extract/gen_desc_to_embed.py",
             args=[
                 ComponentArg(
-                    arg_name="ccIndivScrapeFilePath",
+                    arg_name="i",
                     arg_val=file_path_cc_indiv_scrape,
-                    is_path=True,
-                ),
-                ComponentArg(
-                    arg_name="analyzedPageCopyFolderPath",
-                    arg_val=folder_path_analyzed_page_copy,
                     is_path=True,
                 ),
                 ComponentArg(
@@ -278,8 +271,7 @@ class DucksterPipeline(DataPipeline):
         to_return = [
             com_filter_urls_indiv,
             com_indiv_scrape,
-            com_filter_and_cc_indiv_scrape,
-            com_analyze_page_copy,
+            com_analyze_and_cc_indiv_scrape,
             com_get_filtered_indiv_scrape_domains,
             com_filter_domains_for_sup_similarweb,
             com_scrape_sup_similarweb,
