@@ -173,9 +173,24 @@ class DataPipeline(ABC):
             default=False,
             dest="reset_test",
         )
+        parser.add_argument(
+            "--oneStep",
+            type=int,
+            default=None,
+            dest="one_step",
+        )
 
     def run_steps(self, steps: list[ScriptComponent], **kwargs):
-        start_index, end_index = kwargs["start_index"], kwargs["end_index"]
+        one_step, start_index, end_index = (
+            kwargs["one_step"],
+            kwargs["start_index"],
+            kwargs["end_index"],
+        )
+
+        if one_step is not None:
+            start_index = one_step
+            end_index = one_step + 1
+
         self.run_info_folder.open_pipeline_log()
 
         print("[ORCHESTRATOR] Pipeline run started", self.get_pipeline_name())
