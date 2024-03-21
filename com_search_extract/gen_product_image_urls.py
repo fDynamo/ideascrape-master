@@ -3,7 +3,9 @@ from custom_helpers_py.pandas_helpers import (
     read_csv_as_df,
     save_df_as_csv,
 )
+from custom_helpers_py.url_formatters import get_domain_from_url
 import argparse
+import re
 
 """
 TODO:
@@ -40,10 +42,12 @@ def main():
         if not end_url or not isinstance(end_url, str):
             raise Exception("Invalid end url!")
 
-        end_url.removesuffix("/")
+        domain = get_domain_from_url(end_url)
         favicon_url.removeprefix("/")
 
-        to_return = end_url + "/" + favicon_url
+        to_return = domain + "/" + favicon_url
+        to_return = re.sub("[/]+", "/", to_return)
+        to_return = "https://" + to_return
         return to_return
 
     for obj in indiv_scrape_list:
