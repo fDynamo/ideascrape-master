@@ -269,6 +269,13 @@ class DucksterPipeline(DataPipeline):
                     is_path=True,
                 ),
             )
+        if kwargs["use_dev_scrape"]:
+            com_prodify.add_arg(
+                ComponentArg(
+                    arg_name="ignoreMissingEmbeddings",
+                    arg_val=True,
+                ),
+            )
 
         to_return = [
             com_filter_urls_indiv,

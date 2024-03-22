@@ -33,6 +33,14 @@ def camel_to_snake_case(in_str: str) -> str:
     return re.sub(CAMEL2SNAKE, "_", in_str).lower()
 
 
+def remove_unnecessary_spaces_from_string(in_str: str) -> str:
+    to_return = in_str
+    to_return = to_return.replace("\n", " ")
+    to_return = re.sub(" +", " ", to_return)
+    to_return = to_return.strip()
+    return to_return
+
+
 """
 NOTE:
 This code is lowkey shit, need to fix somehow

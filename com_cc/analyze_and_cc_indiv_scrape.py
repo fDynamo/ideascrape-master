@@ -2,6 +2,7 @@ from custom_helpers_py.filter_results import (
     is_page_title_valid,
     is_page_description_valid,
 )
+from custom_helpers_py.string_formatters import remove_unnecessary_spaces_from_string
 from custom_helpers_py.pandas_helpers import (
     save_df_as_csv,
 )
@@ -55,6 +56,8 @@ def main():
 
         init_url = file_obj["init_url"]
         title = file_obj["title"]
+        title = remove_unnecessary_spaces_from_string(title)
+        file_obj["title"] = title
 
         # Filter on page title
         if not is_page_title_valid(title):
@@ -81,10 +84,14 @@ def main():
         analyzed_description: str = (
             description + " " + analyzed_page_copy_obj["page_gist"]
         )
-        analyzed_description = analyzed_description.strip()
+        analyzed_description = remove_unnecessary_spaces_from_string(
+            analyzed_description
+        )
 
         if not description:
             description = analyzed_description
+        else:
+            description = remove_unnecessary_spaces_from_string(description)
 
         if not is_page_description_valid(description):
             rejected_list.append({"url": init_url, "reason": "Invalid description"})

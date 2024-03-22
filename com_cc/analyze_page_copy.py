@@ -1,7 +1,6 @@
-from os import listdir
-from os.path import join
 from bs4 import BeautifulSoup
 import re
+from custom_helpers_py.string_formatters import remove_unnecessary_spaces_from_string
 
 
 def analyze_page_copy(in_file_path: str):
@@ -84,6 +83,7 @@ def analyze_generic(meta_info: str, content: str):
                     new_page_gist_list.append(in_text)
 
         page_gist = " ".join(new_page_gist_list)
+        page_gist = remove_unnecessary_spaces_from_string(page_gist)
         to_return["page_gist"] = page_gist
 
     link_list = []

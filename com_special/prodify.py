@@ -55,6 +55,15 @@ def main():
     parser.add_argument(
         "-o", "--outFolderPath", type=str, dest="out_folder_path", required=True
     )
+
+    # some options
+    parser.add_argument(
+        "--ignoreMissingEmbeddings",
+        type=bool,
+        dest="ignore_missing_embeddings",
+        action=argparse.BooleanOptionalAction,
+    )
+
     args = parser.parse_args()
 
     cc_indiv_scrape_file_path: str = args.cc_indiv_scrape_file_path
@@ -64,6 +73,8 @@ def main():
     cc_sup_similarweb_scrape_file_path: str = args.cc_sup_similarweb_scrape_file_path
 
     combined_source_file_path: str = args.combined_source_file_path
+
+    ignore_missing_embeddings: bool = args.ignore_missing_embeddings
 
     out_folder_path: str = args.out_folder_path
 
@@ -95,21 +106,32 @@ def main():
             print("start embeddings")
 
             def get_desc_embedding(url_file_name: str):
-                desc_embedding_file_path = join(
-                    desc_embeddings_folder_path, url_file_name + ".txt"
-                )
-                with open(desc_embedding_file_path, "r") as em_file:
-                    embedding = em_file.read()
-                return embedding
+                try:
+                    desc_embedding_file_path = join(
+                        desc_embeddings_folder_path, url_file_name + ".txt"
+                    )
+                    with open(desc_embedding_file_path, "r") as em_file:
+                        embedding = em_file.read()
+                    return embedding
+                except:
+                    if ignore_missing_embeddings:
+                        return None
+                    raise Exception("Missing embedding!")
 
             search_main_df["product_description_embedding"] = search_main_df[
                 "tmp_url_file_name"
             ].apply(get_desc_embedding)
+
+            if ignore_missing_embeddings:
+                search_main_df = search_main_df.dropna(
+                    subset="product_description_embedding"
+                )
         else:
             search_main_df["product_description_embedding"] = ""
 
         if product_images_folder_path:
             print("start images")
+
             IMAGE_RECORDS_FILE_PATH = join(product_images_folder_path, RECORD_FILE_NAME)
             image_records_df = read_csv_as_df(IMAGE_RECORDS_FILE_PATH)
             search_main_df = search_main_df.merge(image_records_df, on="product_url")
