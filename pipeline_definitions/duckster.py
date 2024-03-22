@@ -71,7 +71,6 @@ class DucksterPipeline(DataPipeline):
             ],
         )
         if kwargs["use_dev_scrape"]:
-            raise Exception("TODO!")
             folder_path_indiv_scrape = join(
                 get_dev_scrape_folder_path(),
                 "indiv_scrape",
@@ -191,8 +190,11 @@ class DucksterPipeline(DataPipeline):
             ],
         )
         if kwargs["use_dev_scrape"]:
-            "TODO"
-            pass
+            folder_path_desc_embeddings = join(
+                get_dev_scrape_folder_path(),
+                "desc_embeddings",
+            )
+            com_embed_desc_vector.erase()
 
         file_path_product_image_urls = join(out_folder_path, "product_image_urls.csv")
         com_gen_product_image_urls = ScriptComponent(

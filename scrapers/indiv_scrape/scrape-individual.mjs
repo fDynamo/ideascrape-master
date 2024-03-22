@@ -328,9 +328,9 @@ const main = async () => {
           reqStartedAt: requestStartedStr,
           reqEndedAt: requestEndedStr,
           reqDurationS: requestDurationS,
-          reqStartedAt: evalStartedStr,
-          reqEndedAt: evalEndedStr,
-          reqDurationS: evalDurationS,
+          evalStartedAt: evalStartedStr,
+          evalEndedAt: evalEndedStr,
+          evalDurationS: evalDurationS,
         });
 
         // Reset variables
