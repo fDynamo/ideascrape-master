@@ -37,7 +37,7 @@ const evaluateGenericPage = () => {
   // Link tags
   linkElList.forEach((linkEl) => {
     const rel = linkEl.getAttribute("rel");
-    const href = linkEl.getAttribute("href");
+    const href = linkEl.href;
     if (rel == "canonical") {
       canonicalUrl = href;
     }

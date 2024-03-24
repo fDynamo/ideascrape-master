@@ -48,10 +48,14 @@ def main():
     parser.add_argument(
         "-o", "--outFolderPath", type=str, dest="out_folder_path", required=True
     )
+    parser.add_argument(
+        "--startIndex", type=int, dest="start_index", required=False, default=0
+    )
     args = parser.parse_args()
 
     in_file_path = args.in_file_path
     out_folder_path = args.out_folder_path
+    start_index = args.start_index
 
     RECORD_FILE_PATH = join(out_folder_path, RECORD_FILE_NAME)
     RUN_DELAY = 0
@@ -69,12 +73,15 @@ def main():
 
     atleast_one_success = False
     for i, entry in enumerate(to_download_list):
+        if i < start_index:
+            continue
+
         image_url = entry["image_url"]
 
         if not image_url or not isinstance(image_url, str) or image_url == "":
             continue
 
-        print("downloading", i)
+        print("downloading", i, entry["product_url"])
 
         # Convert url to image name
         save_image_name = convert_url_to_file_name(entry["product_url"])
@@ -95,7 +102,9 @@ def main():
 
         try:
             download_image(image_url, save_file_path)
+            print("downloaded")
             transformed_file_path = transform_image(save_file_path, save_file_path)
+            print("transformed")
             transformed_file_name = basename(transformed_file_path)
             atleast_one_success = True
         except Exception as error:

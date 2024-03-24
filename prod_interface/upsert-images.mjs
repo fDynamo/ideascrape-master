@@ -48,7 +48,7 @@ async function main() {
       break;
     }
     lastIndex = i;
-    const file = recordsList[i].image_filename;
+    const file = recordsList[i].image_file_name;
     if (!file || file.endsWith("svg") || file.endsWith("csv") || file == "ER") {
       console.log("skipping", i, file);
       continue;

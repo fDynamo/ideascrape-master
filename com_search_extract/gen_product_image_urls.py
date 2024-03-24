@@ -61,6 +61,7 @@ def main():
         to_return_list.append(to_add)
 
     to_return_df = pd.DataFrame(to_return_list)
+    to_return_df = to_return_df.dropna(subset="image_url")
     save_df_as_csv(to_return_df, out_file_path)
 
 
