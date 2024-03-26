@@ -69,6 +69,13 @@ def main():
                 date_days_ago = datetime.today() - timedelta(days=int(days_ago))
                 return date_days_ago.strftime("%Y-%m-%d")
 
+            if "m" in time_added_str:
+                minutes_ago = time_added_str.removesuffix("m")
+                date_minutes_ago = datetime.today() - timedelta(
+                    minutes=int(minutes_ago)
+                )
+                return date_minutes_ago.strftime("%Y-%m-%d")
+
         if len(launch_date) > 10:
             non_year_date = launch_date[4:]
             non_year_date = non_year_date.replace("0", "")
