@@ -22,6 +22,10 @@ def read_csv_as_df(filepath: str, use_python_engine: bool = False) -> pd.DataFra
     return pd.read_csv(filepath, encoding="utf-8", low_memory=False)
 
 
+def read_json_as_df(file_path: str) -> pd.DataFrame:
+    return pd.read_json(file_path, encoding="utf-8")
+
+
 def save_df_as_csv(df: pd.DataFrame, filepath: str):
     df.to_csv(filepath, encoding="utf-8", index=False)
 
