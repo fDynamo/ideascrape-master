@@ -59,7 +59,7 @@ def main():
     if is_use_tp_as_input:
         urls_series: pd.Series = tpd.get_urls()
         if urls_series is None:
-            print("TP File cannot be used as input")
+            print("TPD cannot be used as input")
             exit(1)
     else:
         in_df = read_csv_as_df(in_file_path)

@@ -90,13 +90,15 @@ def is_page_description_valid(in_desc: str) -> bool:
     return True
 
 
-def is_domain_similarweb_scrapable(in_domain):
+# Returns 'y' if valid
+# Returns a cause string if not valid
+def is_domain_similarweb_scrapable(in_domain) -> str:
     substrings = result_filters["similarweb"]["substrings"]
     for substring in substrings:
         if substring in in_domain:
-            return False
+            return "Substring: " + substring
 
-    return True
+    return "y"
 
 
 if __name__ == "__main__":

@@ -18,8 +18,8 @@ class TPData:
         to_add_df: pd.DataFrame = None,
         to_add_list: list[dict] = None,
         to_add_dict: dict = None,
-        clean_product_url=False,
         part_name: str = None,
+        domain_pk: bool = False,
     ):
         if to_add_df is not None:
             pass
@@ -30,12 +30,8 @@ class TPData:
         else:
             raise Exception("Nothing to add")
 
-        if TPData.__validate_tp_df(to_add_df):
+        if not TPData.__validate_tp_df(to_add_df, domain_pk=domain_pk):
             raise Exception("Malformed df")
-
-        if clean_product_url:
-            to_add_df["product_url"] = to_add_df["product_url"].apply(clean_url)
-            to_add_df = to_add_df.drop_duplicates(subset="product_url")
 
         old_file_path = self.__get_data_file_path(part_name=part_name)
         is_old_exists = exists(old_file_path)
@@ -43,8 +39,9 @@ class TPData:
         if is_old_exists:
             curr_df = read_json_as_df(old_file_path)
             dupe_suffix = "_old"
+            on_col = "product_url" if not domain_pk else "product_domain"
             to_add_df = curr_df.merge(
-                to_add_df, on="product_url", how="outer", suffixes=(dupe_suffix, "")
+                to_add_df, on=on_col, how="outer", suffixes=(dupe_suffix, "")
             )
             cols_to_remove = [
                 col for col in to_add_df.columns if col.endswith(dupe_suffix)
@@ -55,6 +52,9 @@ class TPData:
                     to_add_df[new_col] = to_add_df[new_col].fillna(to_add_df[old_col])
 
                 to_add_df = to_add_df.drop(columns=cols_to_remove)
+        else:
+            if domain_pk and "product_url" not in to_add_df.columns:
+                to_add_df["product_url"] = to_add_df["product_domain"]
 
         if (
             "product_domain" not in to_add_df.columns
@@ -82,7 +82,7 @@ class TPData:
         self, df_to_save: pd.DataFrame, skip_validation=False, part_name: str = None
     ):
 
-        if not skip_validation and TPData.__validate_tp_df(df_to_save):
+        if not skip_validation and not TPData.__validate_tp_df(df_to_save):
             raise Exception("Malformed df")
 
         if not self.folder_exists:
@@ -111,8 +111,17 @@ class TPData:
         return join(self.folder_path, old_file_name)
 
     @staticmethod
-    def __validate_tp_df(in_df: pd.DataFrame) -> bool:
-        return not "product_url" in in_df.columns or in_df["product_url"].isna().any()
+    # Returns false if invalid
+    def __validate_tp_df(in_df: pd.DataFrame, domain_pk=False) -> bool:
+        if not domain_pk:
+            return not (
+                "product_url" not in in_df.columns or in_df["product_url"].isna().any()
+            )
+        else:
+            return not (
+                "product_domain" not in in_df.columns
+                or in_df["product_domain"].isna().any()
+            )
 
 
 if __name__ == "__main__":
