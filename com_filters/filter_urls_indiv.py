@@ -39,6 +39,9 @@ def main():
     parser.add_argument(
         "--disable-filter", action=argparse.BooleanOptionalAction, default=False
     )
+    parser.add_argument(
+        "--reset-tp", action=argparse.BooleanOptionalAction, default=False
+    )
     args = parser.parse_args()
 
     in_file_path = args.in_file_path
@@ -50,6 +53,7 @@ def main():
 
     is_prod = args.prod
     is_disable_filter = args.disable_filter
+    is_reset_tp = args.reset_tp
 
     if not is_use_tp_as_input and not in_file_path:
         print("No input supplied")
@@ -93,7 +97,7 @@ def main():
         save_df_as_csv(rejected_df, rejected_file_path)
 
     master_df = master_df.rename(columns={"url": "product_url"})
-    tpd.add_data(to_add_df=master_df)
+    tpd.add_data(to_add_df=master_df, reset=is_reset_tp)
 
 
 if __name__ == "__main__":

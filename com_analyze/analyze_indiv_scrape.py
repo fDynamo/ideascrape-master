@@ -13,6 +13,7 @@ from com_analyze.analyze_page_copy import analyze_page_copy
 from custom_helpers_py.filter_results import is_url_valid
 from copy import deepcopy
 from custom_helpers_py.custom_classes.tp_data import TPData
+from custom_helpers_py.pandas_helpers import save_df_as_csv
 
 
 """
@@ -30,10 +31,14 @@ def main():
     parser.add_argument(
         "--tp", "--tp-folder-path", type=str, required=True, dest="tp_folder_path"
     )
+    parser.add_argument(
+        "-r", "--rejected-folder-path", type=str, dest="rejected_folder_path"
+    )
     args = parser.parse_args()
 
     in_folder_path = args.in_folder_path
     tp_folder_path = args.tp_folder_path
+    rejected_folder_path = args.rejected_folder_path
 
     essential_data_folder_path = join(in_folder_path, "essential_data")
     page_copy_folder_path = join(in_folder_path, "page_copy")
@@ -128,6 +133,20 @@ def main():
     # Save
     tpd = TPData(folder_path=tp_folder_path)
     tpd.add_data(to_add_df=master_df)
+
+    # Remove those without entries
+    tpd_df = tpd.as_df()
+    no_entries_mask = tpd_df["title"].isna()
+    no_entries_df = tpd_df[no_entries_mask]
+    no_entries_df["rejected"] = REJECTED_PREFIX + "Not scraped"
+    no_entries_df = no_entries_df[["product_url", "rejected"]]
+    tpd.add_data(to_add_df=no_entries_df)
+
+    if rejected_folder_path:
+        rejected_mask = ~master_df["rejected"].isna()
+        rejected_df = master_df[rejected_mask][["product_url", "rejected"]]
+        rejected_df = pd.concat([rejected_df, no_entries_df])
+        save_df_as_csv(rejected_df, rejected_folder_path)
 
 
 if __name__ == "__main__":

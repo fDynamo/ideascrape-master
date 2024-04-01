@@ -52,10 +52,10 @@ def main():
     master_df["sw_url"] = "https://www.similarweb.com/website/" + master_df["domain"]
     master_df["product_domain"] = master_df["domain"]
 
-    dfs_to_keep = ["product_domain"] + [
+    cols_to_keep = ["product_domain"] + [
         col for col in master_df.columns if col.startswith("sw_")
     ]
-    master_df = master_df[dfs_to_keep]
+    master_df = master_df[cols_to_keep]
 
     tpd = TPData(folder_path=tp_folder_path)
     tpd.add_data(to_add_df=master_df, part_name="sw")

@@ -6,7 +6,10 @@ class ComponentArg:
         self, arg_name: str, arg_val: str | bool | None = True, is_path=None
     ) -> None:
         self.arg_name = arg_name
-        self.arg_val = arg_val
+        if arg_val == None:
+            self.arg_val = False
+        else:
+            self.arg_val = arg_val
 
         if is_path == None:
             new_is_path = False
@@ -45,7 +48,7 @@ class ComponentArg:
         return to_return
 
     def get_debug_str(self) -> str:
-        return "\n".join([self.arg_name, self.arg_val, self.is_path])
+        return "\n".join([self.arg_name, str(self.arg_val), str(self.is_path)])
 
     @staticmethod
     def convert_list_to_arg(in_list: list):

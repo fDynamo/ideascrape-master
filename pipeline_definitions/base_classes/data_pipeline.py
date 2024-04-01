@@ -71,7 +71,7 @@ class RunInfoFolder:
 
     def add_step_to_progress(self, step_id: int, com: ScriptComponent):
         with open(join(self.folder_path, "progress.txt"), "a") as outfile:
-            outfile.write(str(step_id) + " : " + str(com) + "\n")
+            outfile.write(str(step_id) + "\n" + str(com) + "\n\n")
 
     def open_pipeline_log(self):
         run_log_file = open(join(self.folder_path, "run_log.txt"), "a")
@@ -213,6 +213,7 @@ class DataPipeline(ABC):
 
             com_start_time = datetime.now()
             execution_error = None
+            process = None
             try:
                 # Make all directories as needed
                 path_in_args = com.get_paths_in_args()

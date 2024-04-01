@@ -85,13 +85,12 @@ def main():
     master_df
 
     invalid_mask = ~master_df["rejected_similarweb_scrape"].isna()
-    rejected_df = master_df[invalid_mask]["domain"]
-    filtered_df = master_df[~invalid_mask]["domain"]
+    rejected_df = master_df[invalid_mask][["domain", "rejected_similarweb_scrape"]]
+    filtered_df = master_df[~invalid_mask][["domain"]]
 
     # Save
     save_df_as_csv(filtered_df, out_file_path)
     if isinstance(rejected_file_path, str):
-        rejected_df = rejected_df.drop(columns=["is_valid"])
         save_df_as_csv(rejected_df, rejected_file_path)
 
     # Save in tpd

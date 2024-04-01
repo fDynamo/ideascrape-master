@@ -5,8 +5,6 @@ from custom_helpers_py.string_formatters import (
 from os.path import join, basename
 import requests
 from time import sleep
-from custom_helpers_py.url_formatters import get_domain_from_url
-import re
 import argparse
 from wand.image import Image
 from custom_helpers_py.custom_classes.tp_data import TPData
@@ -41,9 +39,6 @@ def main():
 
     to_download_df = tpd.as_df()
     to_download_df = to_download_df[["product_url", "page_image_url"]]
-    to_download_df["page_image_url"] = to_download_df["page_image_url"].apply(
-        fix_favicon_url
-    )
 
     # Download
     allowed_extensions = [".svg", ".png", ".gif", ".ico", ".jpg", ".jpeg", ".webp"]
@@ -108,25 +103,6 @@ def main():
     if not atleast_one_success:
         print("All downloads failed!")
         exit(1)
-
-
-def fix_favicon_url(favicon_url: str, end_url: str):
-    if favicon_url.startswith("http"):
-        return favicon_url
-
-    if favicon_url.startswith("//"):
-        return "https:" + favicon_url
-
-    if not end_url or not isinstance(end_url, str):
-        raise Exception("Invalid end url!")
-
-    domain = get_domain_from_url(end_url)
-    favicon_url.removeprefix("/")
-
-    to_return = domain + "/" + favicon_url
-    to_return = re.sub("[/]+", "/", to_return)
-    to_return = "https://" + to_return
-    return to_return
 
 
 # Download function

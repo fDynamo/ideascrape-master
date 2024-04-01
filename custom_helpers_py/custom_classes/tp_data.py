@@ -21,6 +21,7 @@ class TPData:
         to_add_dict: dict = None,
         part_name: str = None,
         domain_pk: bool = False,
+        reset: bool = False,
     ):
         if to_add_df is not None:
             pass
@@ -41,7 +42,7 @@ class TPData:
         old_file_path = self.__get_data_file_path(part_name=part_name)
         is_old_exists = exists(old_file_path)
 
-        if is_old_exists:
+        if is_old_exists and not reset:
             curr_df = read_json_as_df(old_file_path)
             dupe_suffix = "_old"
             on_col = "product_url" if not domain_pk else "product_domain"
@@ -66,7 +67,7 @@ class TPData:
                 get_domain_from_url
             )
 
-        self.save_df(to_add_df, skip_validation=True)
+        self.save_df(to_add_df, skip_validation=True, part_name=part_name)
 
     """
     Combines all parts to master
@@ -112,7 +113,7 @@ class TPData:
         if is_data_exists:
             master_df = read_json_as_df(data_file_path)
             if filter_rejected:
-                master_df = master_df[~master_df["rejected"].isna()]
+                master_df = master_df[master_df["rejected"].isna()]
 
             return master_df
         return None

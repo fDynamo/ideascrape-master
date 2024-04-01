@@ -30,17 +30,17 @@ def is_url_valid(in_clean_url: str) -> str:
     substrings = result_filters["substrings"]
     for substring in substrings:
         if substring in in_clean_url:
-            return "Substring"
+            return "Substring: " + substring
 
     starts = result_filters["starts"]
     for start in starts:
         if in_clean_url.startswith(start):
-            return "Starts"
+            return "Starts: " + start
 
     ends = result_filters["ends"]
     for end in ends:
         if in_clean_url.endswith(end):
-            return "Ends"
+            return "Ends: " + end
 
     return "y"
 
