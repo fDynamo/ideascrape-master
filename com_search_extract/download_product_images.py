@@ -89,16 +89,16 @@ def main():
             transformed_file_path = transform_image(save_file_path, save_file_path)
             print("transformed")
             transformed_file_name = basename(transformed_file_path)
+
+            # Save file_path in entry
+            entry[LOCAL_IMAGE_FILE_NAME_COL_NAME] = transformed_file_name
+            tpd.add_data(to_add_dict=entry)
+
             atleast_one_success = True
         except Exception as error:
             print(error)
             entry[LOCAL_IMAGE_ERROR_COL_NAME] = str(error)
             continue
-
-        # Save file_path in entry
-        entry[LOCAL_IMAGE_FILE_NAME_COL_NAME] = transformed_file_name
-
-        tpd.add_data(to_add_dict=entry)
 
         pct = format_count_percentage(i + 1, count_to_download)
         print("progress", pct)

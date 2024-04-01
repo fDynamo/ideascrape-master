@@ -3,9 +3,10 @@ from custom_helpers_py.pandas_helpers import read_json_as_df
 from custom_helpers_py.url_formatters import get_domain_from_url, clean_url
 import pandas as pd
 from os.path import join
-from os import mkdir
+from os import mkdir, listdir
 
 MASTER_FILE_NAME = "master.json"
+PART_PREFIX = "part_"
 
 
 class TPData:
@@ -31,12 +32,8 @@ class TPData:
             raise Exception("Nothing to add")
 
         # Infer domain pk
-        if (
-            not domain_pk
-            and "product_domain" in to_add_df.columns
-            and "product_url" not in to_add_df.columns
-        ):
-            domain_pk = True
+        if not domain_pk:
+            domain_pk = self.__infer_domain_pk(to_add_df)
 
         if not TPData.__validate_tp_df(to_add_df, domain_pk=domain_pk):
             raise Exception("Malformed df")
@@ -71,6 +68,43 @@ class TPData:
 
         self.save_df(to_add_df, skip_validation=True)
 
+    """
+    Combines all parts to master
+    IMPORTANT:
+    - Any urls or domains not in master will still get appended
+    """
+
+    def get_combined_parts_df(self, filter_rejected=True):
+        master_df = self.as_df(filter_rejected=filter_rejected)
+        if master_df is None:
+            return None
+
+        file_list = listdir(self.folder_path)
+        for file_name in file_list:
+            if not file_name.startswith(PART_PREFIX):
+                continue
+
+            part_name = file_name.removeprefix(PART_PREFIX).removesuffix(".json")
+            part_df = self.as_df(part_name=part_name, filter_rejected=filter_rejected)
+            domain_pk = self.__infer_domain_pk(part_df)
+
+            dupe_suffix = "_old"
+            on_col = "product_url" if not domain_pk else "product_domain"
+            master_df = master_df.merge(
+                part_df, on=on_col, how="outer", suffixes=(dupe_suffix, "")
+            )
+            cols_to_remove = [
+                col for col in master_df.columns if col.endswith(dupe_suffix)
+            ]
+            if len(cols_to_remove) > 0:
+                for old_col in cols_to_remove:
+                    new_col = old_col.removesuffix(dupe_suffix)
+                    master_df[new_col] = master_df[new_col].fillna(master_df[old_col])
+
+                master_df = master_df.drop(columns=cols_to_remove)
+
+        return master_df
+
     def as_df(self, filter_rejected=True, part_name: str = None) -> pd.DataFrame | None:
         data_file_path = self.__get_data_file_path(part_name=part_name)
         is_data_exists = exists(data_file_path)
@@ -86,7 +120,6 @@ class TPData:
     def save_df(
         self, df_to_save: pd.DataFrame, skip_validation=False, part_name: str = None
     ):
-
         if not skip_validation and not TPData.__validate_tp_df(df_to_save):
             raise Exception("Malformed df")
 
@@ -112,8 +145,11 @@ class TPData:
     def __get_data_file_path(self, part_name: str = None):
         old_file_name = MASTER_FILE_NAME
         if part_name is not None:
-            old_file_name = "part_" + part_name + ".json"
+            old_file_name = PART_PREFIX + part_name + ".json"
         return join(self.folder_path, old_file_name)
+
+    def __infer_domain_pk(self, in_df: pd.DataFrame):
+        return "product_domain" in in_df.columns and "product_url" not in in_df.columns
 
     @staticmethod
     # Returns false if invalid
