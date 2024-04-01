@@ -30,6 +30,14 @@ class TPData:
         else:
             raise Exception("Nothing to add")
 
+        # Infer domain pk
+        if (
+            not domain_pk
+            and "product_domain" in to_add_df.columns
+            and "product_url" not in to_add_df.columns
+        ):
+            domain_pk = True
+
         if not TPData.__validate_tp_df(to_add_df, domain_pk=domain_pk):
             raise Exception("Malformed df")
 
@@ -52,11 +60,8 @@ class TPData:
                     to_add_df[new_col] = to_add_df[new_col].fillna(to_add_df[old_col])
 
                 to_add_df = to_add_df.drop(columns=cols_to_remove)
-        else:
-            if domain_pk and "product_url" not in to_add_df.columns:
-                to_add_df["product_url"] = to_add_df["product_domain"]
 
-        if (
+        if "product_url" in to_add_df.columns and (
             "product_domain" not in to_add_df.columns
             or to_add_df["product_domain"].isna().any()
         ):

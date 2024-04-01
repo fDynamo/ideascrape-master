@@ -2,14 +2,9 @@ from custom_helpers_py.string_formatters import (
     convert_url_to_file_name,
     format_count_percentage,
 )
-import pandas as pd
 from os.path import join, basename
 import requests
 from time import sleep
-from custom_helpers_py.pandas_helpers import (
-    read_csv_as_df,
-    save_df_as_csv,
-)
 from custom_helpers_py.url_formatters import get_domain_from_url
 import re
 import argparse
