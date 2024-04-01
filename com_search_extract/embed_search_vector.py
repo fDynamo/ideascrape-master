@@ -1,15 +1,11 @@
 from openai import OpenAI
 from custom_helpers_py.string_formatters import (
-    convert_url_to_file_name,
     clean_text,
     format_count_percentage,
 )
 from dotenv import load_dotenv
-from custom_helpers_py.pandas_helpers import (
-    read_csv_as_df,
-)
 import argparse
-from os.path import join
+from custom_helpers_py.custom_classes.tp_data import TPData
 
 
 """
@@ -22,21 +18,17 @@ def main():
     # Get arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-i", "--inFilePath", type=str, dest="in_file_path")
-    parser.add_argument("-o", "--outFolderPath", type=str, dest="out_folder_path")
+    parser.add_argument(
+        "--tp", "--tp-folder-path", type=str, required=True, dest="tp_folder_path"
+    )
     args = parser.parse_args()
 
-    in_file_path = args.in_file_path
-    out_folder_path = args.out_folder_path
-
-    if not in_file_path or not out_folder_path:
-        print("Invalid inputs")
-        exit(1)
+    tp_folder_path = args.tp_folder_path
 
     load_dotenv()
 
-    # Get text to embed
-    in_df = read_csv_as_df(in_file_path)
+    tpd = TPData(folder_path=tp_folder_path)
+    in_df = tpd.as_df()
 
     # Start embedding
     client = OpenAI()
@@ -50,7 +42,7 @@ def main():
     for i, in_record in enumerate(in_list):
         print("embedding", i)
         product_url = in_record["product_url"]
-        text_to_embed = in_record["desc"]
+        text_to_embed = in_record["analyzed_description"]
         text_to_embed = clean_text(text_to_embed)
         if not text_to_embed or text_to_embed == "":
             print("empty skipping")
@@ -67,12 +59,10 @@ def main():
         )
 
         embedding = str(embedding)
-        save_file_path = join(
-            out_folder_path, convert_url_to_file_name(product_url) + ".txt"
-        )
 
-        with open(save_file_path, "w") as out_file:
-            out_file.write(embedding)
+        to_add = {"product_url": product_url, "search_vector": embedding}
+
+        tpd.add_data(to_add_list=[to_add], part_name="search_vector_embeddings")
 
         pct = format_count_percentage(i, num_records)
         print("done", i, pct)

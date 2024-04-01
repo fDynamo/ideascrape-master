@@ -3,9 +3,6 @@ from custom_helpers_py.filter_results import (
     is_page_description_valid,
 )
 from custom_helpers_py.string_formatters import remove_unnecessary_spaces_from_string
-from custom_helpers_py.pandas_helpers import (
-    save_df_as_csv,
-)
 from custom_helpers_py.url_formatters import clean_url
 import argparse
 from os import listdir
