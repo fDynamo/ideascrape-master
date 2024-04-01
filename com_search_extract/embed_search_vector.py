@@ -62,7 +62,7 @@ def main():
 
         to_add = {"product_url": product_url, "search_vector": embedding}
 
-        tpd.add_data(to_add_list=[to_add], part_name="search_vector_embeddings")
+        tpd.add_data(to_add_dict=to_add, part_name="search_vector_embeddings")
 
         pct = format_count_percentage(i, num_records)
         print("done", i, pct)

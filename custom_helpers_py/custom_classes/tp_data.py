@@ -15,19 +15,20 @@ class TPData:
 
     def add_data(
         self,
-        to_add_list: list[dict] = None,
-        clean_product_url=False,
         to_add_df: pd.DataFrame = None,
+        to_add_list: list[dict] = None,
+        to_add_dict: dict = None,
+        clean_product_url=False,
         part_name: str = None,
     ):
-        if to_add_df is None:
-            if to_add_list is None:
-                raise Exception("Nothing to add")
-
-            # Read as df
+        if to_add_df is not None:
+            pass
+        elif to_add_list is not None:
             to_add_df = pd.DataFrame(to_add_list)
-
-        original_df = to_add_df
+        elif to_add_dict is not None:
+            to_add_df = pd.DataFrame([to_add_dict])
+        else:
+            raise Exception("Nothing to add")
 
         if TPData.__validate_tp_df(to_add_df):
             raise Exception("Malformed df")
@@ -40,25 +41,20 @@ class TPData:
         is_old_exists = exists(old_file_path)
 
         if is_old_exists:
-            try:
-                curr_df = read_json_as_df(old_file_path)
-                dupe_suffix = "_old"
-                to_add_df = curr_df.merge(
-                    to_add_df, on="product_url", how="outer", suffixes=(dupe_suffix, "")
-                )
-                cols_to_remove = [
-                    col for col in to_add_df.columns if col.endswith(dupe_suffix)
-                ]
-                if len(cols_to_remove) > 0:
-                    for old_col in cols_to_remove:
-                        new_col = old_col.removesuffix(dupe_suffix)
-                        to_add_df[new_col] = to_add_df[new_col].fillna(
-                            to_add_df[old_col]
-                        )
+            curr_df = read_json_as_df(old_file_path)
+            dupe_suffix = "_old"
+            to_add_df = curr_df.merge(
+                to_add_df, on="product_url", how="outer", suffixes=(dupe_suffix, "")
+            )
+            cols_to_remove = [
+                col for col in to_add_df.columns if col.endswith(dupe_suffix)
+            ]
+            if len(cols_to_remove) > 0:
+                for old_col in cols_to_remove:
+                    new_col = old_col.removesuffix(dupe_suffix)
+                    to_add_df[new_col] = to_add_df[new_col].fillna(to_add_df[old_col])
 
-                    to_add_df = to_add_df.drop(columns=cols_to_remove)
-            except:
-                to_add_df = original_df
+                to_add_df = to_add_df.drop(columns=cols_to_remove)
 
         if (
             "product_domain" not in to_add_df.columns
@@ -110,7 +106,7 @@ class TPData:
 
     def __get_data_file_path(self, part_name: str = None):
         old_file_name = MASTER_FILE_NAME
-        if not part_name is None:
+        if part_name is not None:
             old_file_name = "part_" + part_name + ".json"
         return join(self.folder_path, old_file_name)
 
