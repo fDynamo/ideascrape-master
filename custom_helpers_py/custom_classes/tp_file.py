@@ -52,9 +52,13 @@ class TPFile:
 
         self.save_df(to_add_df, skip_validation=True)
 
-    def as_df(self) -> pd.DataFrame | None:
+    def as_df(self, filter_rejected=True) -> pd.DataFrame | None:
         if self.file_exists:
-            return read_json_as_df(self.file_path)
+            master_df = read_json_as_df(self.file_path)
+            if filter_rejected:
+                master_df = master_df[~master_df["rejected"].isna()]
+
+            return master_df
         return None
 
     def save_df(self, df_to_save: pd.DataFrame, skip_validation=False):
@@ -64,6 +68,15 @@ class TPFile:
         df_to_save.to_json(self.file_path, orient="records", indent=4)
         if not self.file_exists:
             self.file_exists = True
+
+    def get_urls(self, domains: bool = False, filter_rejected=True):
+        df = self.as_df(filter_rejected=filter_rejected)
+        if df is None:
+            return None
+
+        if domains:
+            return df["product_domain"].drop_duplicates(keep="last")
+        return df["product_url"]
 
     @staticmethod
     def __validate_tp_df(in_df: pd.DataFrame) -> bool:
