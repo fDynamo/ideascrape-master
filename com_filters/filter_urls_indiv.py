@@ -2,7 +2,7 @@ import pandas as pd
 from custom_helpers_py.filter_results import is_url_valid
 from custom_helpers_py.url_formatters import clean_url, get_domain_from_url
 from custom_helpers_py.pandas_helpers import read_csv_as_df, save_df_as_csv
-from custom_helpers_py.custom_classes.tp_file import TPFile
+from custom_helpers_py.custom_classes.tp_data import TPData
 import argparse
 
 
@@ -14,7 +14,7 @@ def main():
         "-i", "--in-file-path", type=str, required=False, dest="in_file_path"
     )
     parser.add_argument(
-        "--tp", "--tp-file-path", type=str, required=True, dest="tp_file_path"
+        "--tp", "--tp-file-path", type=str, required=True, dest="tp_folder_path"
     )
     parser.add_argument(
         "-o", "--out-file-path", type=str, required=True, dest="out_file_path"
@@ -44,7 +44,7 @@ def main():
     in_file_path = args.in_file_path
     out_file_path = args.out_file_path
     rejected_file_path = args.rejected_file_path
-    tp_file_path = args.tp_file_path
+    tp_folder_path = args.tp_folder_path
     col_name = args.col_name
     is_use_tp_as_input = args.is_use_tp_as_input
 
@@ -55,9 +55,9 @@ def main():
         print("No input supplied")
         exit(1)
 
-    tp_file = TPFile(file_path=tp_file_path)
+    tpd = TPData(folder_path=tp_folder_path)
     if is_use_tp_as_input:
-        urls_series: pd.Series = tp_file.get_urls()
+        urls_series: pd.Series = tpd.get_urls()
         if urls_series is None:
             print("TP File cannot be used as input")
             exit(1)
@@ -93,7 +93,7 @@ def main():
         save_df_as_csv(rejected_df, rejected_file_path)
 
     master_df = master_df.rename(columns={"url": "product_url"})
-    tp_file.add_data(to_add_df=master_df)
+    tpd.add_data(to_add_df=master_df)
 
 
 if __name__ == "__main__":

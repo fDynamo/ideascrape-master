@@ -15,7 +15,7 @@ import pandas as pd
 from com_analyze.analyze_page_copy import analyze_page_copy
 from custom_helpers_py.filter_results import is_url_valid
 from copy import deepcopy
-from custom_helpers_py.custom_classes.tp_file import TPFile
+from custom_helpers_py.custom_classes.tp_data import TPData
 
 
 """
@@ -31,12 +31,12 @@ def main():
         "-i", "--in-folder-path", type=str, dest="in_folder_path", required=True
     )
     parser.add_argument(
-        "--tp", "--tp-file-path", type=str, required=True, dest="tp_file_path"
+        "--tp", "--tp-folder-path", type=str, required=True, dest="tp_folder_path"
     )
     args = parser.parse_args()
 
     in_folder_path = args.in_folder_path
-    tp_file_path = args.tp_file_path
+    tp_folder_path = args.tp_folder_path
 
     essential_data_folder_path = join(in_folder_path, "essential_data")
     page_copy_folder_path = join(in_folder_path, "page_copy")
@@ -129,8 +129,8 @@ def main():
     master_df = master_df.drop_duplicates(subset="product_url", keep="last")
 
     # Save
-    tp_file = TPFile(file_path=tp_file_path)
-    tp_file.add_data(to_add_df=master_df)
+    tpd = TPData(folder_path=tp_folder_path)
+    tpd.add_data(to_add_df=master_df)
 
 
 if __name__ == "__main__":

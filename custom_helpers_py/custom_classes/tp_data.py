@@ -2,18 +2,23 @@ from os.path import exists
 from custom_helpers_py.pandas_helpers import read_json_as_df
 from custom_helpers_py.url_formatters import get_domain_from_url, clean_url
 import pandas as pd
+from os.path import join
+from os import mkdir
+
+MASTER_FILE_NAME = "master.json"
 
 
-class TPFile:
-    def __init__(self, file_path: str) -> None:
-        self.file_path = file_path
-        self.file_exists = exists(file_path)
+class TPData:
+    def __init__(self, folder_path: str) -> None:
+        self.folder_path = folder_path
+        self.folder_exists = exists(folder_path)
 
     def add_data(
         self,
         to_add_list: list[dict] = None,
         clean_product_url=False,
         to_add_df: pd.DataFrame = None,
+        part_name: str = None,
     ):
         if to_add_df is None:
             if to_add_list is None:
@@ -24,16 +29,19 @@ class TPFile:
 
         original_df = to_add_df
 
-        if TPFile.__validate_tp_df(to_add_df):
+        if TPData.__validate_tp_df(to_add_df):
             raise Exception("Malformed df")
 
         if clean_product_url:
             to_add_df["product_url"] = to_add_df["product_url"].apply(clean_url)
             to_add_df = to_add_df.drop_duplicates(subset="product_url")
 
-        if self.file_exists:
+        old_file_path = self.__get_data_file_path(part_name=part_name)
+        is_old_exists = exists(old_file_path)
+
+        if is_old_exists:
             try:
-                curr_df = read_json_as_df(self.file_path)
+                curr_df = read_json_as_df(old_file_path)
                 dupe_suffix = "_old"
                 to_add_df = curr_df.merge(
                     to_add_df, on="product_url", how="outer", suffixes=(dupe_suffix, "")
@@ -62,31 +70,49 @@ class TPFile:
 
         self.save_df(to_add_df, skip_validation=True)
 
-    def as_df(self, filter_rejected=True) -> pd.DataFrame | None:
-        if self.file_exists:
-            master_df = read_json_as_df(self.file_path)
+    def as_df(self, filter_rejected=True, part_name: str = None) -> pd.DataFrame | None:
+        data_file_path = self.__get_data_file_path(part_name=part_name)
+        is_data_exists = exists(data_file_path)
+
+        if is_data_exists:
+            master_df = read_json_as_df(data_file_path)
             if filter_rejected:
                 master_df = master_df[~master_df["rejected"].isna()]
 
             return master_df
         return None
 
-    def save_df(self, df_to_save: pd.DataFrame, skip_validation=False):
-        if not skip_validation and TPFile.__validate_tp_df(df_to_save):
+    def save_df(
+        self, df_to_save: pd.DataFrame, skip_validation=False, part_name: str = None
+    ):
+
+        if not skip_validation and TPData.__validate_tp_df(df_to_save):
             raise Exception("Malformed df")
 
-        df_to_save.to_json(self.file_path, orient="records", indent=4)
-        if not self.file_exists:
-            self.file_exists = True
+        if not self.folder_exists:
+            mkdir(self.folder_path)
+            self.folder_exists = True
 
-    def get_urls(self, domains: bool = False, filter_rejected=True):
-        df = self.as_df(filter_rejected=filter_rejected)
+        save_file_path = self.__get_data_file_path(part_name=part_name)
+
+        df_to_save.to_json(save_file_path, orient="records", indent=4)
+
+    def get_urls(
+        self, domains: bool = False, filter_rejected=True, part_name: str = None
+    ):
+        df = self.as_df(filter_rejected=filter_rejected, part_name=part_name)
         if df is None:
             return None
 
         if domains:
             return df["product_domain"].drop_duplicates(keep="last")
         return df["product_url"]
+
+    def __get_data_file_path(self, part_name: str = None):
+        old_file_name = MASTER_FILE_NAME
+        if not part_name is None:
+            old_file_name = "part_" + part_name + ".json"
+        return join(self.folder_path, old_file_name)
 
     @staticmethod
     def __validate_tp_df(in_df: pd.DataFrame) -> bool:
