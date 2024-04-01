@@ -2,7 +2,6 @@ import pandas as pd
 from custom_helpers_py.filter_results import is_url_valid
 from custom_helpers_py.url_formatters import clean_url, get_domain_from_url
 from custom_helpers_py.pandas_helpers import read_csv_as_df, save_df_as_csv
-from custom_helpers_py.get_paths import get_search_main_records_filepath
 from custom_helpers_py.custom_classes.tp_file import TPFile
 import argparse
 
@@ -94,8 +93,7 @@ def main():
         save_df_as_csv(rejected_df, rejected_file_path)
 
     master_df = master_df.rename(columns={"url": "product_url"})
-    to_add_data = master_df.to_dict(orient="records")
-    tp_file.add_data(to_add_data)
+    tp_file.add_data(to_add_df=master_df)
 
 
 if __name__ == "__main__":

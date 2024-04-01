@@ -9,9 +9,19 @@ class TPFile:
         self.file_path = file_path
         self.file_exists = exists(file_path)
 
-    def add_data(self, to_add_list: list[dict], clean_product_url=False):
-        # Read as df
-        to_add_df = pd.DataFrame(to_add_list)
+    def add_data(
+        self,
+        to_add_list: list[dict] = None,
+        clean_product_url=False,
+        to_add_df: pd.DataFrame = None,
+    ):
+        if to_add_df is None:
+            if to_add_list is None:
+                raise Exception("Nothing to add")
+
+            # Read as df
+            to_add_df = pd.DataFrame(to_add_list)
+
         original_df = to_add_df
 
         if TPFile.__validate_tp_df(to_add_df):
