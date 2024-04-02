@@ -1,6 +1,6 @@
 from os.path import exists
-from custom_helpers_py.pandas_helpers import read_json_as_df
-from custom_helpers_py.url_formatters import get_domain_from_url, clean_url
+from custom_helpers_py.pandas_helpers import read_json_as_df, save_df_as_json
+from custom_helpers_py.url_formatters import get_domain_from_url
 import pandas as pd
 from os.path import join
 from os import mkdir, listdir
@@ -130,7 +130,7 @@ class TPData:
 
         save_file_path = self.__get_data_file_path(part_name=part_name)
 
-        df_to_save.to_json(save_file_path, orient="records", indent=4)
+        save_df_as_json(df_to_save, save_file_path)
 
     def get_urls(
         self, domains: bool = False, filter_rejected=True, part_name: str = None

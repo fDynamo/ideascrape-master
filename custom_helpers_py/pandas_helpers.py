@@ -26,6 +26,10 @@ def read_json_as_df(file_path: str) -> pd.DataFrame:
     return pd.read_json(file_path, encoding="utf-8")
 
 
+def save_df_as_json(df: pd.DataFrame, file_path: str):
+    df.to_json(file_path, orient="records", indent=3)
+
+
 def save_df_as_csv(df: pd.DataFrame, filepath: str):
     df.to_csv(filepath, encoding="utf-8", index=False)
 

@@ -187,6 +187,7 @@ class DucksterPipeline(DataPipeline):
             com_download_product_images.erase()
 
         folder_path_upsync = join(out_folder_path, "upsync")
+        file_path_rejected_prodify = join(folder_path_rejected, "prodify.json")
         com_prodify = ScriptComponent(
             component_name="prodify",
             body="python com_upsync/prodify.py",
@@ -194,9 +195,7 @@ class DucksterPipeline(DataPipeline):
                 ComponentArg(arg_name="tp", arg_val=tp_folder_path, is_path=True),
                 ComponentArg(arg_name="o", arg_val=folder_path_upsync, is_path=True),
                 ComponentArg(
-                    arg_name="product-images-folder-path",
-                    arg_val=folder_path_product_images,
-                    is_path=True,
+                    arg_name="r", arg_val=file_path_rejected_prodify, is_path=True
                 ),
             ],
         )
