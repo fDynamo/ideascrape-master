@@ -1,7 +1,7 @@
 from os.path import join
 import argparse
 from custom_helpers_py.custom_classes.tp_data import TPData
-from custom_helpers_py.pandas_helpers import save_df_as_json
+from custom_helpers_py.pandas_helpers import save_df_as_json, grab_and_rename_columns
 
 
 """
@@ -53,7 +53,7 @@ def main():
 
     # Format df
     # TODO: Add aift and ph support
-    GRAB_DICT = {
+    grab_dict = {
         "product_url": "",
         "title": "product_name",
         "description": "product_description",
@@ -63,15 +63,7 @@ def main():
         "sw_visits_last_month": "",
         "sw_created_at": "",
     }
-    grab_col_list = list(GRAB_DICT.keys())
-    master_df = master_df[grab_col_list]
-    rename_dict = {}
-    for col_name in grab_col_list:
-        new_name = GRAB_DICT[col_name]
-        if not new_name:
-            continue
-        rename_dict[col_name] = new_name
-    master_df = master_df.rename(columns=rename_dict)
+    master_df = grab_and_rename_columns(master_df, grab_dict)
 
     if not ignore_missing_search_vector:
 
@@ -82,8 +74,10 @@ def main():
 
         master_df.apply(check_missing_search_vector, axis=1)
 
+    # Add upsync action
     master_df["upsync_action"] = "upsert"
 
+    # Save
     save_path = join(out_folder_path, "zero.json")
     save_df_as_json(master_df, save_path)
 

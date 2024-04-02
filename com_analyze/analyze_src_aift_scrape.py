@@ -3,11 +3,9 @@ from os.path import join
 from datetime import datetime, timedelta
 from custom_helpers_py.url_formatters import clean_url
 from custom_helpers_py.pandas_helpers import concat_folder_into_df
-from custom_helpers_py.pandas_helpers import (
-    save_df_as_csv,
-    concat_folder_into_df,
-)
 import argparse
+from custom_helpers_py.custom_classes.tp_data import TPData
+from custom_helpers_py.pandas_helpers import grab_and_rename_columns
 
 """
 TODO:
@@ -20,20 +18,20 @@ def main():
     # Get arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-i", "--in-folderpath", type=str)
-    parser.add_argument("-o", "--out-filepath", type=str)
+    parser.add_argument(
+        "-i", "--in-folder-path", type=str, required=True, dest="in_folder_path"
+    )
+    parser.add_argument(
+        "--tp", "--tp-folder-path", type=str, required=True, dest="tp_folder_path"
+    )
     args = parser.parse_args()
 
-    in_folderpath = args.in_folderpath
-    out_filepath = args.out_filepath
+    in_folder_path = args.in_folder_path
+    tp_folder_path = args.tp_folder_path
 
-    if not in_folderpath or not out_filepath:
-        print("Invalid inputs")
-        return
-
-    LISTS_FOLDER = join(in_folderpath, "lists")
+    LISTS_FOLDER = join(in_folder_path, "lists")
     lists_df = concat_folder_into_df(LISTS_FOLDER, drop_subset="source_url")
-    POSTS_FOLDER = join(in_folderpath, "posts")
+    POSTS_FOLDER = join(in_folder_path, "posts")
     posts_df = concat_folder_into_df(POSTS_FOLDER, drop_subset="source_url")
 
     def clean_numbers(in_num):
@@ -119,10 +117,23 @@ def main():
         master_df["updated_at"].apply(fix_updated_at), utc=True
     )
 
-    master_df["clean_product_url"] = master_df["product_url"].apply(clean_url)
-    master_df = master_df.drop_duplicates(subset="clean_product_url", keep="last")
+    master_df["product_url"] = master_df["product_url"].apply(clean_url)
+    master_df = master_df.drop_duplicates(subset="product_url", keep="last")
 
-    save_df_as_csv(master_df, out_filepath)
+    # Process
+    grab_dict = {
+        "product_url": "",
+        "source_url": "aift_url",
+        "count_save": "aift_count_save",
+        "listed_at": "aift_listed_at",
+        "updated_at": "aift_updated_at",
+    }
+
+    master_df = grab_and_rename_columns(master_df, grab_dict)
+
+    # Save
+    tpd = TPData(folder_path=tp_folder_path)
+    tpd.add_data(to_add_df=master_df, part_name="source_aift")
 
 
 if __name__ == "__main__":

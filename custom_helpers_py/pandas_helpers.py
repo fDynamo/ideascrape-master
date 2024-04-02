@@ -78,3 +78,18 @@ def concat_folder_into_df(
     master_df = master_df.reset_index(drop=True)
 
     return master_df
+
+
+# grab_dict is a dict with col names to grab as keys
+# and new names as values. Leave new name as empty str to not rename
+def grab_and_rename_columns(in_df: pd.DataFrame, grab_dict: dict):
+    grab_col_list = list(grab_dict.keys())
+    master_df = in_df[grab_col_list]
+    rename_dict = {}
+    for col_name in grab_col_list:
+        new_name = grab_dict[col_name]
+        if not new_name:
+            continue
+        rename_dict[col_name] = new_name
+    master_df = master_df.rename(columns=rename_dict)
+    return master_df
