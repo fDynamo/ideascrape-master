@@ -133,16 +133,16 @@ class DataPipeline(ABC):
         pass
 
     def add_cli_args(self, parser):
-        parser.add_argument("-o", "--outName", type=str, dest="out_name")
+        parser.add_argument("-o", "--out-name", type=str, dest="out_name")
         parser.add_argument(
-            "-n", "--newName", action=argparse.BooleanOptionalAction, dest="new_name"
+            "-n", "--new-name", action=argparse.BooleanOptionalAction, dest="new_name"
         )
         parser.add_argument(
-            "-t", "--testName", action=argparse.BooleanOptionalAction, dest="test_name"
+            "-t", "--test-name", action=argparse.BooleanOptionalAction, dest="test_name"
         )
-        parser.add_argument("-r", "--retryName", type=str, dest="retry_name")
-        parser.add_argument("--startIndex", type=int, dest="start_index", default=None)
-        parser.add_argument("--endIndex", type=int, dest="end_index", default=None)
+        parser.add_argument("-r", "--retry-name", type=str, dest="retry_name")
+        parser.add_argument("--start-index", type=int, dest="start_index", default=None)
+        parser.add_argument("--end-index", type=int, dest="end_index", default=None)
         parser.add_argument(
             "--prod", action=argparse.BooleanOptionalAction, default=False
         )
@@ -150,31 +150,31 @@ class DataPipeline(ABC):
             "--upsync", action=argparse.BooleanOptionalAction, default=False
         )
         parser.add_argument(
-            "--useDevScrape",
+            "--use-dev-scrape",
             action=argparse.BooleanOptionalAction,
             default=False,
             dest="use_dev_scrape",
         )
         parser.add_argument(
-            "--printSteps",
+            "--print-steps",
             action=argparse.BooleanOptionalAction,
             default=False,
             dest="print_steps",
         )
         parser.add_argument(
-            "--resetRunInfo",
+            "--reset-run-info",
             action=argparse.BooleanOptionalAction,
             default=False,
             dest="reset_run_info",
         )
         parser.add_argument(
-            "--resetTest",
+            "--reset-test",
             action=argparse.BooleanOptionalAction,
             default=False,
             dest="reset_test",
         )
         parser.add_argument(
-            "--oneStep",
+            "--one-step",
             type=int,
             default=None,
             dest="one_step",

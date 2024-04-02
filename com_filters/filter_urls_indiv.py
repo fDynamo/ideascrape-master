@@ -32,7 +32,7 @@ def main():
         "--use-tp-as-input",
         action=argparse.BooleanOptionalAction,
         default=False,
-        dest="is_use_tp_as_input",
+        dest="use_tp_as_input",
     )
 
     parser.add_argument("--prod", action=argparse.BooleanOptionalAction, default=False)
@@ -49,7 +49,7 @@ def main():
     rejected_file_path = args.rejected_file_path
     tp_folder_path = args.tp_folder_path
     col_name = args.col_name
-    is_use_tp_as_input = args.is_use_tp_as_input
+    is_use_tp_as_input = args.use_tp_as_input
 
     is_prod = args.prod
     is_disable_filter = args.disable_filter
@@ -61,7 +61,7 @@ def main():
 
     tpd = TPData(folder_path=tp_folder_path)
     if is_use_tp_as_input:
-        urls_series: pd.Series = tpd.get_urls()
+        urls_series: pd.Series = tpd.get_urls(combined=True)
         if urls_series is None:
             print("TPD cannot be used as input")
             exit(1)
