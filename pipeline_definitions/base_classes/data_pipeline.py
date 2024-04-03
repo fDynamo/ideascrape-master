@@ -211,11 +211,11 @@ class DataPipeline(ABC):
                 continue
 
             script_to_run = str(com)
+
+            print("\n[STEP START]", i, com)
             if not script_to_run:
                 print("[SKIPPING ERASED STEP]")
                 continue
-
-            print("\n[STEP START]", i, com)
 
             com_start_time = datetime.now()
             execution_error = None
