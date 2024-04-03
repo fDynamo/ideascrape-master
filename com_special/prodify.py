@@ -86,6 +86,9 @@ def main():
     # Add upsync action
     master_df["upsync_action"] = "upsert"
 
+    # Add updated at
+    master_df["info_updated_at"] = pd.Timestamp.now()
+
     # Save
     save_path = join(out_folder_path, "zero.json")
     save_df_as_json(master_df, save_path)

@@ -65,6 +65,9 @@ def is_page_title_valid(page_title: str):
     if str_to_test.startswith("40"):
         return False
 
+    if str_to_test.startswith("50"):
+        return False
+
     return True
 
 
