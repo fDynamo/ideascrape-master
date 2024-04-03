@@ -77,8 +77,6 @@ class TPData:
 
     def get_combined_parts_df(self, filter_rejected=True):
         master_df = self.as_df(filter_rejected=filter_rejected)
-        if master_df is None:
-            return None
 
         file_list = listdir(self.folder_path)
         for file_name in file_list:
@@ -88,6 +86,12 @@ class TPData:
             part_name = file_name.removeprefix(PART_PREFIX).removesuffix(".json")
             part_df = self.as_df(part_name=part_name, filter_rejected=filter_rejected)
             domain_pk = self.__infer_domain_pk(part_df)
+
+            if master_df is None:
+                if domain_pk:
+                    raise Exception("Domain PK cannot be master replacement")
+                master_df = part_df
+                continue
 
             dupe_suffix = "_old"
             on_col = "product_url" if not domain_pk else "product_domain"
@@ -104,6 +108,9 @@ class TPData:
 
                 master_df = master_df.drop(columns=cols_to_remove)
 
+        if len(master_df.columns) == 0:
+            return None
+
         return master_df
 
     def as_df(self, filter_rejected=True, part_name: str = None) -> pd.DataFrame | None:
@@ -112,7 +119,7 @@ class TPData:
 
         if is_data_exists:
             master_df = read_json_as_df(data_file_path)
-            if filter_rejected:
+            if filter_rejected and "rejected" in master_df.columns:
                 master_df = master_df[master_df["rejected"].isna()]
 
             return master_df
@@ -133,9 +140,17 @@ class TPData:
         save_df_as_json(df_to_save, save_file_path)
 
     def get_urls(
-        self, domains: bool = False, filter_rejected=True, part_name: str = None
+        self,
+        domains: bool = False,
+        filter_rejected=True,
+        part_name: str = None,
+        combined=False,
     ):
-        df = self.as_df(filter_rejected=filter_rejected, part_name=part_name)
+        if combined:
+            df = self.get_combined_parts_df(filter_rejected=filter_rejected)
+        else:
+            df = self.as_df(filter_rejected=filter_rejected, part_name=part_name)
+
         if df is None:
             return None
 
