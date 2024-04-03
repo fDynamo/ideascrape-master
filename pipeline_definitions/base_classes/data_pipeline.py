@@ -179,6 +179,12 @@ class DataPipeline(ABC):
             default=None,
             dest="one_step",
         )
+        parser.add_argument(
+            "--dont-run",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+            dest="dont_run",
+        )
 
     def run_steps(self, steps: list[ScriptComponent], **kwargs):
         one_step, start_index, end_index = (
@@ -311,6 +317,7 @@ class DataPipeline(ABC):
         retry_name: str = cli_args.retry_name
         is_run_new: bool = cli_args.new_name
         is_run_test: bool = cli_args.test_name
+        is_dont_run: bool = cli_args.dont_run
 
         if is_run_test:
             run_name = "test"
@@ -363,4 +370,6 @@ class DataPipeline(ABC):
 
         # Run steps
         in_run_kwargs = {**in_kwargs, **special_run_kwargs}
-        self.run_steps(steps_to_run, **in_run_kwargs)
+
+        if not is_dont_run:
+            self.run_steps(steps_to_run, **in_run_kwargs)
