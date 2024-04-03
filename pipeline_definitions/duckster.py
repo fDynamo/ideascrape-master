@@ -3,10 +3,11 @@ from pipeline_definitions.base_classes.script_component import (
     ScriptComponent,
     ComponentArg,
 )
+from pipeline_definitions.upsync import UpsyncPipeline
 from os.path import join
 import argparse
 from custom_helpers_py.get_paths import get_dev_scrape_folder_path
-from pipeline_definitions.upsync import UpsyncPipeline
+import shutil
 
 
 class DucksterPipeline(DataPipeline):
@@ -15,7 +16,7 @@ class DucksterPipeline(DataPipeline):
 
     def add_cli_args(self, parser):
         parser.add_argument(
-            "-i", "--in-url-file-path", type=str, dest="in_file_path", required=True
+            "-i", "--in-url-file-path", type=str, dest="in_url_file_path", required=True
         )
         parser.add_argument(
             "--skip-url-filter",
@@ -36,7 +37,13 @@ class DucksterPipeline(DataPipeline):
         out_folder_path = self.pipeline_run_folder_path
 
         # Common folder paths
-        tp_folder_path = join(out_folder_path, ".tpd")
+        tp_folder_path = kwargs.get("in_tp_folder_path", None)
+        is_existing_tp = False
+        if not tp_folder_path:
+            tp_folder_path = join(out_folder_path, ".tpd")
+        else:
+            is_existing_tp = True
+
         folder_path_rejected = join(out_folder_path, "rejected")
 
         file_path_urls_for_indiv_scrape = join(
@@ -47,9 +54,6 @@ class DucksterPipeline(DataPipeline):
             component_name="filter urls",
             body="python com_filters/filter_urls_indiv.py",
             args=[
-                ComponentArg(
-                    arg_name="i", arg_val=kwargs["in_file_path"], is_path=True
-                ),
                 ComponentArg(arg_name="tp", arg_val=tp_folder_path, is_path=True),
                 ComponentArg(
                     arg_name="o", arg_val=file_path_urls_for_indiv_scrape, is_path=True
@@ -68,6 +72,19 @@ class DucksterPipeline(DataPipeline):
                 ),
             ],
         )
+        if is_existing_tp:
+            com_filter_urls_indiv.add_arg(
+                ComponentArg(
+                    arg_name="use-tp-as-input",
+                    arg_val=True,
+                )
+            )
+        elif kwargs.get("in_url_file_path"):
+            com_filter_urls_indiv.add_arg(
+                ComponentArg(
+                    arg_name="i", arg_val=kwargs["in_url_file_path"], is_path=True
+                )
+            )
 
         folder_path_indiv_scrape = join(out_folder_path, "indiv_scrape")
         com_indiv_scrape = ScriptComponent(
@@ -79,7 +96,6 @@ class DucksterPipeline(DataPipeline):
             ],
         )
         if kwargs["use_dev_scrape"]:
-            raise Exception("use dev scrape not implemented yet")
             folder_path_indiv_scrape = join(
                 get_dev_scrape_folder_path(),
                 "indiv_scrape",
@@ -166,7 +182,26 @@ class DucksterPipeline(DataPipeline):
         )
 
         if kwargs["use_dev_scrape"]:
-            pass
+            com_embed_search_vector.body = "python com_utils/copy_file.py"
+            com_embed_search_vector.args = [
+                ComponentArg(
+                    arg_name="i",
+                    arg_val=join(
+                        get_dev_scrape_folder_path(),
+                        ".tpd",
+                        "part_search_vector_embeddings.json",
+                    ),
+                    is_path=True,
+                ),
+                ComponentArg(
+                    arg_name="o",
+                    arg_val=join(
+                        tp_folder_path,
+                        "part_search_vector_embeddings.json",
+                    ),
+                    is_path=True,
+                ),
+            ]
 
         folder_path_product_images = join(out_folder_path, "product_images")
         com_download_product_images = ScriptComponent(
@@ -186,11 +221,11 @@ class DucksterPipeline(DataPipeline):
             )
             com_download_product_images.erase()
 
-        folder_path_upsync = join(out_folder_path, "upsync")
+        folder_path_upsync = join(out_folder_path, "upsync_files")
         file_path_rejected_prodify = join(folder_path_rejected, "prodify.json")
         com_prodify = ScriptComponent(
             component_name="prodify",
-            body="python com_upsync/prodify.py",
+            body="python com_special/prodify.py",
             args=[
                 ComponentArg(arg_name="tp", arg_val=tp_folder_path, is_path=True),
                 ComponentArg(arg_name="o", arg_val=folder_path_upsync, is_path=True),
@@ -203,7 +238,7 @@ class DucksterPipeline(DataPipeline):
         if kwargs["use_dev_scrape"]:
             com_prodify.add_arg(
                 ComponentArg(
-                    arg_name="ignoreMissingEmbeddings",
+                    arg_name="ignore-missing-search-vector",
                     arg_val=True,
                 ),
             )
@@ -221,17 +256,15 @@ class DucksterPipeline(DataPipeline):
         ]
 
         if kwargs.get("upsync"):
-            # Call upsync
-            com_upsync = ScriptComponent(
-                component_name="upsync",
-                body="python com_upsync/upsync.py",
-                args=[
-                    ComponentArg(
-                        arg_name="i", arg_val=folder_path_upsync, is_path=True
-                    ),
-                ],
-            )
-            to_return.append(com_upsync)
+            upsync_args = {
+                **kwargs,
+                "upsync_folder_path": folder_path_upsync,
+                "upsert_images_folder_path": folder_path_product_images,
+            }
+            upsync_steps = UpsyncPipeline(
+                pipeline_run_folder_path=self.pipeline_run_folder_path
+            ).get_steps(**upsync_args)
+            to_return += upsync_steps
 
         return to_return
 
