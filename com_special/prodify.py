@@ -2,6 +2,7 @@ from os.path import join
 import argparse
 from custom_helpers_py.custom_classes.tp_data import TPData
 from custom_helpers_py.pandas_helpers import save_df_as_json, grab_and_rename_columns
+import pandas as pd
 
 
 """
@@ -57,8 +58,16 @@ def main():
         "product_url": "",
         "title": "product_name",
         "description": "product_description",
-        "local_image_file_name": "product_image_file_name",
+        "local_image_file_name": "product_image_filename",
         "search_vector": "",
+        "aift_url": "",
+        "aift_count_save": "",
+        "aift_listed_at": "",
+        "aift_updated_at": "",
+        "ph_url": "",
+        "ph_count_follower": "",
+        "ph_listed_at": "",
+        "ph_updated_at": "",
         "sw_url": "",
         "sw_visits_last_month": "",
         "sw_created_at": "",

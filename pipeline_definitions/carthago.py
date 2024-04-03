@@ -6,17 +6,28 @@ from pipeline_definitions.base_classes.script_component import (
 from os.path import join
 from pipeline_definitions.duckster import DucksterPipeline
 from custom_helpers_py.get_paths import get_dev_scrape_folder_path
+import argparse
 
 
 class CarthagoPipeline(DataPipeline):
     def get_pipeline_name(self) -> str:
         return "carthago"
 
+    def add_cli_args(self, parser):
+        parser.add_argument(
+            "--skip-duckster",
+            type=bool,
+            dest="skip_duckster",
+            action=argparse.BooleanOptionalAction,
+        )
+
+        super().add_cli_args(parser)
+
     def get_steps(self, **kwargs) -> list[ScriptComponent]:
         out_folder_path = self.pipeline_run_folder_path
 
         folder_path_source_scrapes = join(out_folder_path, "source_scrapes")
-        folder_path_cc_source_scrapes = join(out_folder_path, "cc_source_scrapes")
+        tp_folder_path = join(out_folder_path, ".tpd")
 
         SOURCE_ACRONYM_LIST = ["ph", "aift"]
 
@@ -47,12 +58,9 @@ class CarthagoPipeline(DataPipeline):
                 )
                 com_scrape.erase()
 
-            file_path_cc = join(
-                folder_path_cc_source_scrapes, "cc_source_" + acr + "_scrape.csv"
-            )
-            com_cc = ScriptComponent(
-                component_name="cc source " + acr + " scrape",
-                body="python com_cc/cc_source_" + acr + "_scrape.py",
+            com_analyze = ScriptComponent(
+                component_name="analyze source " + acr,
+                body="python com_analyze/analyze_src_" + acr + "_scrape.py",
                 args=[
                     ComponentArg(
                         arg_name="i",
@@ -60,8 +68,8 @@ class CarthagoPipeline(DataPipeline):
                         is_path=True,
                     ),
                     ComponentArg(
-                        arg_name="o",
-                        arg_val=file_path_cc,
+                        arg_name="tp",
+                        arg_val=tp_folder_path,
                         is_path=True,
                     ),
                 ],
@@ -69,71 +77,20 @@ class CarthagoPipeline(DataPipeline):
 
             source_specific_com_list += [
                 com_scrape,
-                com_cc,
+                com_analyze,
             ]
 
-        # Combine data
-        file_path_combined_data = join(out_folder_path, "combined_source_data.csv")
-        com_combine_data = ScriptComponent(
-            component_name="combine source data",
-            body="python com_cc/combine_source_cc.py",
-            args=[
-                ComponentArg(
-                    arg_name="i",
-                    arg_val=folder_path_cc_source_scrapes,
-                    is_path=True,
-                ),
-                ComponentArg(
-                    arg_name="o",
-                    arg_val=file_path_combined_data,
-                    is_path=True,
-                ),
-            ],
-        )
-
-        # Combine urls
-        file_path_combined_urls = join(out_folder_path, "combined_source_urls.csv")
-        com_get_urls = ScriptComponent(
-            component_name="grab urls from combined source",
-            body="python com_utils/util_extract_column_from_data.py",
-            args=[
-                ComponentArg(
-                    arg_name="i",
-                    arg_val=file_path_combined_data,
-                    is_path=True,
-                ),
-                ComponentArg(
-                    arg_name="o",
-                    arg_val=file_path_combined_urls,
-                    is_path=True,
-                ),
-                ComponentArg(
-                    arg_name="in-col",
-                    arg_val="clean_product_url",
-                ),
-                ComponentArg(
-                    arg_name="out-col",
-                    arg_val="url",
-                ),
-            ],
-        )
-
         # Call duckster
-        duckster_args = {
-            **kwargs,
-            "in_file_path": file_path_combined_urls,
-            "combined_source_file_path": file_path_combined_data,
-        }
-        duckster_steps = DucksterPipeline(
-            pipeline_run_folder_path=self.pipeline_run_folder_path
-        ).get_steps(**duckster_args)
-
         to_return = [
             *source_specific_com_list,
-            com_combine_data,
-            com_get_urls,
-            *duckster_steps,
         ]
+        if not kwargs.get("skip_duckster"):
+            duckster_args = {**kwargs, "in_tp_folder_path": tp_folder_path}
+            duckster_steps = DucksterPipeline(
+                pipeline_run_folder_path=self.pipeline_run_folder_path
+            ).get_steps(**duckster_args)
+            to_return += duckster_steps
+
         return to_return
 
 
