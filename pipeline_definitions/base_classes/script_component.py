@@ -89,6 +89,7 @@ class ScriptComponent:
             raise Exception("Script str not built for non windows!")
 
         to_return = self.body
+        is_bun_script = False
 
         if to_return.startswith("npm run") and len(self.args) > 0:
             if is_windows():
@@ -99,10 +100,19 @@ class ScriptComponent:
             if is_windows():
                 to_return = to_return.removeprefix("python")
                 to_return = ".venv/Scripts/python.exe" + to_return
+        elif to_return.startswith("bun "):
+            is_bun_script = True
 
         if len(self.args):
-            arg_str = " ".join([str(arg) for arg in self.args])
-            to_return += " " + arg_str
+            arg_str = ""
+            for arg in self.args:
+                to_add: str = str(arg)
+                if is_bun_script and arg.is_path:
+                    to_add = to_add.replace("\\", "/")
+                to_add = to_add.strip()
+                if to_add:
+                    arg_str += " " + to_add
+            to_return += " " + arg_str.strip()
 
         return to_return
 
