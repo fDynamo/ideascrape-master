@@ -1,37 +1,42 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, readdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import createSupabaseClient from "../custom_helpers_js/create-supabase-client.js";
 import { getPercentageString } from "../custom_helpers_js/string-formatters.js";
-import * as dotenv from "dotenv";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 import { timeoutPromise } from "../custom_helpers_js/index.js";
-import { readCsvFile } from "../custom_helpers_js/read-csv.js";
 import registerGracefulExit from "../custom_helpers_js/graceful-exit.js";
 
 async function main() {
-  dotenv.config();
-
   let RUN_DELAY = 500;
-  const argv = yargs(hideBin(process.argv)).argv;
-  const {
-    imagesFolderPath,
-    prod,
-    recordsFolderPath,
-    startIndex: inStartIndex,
-  } = argv;
-  if (!imagesFolderPath) {
-    console.error("Invalid inputs");
-    process.exit(1);
-  }
+  const argv = yargs(hideBin(process.argv))
+    .options({
+      i: {
+        alias: "in-folder-path",
+        demandOption: true,
+        type: "string",
+        normalize: true,
+      },
+      r: {
+        alias: "records-folder-path",
+        demandOption: true,
+        type: "string",
+        normalize: true,
+      },
+      prod: {
+        type: "boolean",
+        default: false,
+      },
+      "start-index": {
+        type: "number",
+        default: 0,
+      },
+    })
+    .parse();
+
+  let { inFolderPath, recordsFolderPath, prod, startIndex } = argv;
 
   let supabase = createSupabaseClient(prod);
-
-  const imagesFolder = imagesFolderPath;
-  const recordFile = join(imagesFolderPath, "_record.csv"); // Get filename from RECORD_FILE constant
-  const recordsList = await readCsvFile(recordFile);
-
-  const startIndex = inStartIndex ? parseInt(inStartIndex) : 0;
 
   const errorRecordsList = [];
   let countSuccess = 0;
@@ -43,19 +48,26 @@ async function main() {
     forcedToQuit = true;
   });
 
-  for (let i = startIndex; i < recordsList.length; i++) {
+  const fileNameList = readdirSync(inFolderPath);
+  for (let fileIdx = startIndex; fileIdx < fileNameList.length; fileIdx++) {
     if (forcedToQuit) {
       break;
     }
-    lastIndex = i;
-    const file = recordsList[i].image_file_name;
-    if (!file || file.endsWith("svg") || file.endsWith("csv") || file == "ER") {
-      console.log("skipping", i, file);
+    lastIndex = fileIdx;
+
+    const fileName = fileNameList[fileIdx];
+    if (
+      !fileName ||
+      fileName.endsWith("svg") ||
+      fileName.endsWith("csv") ||
+      fileName == "ER"
+    ) {
+      console.log("skipping", fileIdx, fileName);
       continue;
     }
 
-    const srcFile = join(imagesFolder, file);
-    console.log("uploading", i, file, srcFile);
+    const srcFile = join(inFolderPath, fileName);
+    console.log("uploading", fileIdx, fileName, srcFile);
 
     const fileBody = readFileSync(srcFile);
     const extensionIndex = srcFile.lastIndexOf(".");
@@ -64,11 +76,7 @@ async function main() {
         ? srcFile.substring(extensionIndex + 1).toLowerCase()
         : "";
 
-    console.log(extension);
     let contentType = "image/png";
-    if (extension == "csv") {
-      continue;
-    }
     if (extension == "svg") {
       contentType = "image/svg+xml";
     } else if (extension == "gif") {
@@ -82,23 +90,27 @@ async function main() {
     try {
       const { data, error } = await supabase.storage
         .from(PRODUCT_IMAGES_BUCKET)
-        .upload(file, fileBody, {
+        .upload(fileName, fileBody, {
           contentType,
           upsert: true,
         });
       if (error) throw error;
 
-      const percentage = getPercentageString(i + 1, 0, recordsList.length);
-      console.log("done", i, percentage);
-      console.log("done file", file);
+      const percentage = getPercentageString(
+        fileIdx + 1,
+        0,
+        fileNameList.length
+      );
+      console.log("done", fileIdx, percentage);
+      console.log("done file", fileName);
       countSuccess += 1;
     } catch (error) {
-      console.error("Error", i, file);
+      console.error("Error", fileIdx, fileName);
       console.error(error);
       countError += 1;
       errorRecordsList.push({
-        file,
-        index: i,
+        fileName,
+        index: fileIdx,
         error,
       });
     }
