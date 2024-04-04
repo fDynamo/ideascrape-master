@@ -12,13 +12,17 @@ def main():
     parser.add_argument(
         "--tp", "--tp-folder-path", type=str, required=True, dest="tp_folder_path"
     )
+    parser.add_argument(
+        "--prod", action=argparse.BooleanOptionalAction, default=False, dest="prod"
+    )
 
     args = parser.parse_args()
 
     tp_folder_path = args.tp_folder_path
     run_name = args.run_name
+    is_prod = args.prod
 
-    ic = IndexCache()
+    ic = IndexCache(prod=is_prod)
     tpd = TPData(folder_path=tp_folder_path)
 
     master_df = tpd.as_df(filter_rejected=False)

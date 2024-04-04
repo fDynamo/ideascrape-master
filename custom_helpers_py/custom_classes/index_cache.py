@@ -1,30 +1,36 @@
 from dotenv import load_dotenv
 from os import environ
 from os.path import join, exists
-import json
 import pandas as pd
 from custom_helpers_py.pandas_helpers import save_df_as_json, read_json_as_df
 
 
 class IndexCache:
-    def __init__(self) -> None:
+    def __init__(self, prod) -> None:
         load_dotenv(override=True)
         self.cache_folder_path = environ.get("CACHE_FOLDER")
         if not self.cache_folder_path or not exists(self.cache_folder_path):
             raise Exception("CACHE_FOLDER env variable not set!")
-        self.index_cache_file_path = join(self.cache_folder_path, "index_cache.json")
+        file_name = "index_cache"
+        if prod:
+            file_name += "-prod"
+        else:
+            file_name += "-local"
+        file_name += ".json"
+
+        self.index_cache_file_path = join(self.cache_folder_path, file_name)
 
     """
     in_data needs to be a list with dicts that look like:
     {product_url, status, comments, last_run_name}
     """
 
-    def add_data(self, in_data: list[dict] = None, in_df: pd.DataFrame = None):
-        if in_df is None and in_data is None:
+    def add_data(self, in_list: list[dict] = None, in_df: pd.DataFrame = None):
+        if in_df is None and in_list is None:
             raise Exception("No data to cache")
 
         if in_df is None:
-            in_df = pd.DataFrame(in_data)
+            in_df = pd.DataFrame(in_list)
 
         # if log attempt, need new last attempt
         in_df["updated_at"] = pd.Timestamp.now()
@@ -78,3 +84,25 @@ class IndexCache:
             )
 
             save_df_as_json(new_df, self.index_cache_file_path)
+
+    def get_recent_urls(self, recent_days=30, recent_type="updated") -> list[str]:
+        if not exists(self.index_cache_file_path):
+            raise Exception("No cache")
+        df = read_json_as_df(self.index_cache_file_path)
+
+        date_col = None
+        if recent_type == "updated":
+            date_col = "updated_at"
+        if recent_type == "added":
+            date_col = "added_at"
+
+        df[date_col] = pd.to_datetime(df[date_col])
+
+        now_ts = pd.Timestamp.now()
+        past_ts = now_ts - pd.Timedelta(days=recent_days)
+
+        mask = df[date_col] >= past_ts
+        df = df[mask]
+
+        urls = df["product_url"]
+        return urls.to_list()

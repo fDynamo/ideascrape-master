@@ -70,6 +70,10 @@ class DucksterPipeline(DataPipeline):
                     arg_name="disable-filter",
                     arg_val=kwargs.get("skip_url_filter", False),
                 ),
+                ComponentArg(
+                    arg_name="use-cache-filter",
+                    arg_val=True,
+                ),
             ],
         )
         if is_existing_tp:
@@ -250,6 +254,7 @@ class DucksterPipeline(DataPipeline):
             args=[
                 ComponentArg(arg_name="tp", arg_val=tp_folder_path, is_path=True),
                 ComponentArg(arg_name="run-name", arg_val=cache_run_name),
+                ComponentArg(arg_name="prod", arg_val=kwargs.get("prod", False)),
             ],
         )
 

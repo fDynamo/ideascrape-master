@@ -4,6 +4,7 @@ from custom_helpers_py.url_formatters import clean_url, get_domain_from_url
 from custom_helpers_py.pandas_helpers import read_csv_as_df, save_df_as_csv
 from custom_helpers_py.custom_classes.tp_data import TPData
 import argparse
+from custom_helpers_py.custom_classes.index_cache import IndexCache
 
 
 def main():
@@ -42,6 +43,9 @@ def main():
     parser.add_argument(
         "--reset-tp", action=argparse.BooleanOptionalAction, default=False
     )
+    parser.add_argument(
+        "--use-cache-filter", action=argparse.BooleanOptionalAction, default=False
+    )
     args = parser.parse_args()
 
     in_file_path = args.in_file_path
@@ -51,9 +55,11 @@ def main():
     col_name = args.col_name
     is_use_tp_as_input = args.use_tp_as_input
 
-    is_prod = args.prod
     is_disable_filter = args.disable_filter
     is_reset_tp = args.reset_tp
+
+    is_prod = args.prod
+    is_use_cache_filter = args.use_cache_filter
 
     if not is_use_tp_as_input and not in_file_path:
         print("No input supplied")
@@ -77,9 +83,16 @@ def main():
     master_df = master_df.sort_values(by="url")
 
     # Filter
+    if is_use_cache_filter:
+        ic = IndexCache(prod=is_prod)
+        recent_url_set = set(ic.get_recent_urls(recent_days=30, recent_type="updated"))
+
     def is_url_rejected(in_url):
         if is_disable_filter:
             return None
+
+        if is_use_cache_filter and in_url in recent_url_set:
+            return "filter_urls_indiv: Recently updated"
 
         valid = is_url_valid(in_url)
         if valid == "y":

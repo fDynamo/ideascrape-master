@@ -1,6 +1,5 @@
 import argparse
 import pandas as pd
-from custom_helpers_py.custom_classes.tp_data import TPData
 from custom_helpers_py.custom_classes.index_cache import IndexCache
 from os import listdir
 from os.path import join
@@ -28,7 +27,7 @@ def main():
     run_name = args.run_name
     is_prod = args.prod
 
-    ic = IndexCache()
+    ic = IndexCache(prod=is_prod)
 
     file_name_list: list[str] = listdir(upsync_records_folder_path)
     test_str = "upsync_upsert-"
