@@ -11,7 +11,7 @@ import shutil
 
 
 class DucksterPipeline(DataPipeline):
-    def get_pipeline_name(self) -> str:
+    def get_base_pipeline_name(self) -> str:
         return "duckster"
 
     def add_cli_args(self, parser):
@@ -243,6 +243,16 @@ class DucksterPipeline(DataPipeline):
                 ),
             )
 
+        cache_run_name = self.get_pipeline_name() + "_" + self.run_name
+        com_cache_pre_upsync = ScriptComponent(
+            component_name="cache pre upsync",
+            body="python com_cache/cache_pre_upsync.py",
+            args=[
+                ComponentArg(arg_name="tp", arg_val=tp_folder_path, is_path=True),
+                ComponentArg(arg_name="run-name", arg_val=cache_run_name),
+            ],
+        )
+
         to_return = [
             com_filter_urls_indiv,
             com_indiv_scrape,
@@ -253,6 +263,7 @@ class DucksterPipeline(DataPipeline):
             com_embed_search_vector,
             com_download_product_images,
             com_prodify,
+            com_cache_pre_upsync,
         ]
 
         if kwargs.get("upsync"):
@@ -262,7 +273,9 @@ class DucksterPipeline(DataPipeline):
                 "upsert_images_folder_path": folder_path_product_images,
             }
             upsync_steps = UpsyncPipeline(
-                pipeline_run_folder_path=self.pipeline_run_folder_path
+                pipeline_run_folder_path=self.pipeline_run_folder_path,
+                run_name=self.run_name,
+                parent_pipeline_name=self.get_pipeline_name(),
             ).get_steps(**upsync_args)
             to_return += upsync_steps
 

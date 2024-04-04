@@ -7,7 +7,7 @@ from os.path import join
 
 
 class UpsyncPipeline(DataPipeline):
-    def get_pipeline_name(self) -> str:
+    def get_base_pipeline_name(self) -> str:
         return "upsync"
 
     def add_cli_args(self, parser):
@@ -46,6 +46,23 @@ class UpsyncPipeline(DataPipeline):
                 ],
             )
             to_return.append(com_upsync)
+
+            # Cache
+            cache_run_name = self.get_pipeline_name() + "_" + self.run_name
+            com_cache_post_upsync = ScriptComponent(
+                component_name="cache post upsync",
+                body="python com_cache/cache_post_upsync.py",
+                args=[
+                    ComponentArg(
+                        arg_name="upsync-records-folder-path",
+                        arg_val=records_folder_path,
+                        is_path=True,
+                    ),
+                    ComponentArg(arg_name="run-name", arg_val=cache_run_name),
+                    ComponentArg(arg_name="prod", arg_val=kwargs.get("prod", False)),
+                ],
+            )
+            to_return.append(com_cache_post_upsync)
 
         # Upsert images
         upsert_images_folder_path = kwargs.get("upsert_images_folder_path")

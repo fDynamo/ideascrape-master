@@ -7,7 +7,7 @@ import argparse
 
 
 class TestPipeline(DataPipeline):
-    def get_pipeline_name(self) -> str:
+    def get_base_pipeline_name(self) -> str:
         return "test_pipeline"
 
     def add_cli_args(self, parser):

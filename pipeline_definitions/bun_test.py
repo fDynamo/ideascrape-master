@@ -7,7 +7,7 @@ import argparse
 
 
 class BunTestPipeline(DataPipeline):
-    def get_pipeline_name(self) -> str:
+    def get_base_pipeline_name(self) -> str:
         return "bun_test_pipeline"
 
     def add_cli_args(self, parser):

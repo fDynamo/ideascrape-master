@@ -16,11 +16,15 @@ class IndexCache:
 
     """
     in_data needs to be a list with dicts that look like:
-    {product_url, status, comments}
+    {product_url, status, comments, last_run_name}
     """
 
-    def add_data(self, in_data: list[dict]):
-        in_df = pd.DataFrame(in_data)
+    def add_data(self, in_data: list[dict] = None, in_df: pd.DataFrame = None):
+        if in_df is None and in_data is None:
+            raise Exception("No data to cache")
+
+        if in_df is None:
+            in_df = pd.DataFrame(in_data)
 
         # if log attempt, need new last attempt
         in_df["updated_at"] = pd.Timestamp.now()
@@ -37,6 +41,7 @@ class IndexCache:
                 columns={
                     "status": "new_status",
                     "comments": "new_comments",
+                    "last_run_name": "new_last_run_name",
                     "updated_at": "new_updated_at",
                 }
             )
@@ -62,6 +67,9 @@ class IndexCache:
             # Merge values
             new_df["status"] = new_df["new_status"].fillna(new_df["status"])
             new_df["comments"] = new_df["new_comments"].fillna(new_df["comments"])
+            new_df["last_run_name"] = new_df["new_last_run_name"].fillna(
+                new_df["last_run_name"]
+            )
             new_df["updated_at"] = new_df["new_updated_at"].fillna(new_df["updated_at"])
             new_df["added_at"] = new_df["added_at"].fillna(new_df["updated_at"])
 

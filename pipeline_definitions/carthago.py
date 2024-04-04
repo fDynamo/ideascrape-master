@@ -10,7 +10,7 @@ import argparse
 
 
 class CarthagoPipeline(DataPipeline):
-    def get_pipeline_name(self) -> str:
+    def get_base_pipeline_name(self) -> str:
         return "carthago"
 
     def add_cli_args(self, parser):
@@ -87,7 +87,9 @@ class CarthagoPipeline(DataPipeline):
         if not kwargs.get("skip_duckster"):
             duckster_args = {**kwargs, "in_tp_folder_path": tp_folder_path}
             duckster_steps = DucksterPipeline(
-                pipeline_run_folder_path=self.pipeline_run_folder_path
+                pipeline_run_folder_path=self.pipeline_run_folder_path,
+                run_name=self.run_name,
+                parent_pipeline_name=self.get_pipeline_name(),
             ).get_steps(**duckster_args)
             to_return += duckster_steps
 

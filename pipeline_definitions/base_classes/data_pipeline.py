@@ -119,13 +119,22 @@ class RunInfoFolder:
 
 
 class DataPipeline(ABC):
-    def __init__(self, pipeline_run_folder_path="") -> None:
+    def __init__(
+        self, pipeline_run_folder_path="", run_name="", parent_pipeline_name=""
+    ) -> None:
         super().__init__()
         self.run_info_folder = RunInfoFolder(pipeline_run_folder_path)
         self.set_pipeline_run_folder_path(pipeline_run_folder_path)
+        self.run_name = run_name
+        self.parent_pipeline_name = parent_pipeline_name
+
+    def get_pipeline_name(self) -> str:
+        if self.parent_pipeline_name:
+            return self.parent_pipeline_name
+        return self.get_base_pipeline_name()
 
     @abstractmethod
-    def get_pipeline_name(self) -> str:
+    def get_base_pipeline_name(self) -> str:
         pass
 
     @abstractmethod
@@ -299,7 +308,7 @@ class DataPipeline(ABC):
         parser = argparse.ArgumentParser()
         self.add_cli_args(parser)
 
-        cli_args, _ = parser.parse_known_args()
+        cli_args = parser.parse_args()
 
         if cli_args.print_steps:
             self.print_steps(**vars(cli_args))
@@ -334,6 +343,7 @@ class DataPipeline(ABC):
             exit(1)
 
         pipeline_run_folder_path = join(root_pipeline_folder_path, run_name)
+        self.run_name = run_name
 
         in_kwargs = vars(cli_args)
         special_run_kwargs = {}
