@@ -109,17 +109,15 @@ async function main() {
             num_uploaded: uploadedList.length,
           };
 
-          let baseRecordFileName = "upsync_upsert-";
+          let recordFileName = "upsync_upsert-";
           if (prod) {
-            baseRecordFileName += "prod-";
+            recordFileName += "prod-";
           } else {
-            baseRecordFileName += "local-";
+            recordFileName += "local-";
           }
+          recordFileName += "batch_" + batchIdx + "-" + fileName;
 
-          const recordFilePath = join(
-            recordsFolderPath,
-            baseRecordFileName + fileName
-          );
+          const recordFilePath = join(recordsFolderPath, recordFileName);
           writeFileSync(recordFilePath, JSON.stringify(toRecordObj, null, 3));
         }
       }
