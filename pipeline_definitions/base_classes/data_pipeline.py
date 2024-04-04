@@ -3,6 +3,7 @@ from pipeline_definitions.base_classes.script_component import ScriptComponent
 import argparse
 import subprocess
 from custom_helpers_py.get_paths import get_artifacts_folder_path
+from os import listdir
 from os.path import join, isdir
 from custom_helpers_py.folder_helpers import (
     mkdir_if_not_exists,
@@ -150,6 +151,13 @@ class DataPipeline(ABC):
             "-t", "--test-name", action=argparse.BooleanOptionalAction, dest="test_name"
         )
         parser.add_argument("-r", "--retry-name", type=str, dest="retry_name")
+        parser.add_argument(
+            "--lr",
+            "--last-run",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+            dest="last_run",
+        )
         parser.add_argument("--start-index", type=int, dest="start_index", default=None)
         parser.add_argument("--end-index", type=int, dest="end_index", default=None)
         parser.add_argument(
@@ -324,6 +332,7 @@ class DataPipeline(ABC):
 
         out_name: str = cli_args.out_name
         retry_name: str = cli_args.retry_name
+        is_last_run: bool = cli_args.last_run
         is_run_new: bool = cli_args.new_name
         is_run_test: bool = cli_args.test_name
         is_dont_run: bool = cli_args.dont_run
@@ -337,6 +346,16 @@ class DataPipeline(ABC):
             is_retry = True
         elif is_run_new:
             run_name = get_current_date_filename()
+        elif is_last_run:
+            is_retry = True
+            folder_list = listdir(root_pipeline_folder_path)
+            run_name = ""
+            for folder in folder_list:
+                if folder.startswith("20") and folder > run_name:
+                    run_name = folder
+            if not run_name:
+                print("No last run folder found")
+                exit(1)
 
         if run_name is None:
             print("No name provided.")
@@ -347,6 +366,8 @@ class DataPipeline(ABC):
 
         in_kwargs = vars(cli_args)
         special_run_kwargs = {}
+        special_steps_kwargs = {}
+
         if is_retry:
             if not isdir(pipeline_run_folder_path):
                 print("Pipeline run folder to retry not found")
@@ -361,6 +382,7 @@ class DataPipeline(ABC):
             in_kwargs = self.run_info_folder.read_steps_from_inputs()
             special_run_kwargs["start_index"] = cli_args.start_index
             special_run_kwargs["end_index"] = cli_args.end_index
+            special_steps_kwargs["upsync"] = cli_args.upsync
         else:
             if not is_run_test and isdir(pipeline_run_folder_path):
                 print("Use -r to retry a run")
@@ -371,7 +393,8 @@ class DataPipeline(ABC):
 
         self.set_pipeline_run_folder_path(pipeline_run_folder_path)
 
-        steps_to_run = self.get_steps(**in_kwargs)
+        in_steps_kwargs = {**in_kwargs, **special_steps_kwargs}
+        steps_to_run = self.get_steps(**in_steps_kwargs)
 
         if cli_args.reset_run_info:
             self.run_info_folder.reset_folder()

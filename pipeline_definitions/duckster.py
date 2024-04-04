@@ -7,7 +7,6 @@ from pipeline_definitions.upsync import UpsyncPipeline
 from os.path import join
 import argparse
 from custom_helpers_py.get_paths import get_dev_scrape_folder_path
-import shutil
 
 
 class DucksterPipeline(DataPipeline):
