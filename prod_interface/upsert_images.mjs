@@ -119,16 +119,18 @@ async function main() {
   }
 
   if (recordsFolderPath) {
-    let errorFile = join(recordsFolderPath, "upsert_images_errors");
-    let uploadRecordsFile = join(recordsFolderPath, "upsert_images_records");
-
+    let baseRecordFileName = "upsert_images-";
     if (prod) {
-      errorFile += "_prod.json";
-      uploadRecordsFile += "_prod.json";
+      baseRecordFileName += "prod-";
     } else {
-      errorFile += "_local.json";
-      uploadRecordsFile += "_local.json";
+      baseRecordFileName += "local-";
     }
+
+    let errorFile = join(recordsFolderPath, baseRecordFileName + "errors.json");
+    let uploadRecordsFile = join(
+      recordsFolderPath,
+      baseRecordFileName + "records.json"
+    );
 
     const errorToWrite = {
       errorRecordsList,
@@ -141,7 +143,7 @@ async function main() {
       lastIndex,
     };
 
-    writeFileSync(errorFile, JSON.stringify(errorToWrite));
+    if (countError) writeFileSync(errorFile, JSON.stringify(errorToWrite));
     writeFileSync(uploadRecordsFile, JSON.stringify(recordsToWrite));
   }
 
