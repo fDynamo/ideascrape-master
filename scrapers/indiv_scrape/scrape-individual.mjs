@@ -22,27 +22,49 @@ import { writeFileSync } from "fs";
 import { mkdirIfNotExists } from "../../custom_helpers_js/file-helpers.js";
 
 const main = async () => {
-  // Process input arguments
-  const argv = yargs(hideBin(process.argv)).argv;
-  let { outFolder, urlListFilePath, startIndex, endIndex } = argv;
-  if (!outFolder || !urlListFilePath) {
-    console.log("Invalid arguments");
-    process.exit(1);
-  }
-  if (!startIndex) startIndex = 0;
-  if (!endIndex) endIndex = 0;
+  const argv = yargs(hideBin(process.argv))
+    .options({
+      i: {
+        alias: "in-file-path",
+        demandOption: true,
+        type: "string",
+        normalize: true,
+      },
+      o: {
+        alias: "out-folder-path",
+        demandOption: true,
+        type: "string",
+        normalize: true,
+      },
+      "start-index": {
+        type: "number",
+        default: 0,
+      },
+      "end-index": {
+        type: "number",
+        default: 0,
+      },
+      "break-if-too-many-fails": {
+        type: "boolean",
+        default: false,
+      },
+    })
+    .parse();
+
+  let { inFilePath, outFolderPath, startIndex, endIndex, breakIfTooManyFails } =
+    argv;
 
   // Read url file
-  const urlsFileContents = await readCsvFile(urlListFilePath);
+  const urlsFileContents = await readCsvFile(inFilePath);
   const urls = urlsFileContents.map((row) => row.url);
   let lastIndex = endIndex ? Math.min(endIndex, urls.length) : urls.length;
 
   // Make directories and folders
-  const ESSENTIAL_DATA_FOLDER = join(outFolder, "essential_data");
+  const ESSENTIAL_DATA_FOLDER = join(outFolderPath, "essential_data");
   mkdirIfNotExists(ESSENTIAL_DATA_FOLDER);
-  const PAGE_COPY_FOLDER = join(outFolder, "page_copy");
+  const PAGE_COPY_FOLDER = join(outFolderPath, "page_copy");
   mkdirIfNotExists(PAGE_COPY_FOLDER);
-  const HEAD_INFO_FOLDER = join(outFolder, "head_info");
+  const HEAD_INFO_FOLDER = join(outFolderPath, "head_info");
   mkdirIfNotExists(HEAD_INFO_FOLDER);
 
   // Create runLogger
@@ -63,7 +85,7 @@ const main = async () => {
   const runLogger = await createRunLogger(
     "indiv-scrape",
     dataHeaders,
-    outFolder
+    outFolderPath
   );
 
   // Run constants
@@ -97,7 +119,7 @@ const main = async () => {
   // Log start
   await runLogger.addToStartLog({
     argv: JSON.stringify(argv),
-    urlListFilePath,
+    inFilePath,
     countUrlsToScrape: lastIndex - startIndex,
     startIndex,
     lastIndex,
@@ -440,6 +462,14 @@ const main = async () => {
   endLogContents.lastRunIndex = runIndex;
   endLogContents.countSuccessfulScrapes = countSuccessfulScrapes;
   endLogContents.countFailedScrapes = countFailedScrapes;
+
+  if (breakIfTooManyFails && !endLogContents.error) {
+    const sumScrapes = countSuccessfulScrapes + countFailedScrapes;
+    const failRatio = countFailedScrapes / sumScrapes;
+    if (failRatio >= 0.6) {
+      endLogContents.error = "Fail ratio too high! " + failRatio;
+    }
+  }
 
   await runLogger.addToEndLog(endLogContents);
   await runLogger.stopRunLogger();

@@ -35,6 +35,12 @@ class DucksterPipeline(DataPipeline):
             dest="delete_rejected",
             action=argparse.BooleanOptionalAction,
         )
+        parser.add_argument(
+            "--safe-indiv-scrape",
+            type=bool,
+            dest="safe_indiv_scrape",
+            action=argparse.BooleanOptionalAction,
+        )
 
         super().add_cli_args(parser)
 
@@ -100,8 +106,12 @@ class DucksterPipeline(DataPipeline):
             component_name="indiv scrape",
             body="npm run indiv_scrape",
             args=[
-                ["urlListFilePath", file_path_urls_for_indiv_scrape],
-                ["outFolder", folder_path_indiv_scrape],
+                ["in-file-path", file_path_urls_for_indiv_scrape],
+                ["out-folder-path", folder_path_indiv_scrape],
+                ComponentArg(
+                    arg_name="break-if-too-many-fails",
+                    arg_val=kwargs.get("safe_indiv_scrape"),
+                ),
             ],
         )
         if kwargs["use_dev_scrape"]:
