@@ -26,6 +26,10 @@ def read_json_as_df(file_path: str) -> pd.DataFrame:
     return pd.read_json(file_path, encoding="utf-8")
 
 
+def save_df_as_json(df: pd.DataFrame, file_path: str):
+    df.to_json(file_path, orient="records", indent=3, date_format="iso")
+
+
 def save_df_as_csv(df: pd.DataFrame, filepath: str):
     df.to_csv(filepath, encoding="utf-8", index=False)
 
@@ -73,4 +77,22 @@ def concat_folder_into_df(
 
     master_df = master_df.reset_index(drop=True)
 
+    return master_df
+
+
+# grab_dict is a dict with col names to grab as keys
+# and new names as values. Leave new name as empty str to not rename
+def grab_and_rename_columns(in_df: pd.DataFrame, grab_dict: dict, safe_grab=True):
+    grab_col_list = list(grab_dict.keys())
+    if safe_grab:
+        grab_col_list = [col for col in grab_col_list if col in in_df.columns]
+    master_df = in_df[grab_col_list]
+
+    rename_dict = {}
+    for col_name in grab_col_list:
+        new_name = grab_dict[col_name]
+        if not new_name:
+            continue
+        rename_dict[col_name] = new_name
+    master_df = master_df.rename(columns=rename_dict)
     return master_df

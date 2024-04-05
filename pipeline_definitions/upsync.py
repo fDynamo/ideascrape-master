@@ -5,67 +5,79 @@ from pipeline_definitions.base_classes.script_component import (
 )
 from os.path import join
 
-# TODO: Remove functionality
-
 
 class UpsyncPipeline(DataPipeline):
-    def get_pipeline_name(self) -> str:
+    def get_base_pipeline_name(self) -> str:
         return "upsync"
 
     def add_cli_args(self, parser):
+        parser.add_argument("--upsync-folder-path", type=str, dest="upsync_folder_path")
         parser.add_argument(
-            "--upsertFolderPath", type=str, dest="upsert_folder_path", required=True
-        )
-        parser.add_argument(
-            "--upsertImagesFolderPath",
+            "--upsert-images-folder-path",
             type=str,
-            dest="upsert_folder_path",
-            required=True,
+            dest="upsert_images_folder_path",
         )
         super().add_cli_args(parser)
 
     def get_steps(self, **kwargs) -> list[ScriptComponent]:
         out_folder_path = self.pipeline_run_folder_path
-        records_folder_path = join(out_folder_path, "records")
+        records_folder_path = join(out_folder_path, "upsync_records")
 
         # Upsert tables
         to_return = []
 
-        upsert_folder_path = kwargs.get("upsert_folder_path")
-        if upsert_folder_path:
-            com_upsert = ScriptComponent(
-                component_name="upsert data",
-                body="npm run pi_upsert_records",
+        upsync_folder_path = kwargs.get("upsync_folder_path")
+        if upsync_folder_path:
+            com_upsync = ScriptComponent(
+                component_name="upsync data",
+                body="bun run pi_upsync_records",
                 args=[
                     ComponentArg(
-                        arg_name="toUploadFolderPath",
-                        arg_val=upsert_folder_path,
+                        arg_name="i",
+                        arg_val=upsync_folder_path,
                         is_path=True,
                     ),
                     ComponentArg(
-                        arg_name="recordsFolderPath",
+                        arg_name="r",
                         arg_val=records_folder_path,
                         is_path=True,
                     ),
                     ComponentArg(arg_name="prod", arg_val=kwargs.get("prod", False)),
                 ],
             )
-            to_return.append(com_upsert)
+            to_return.append(com_upsync)
+
+            # Cache
+            cache_run_name = self.get_pipeline_name() + "_" + self.run_name
+            com_cache_post_upsync = ScriptComponent(
+                component_name="cache post upsync",
+                body="python com_cache/cache_post_upsync.py",
+                args=[
+                    ComponentArg(
+                        arg_name="upsync-records-folder-path",
+                        arg_val=records_folder_path,
+                        is_path=True,
+                    ),
+                    ComponentArg(arg_name="run-name", arg_val=cache_run_name),
+                    ComponentArg(arg_name="prod", arg_val=kwargs.get("prod", False)),
+                ],
+            )
+            to_return.append(com_cache_post_upsync)
 
         # Upsert images
         upsert_images_folder_path = kwargs.get("upsert_images_folder_path")
         if upsert_images_folder_path:
             com_upsert = ScriptComponent(
                 component_name="upsert images",
-                body="npm run pi_upsert_images",
+                body="bun run pi_upsert_images",
                 args=[
                     ComponentArg(
-                        arg_name="imagesFolderPath",
+                        arg_name="i",
                         arg_val=upsert_images_folder_path,
                         is_path=True,
                     ),
                     ComponentArg(
-                        arg_name="recordsFolderPath",
+                        arg_name="r",
                         arg_val=records_folder_path,
                         is_path=True,
                     ),
@@ -73,6 +85,9 @@ class UpsyncPipeline(DataPipeline):
                 ],
             )
             to_return.append(com_upsert)
+
+        if len(to_return) == 0:
+            raise Exception("Nothing to upsync!")
 
         return to_return
 

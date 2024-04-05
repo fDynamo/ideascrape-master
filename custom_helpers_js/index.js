@@ -61,6 +61,10 @@ const batchData = (inData, batchSize) => {
   return batchList;
 };
 
+function isNumber(value) {
+  return typeof value === "number";
+}
+
 module.exports = {
   timeoutPromise,
   getArgs,
@@ -68,4 +72,5 @@ module.exports = {
   convertObjKeysToHeader,
   getPercentageString,
   batchData,
+  isNumber,
 };

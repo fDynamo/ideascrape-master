@@ -32,6 +32,9 @@ def mkdir_to_ensure_path(some_path: str):
         dir_to_ensure = dirname(dir_to_ensure)
         ensure_list.append(dir_to_ensure)
 
+        if dir_to_ensure == "." or dir_to_ensure == "":
+            break
+
     ensure_list.reverse()
     mkdir_if_not_exists(ensure_list)
 

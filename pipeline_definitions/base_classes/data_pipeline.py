@@ -3,6 +3,7 @@ from pipeline_definitions.base_classes.script_component import ScriptComponent
 import argparse
 import subprocess
 from custom_helpers_py.get_paths import get_artifacts_folder_path
+from os import listdir
 from os.path import join, isdir
 from custom_helpers_py.folder_helpers import (
     mkdir_if_not_exists,
@@ -71,7 +72,7 @@ class RunInfoFolder:
 
     def add_step_to_progress(self, step_id: int, com: ScriptComponent):
         with open(join(self.folder_path, "progress.txt"), "a") as outfile:
-            outfile.write(str(step_id) + " : " + str(com) + "\n")
+            outfile.write(str(step_id) + "\n" + str(com) + "\n\n")
 
     def open_pipeline_log(self):
         run_log_file = open(join(self.folder_path, "run_log.txt"), "a")
@@ -119,13 +120,23 @@ class RunInfoFolder:
 
 
 class DataPipeline(ABC):
-    def __init__(self, pipeline_run_folder_path="") -> None:
+    def __init__(
+        self, pipeline_run_folder_path="", run_name="", parent_pipeline_name=""
+    ) -> None:
         super().__init__()
-        self.run_info_folder = RunInfoFolder(pipeline_run_folder_path)
+        self.run_name = run_name
+        self.parent_pipeline_name = parent_pipeline_name
+
+        self.run_info_folder = RunInfoFolder()
         self.set_pipeline_run_folder_path(pipeline_run_folder_path)
 
-    @abstractmethod
     def get_pipeline_name(self) -> str:
+        if self.parent_pipeline_name:
+            return self.parent_pipeline_name
+        return self.get_base_pipeline_name()
+
+    @abstractmethod
+    def get_base_pipeline_name(self) -> str:
         pass
 
     @abstractmethod
@@ -133,16 +144,23 @@ class DataPipeline(ABC):
         pass
 
     def add_cli_args(self, parser):
-        parser.add_argument("-o", "--outName", type=str, dest="out_name")
+        parser.add_argument("-o", "--out-name", type=str, dest="out_name")
         parser.add_argument(
-            "-n", "--newName", action=argparse.BooleanOptionalAction, dest="new_name"
+            "-n", "--new-name", action=argparse.BooleanOptionalAction, dest="new_name"
         )
         parser.add_argument(
-            "-t", "--testName", action=argparse.BooleanOptionalAction, dest="test_name"
+            "-t", "--test-name", action=argparse.BooleanOptionalAction, dest="test_name"
         )
-        parser.add_argument("-r", "--retryName", type=str, dest="retry_name")
-        parser.add_argument("--startIndex", type=int, dest="start_index", default=None)
-        parser.add_argument("--endIndex", type=int, dest="end_index", default=None)
+        parser.add_argument("-r", "--retry-name", type=str, dest="retry_name")
+        parser.add_argument(
+            "--lr",
+            "--last-run",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+            dest="last_run",
+        )
+        parser.add_argument("--start-index", type=int, dest="start_index", default=None)
+        parser.add_argument("--end-index", type=int, dest="end_index", default=None)
         parser.add_argument(
             "--prod", action=argparse.BooleanOptionalAction, default=False
         )
@@ -150,34 +168,40 @@ class DataPipeline(ABC):
             "--upsync", action=argparse.BooleanOptionalAction, default=False
         )
         parser.add_argument(
-            "--useDevScrape",
+            "--use-dev-scrape",
             action=argparse.BooleanOptionalAction,
             default=False,
             dest="use_dev_scrape",
         )
         parser.add_argument(
-            "--printSteps",
+            "--print-steps",
             action=argparse.BooleanOptionalAction,
             default=False,
             dest="print_steps",
         )
         parser.add_argument(
-            "--resetRunInfo",
+            "--reset-run-info",
             action=argparse.BooleanOptionalAction,
             default=False,
             dest="reset_run_info",
         )
         parser.add_argument(
-            "--resetTest",
+            "--reset-test",
             action=argparse.BooleanOptionalAction,
             default=False,
             dest="reset_test",
         )
         parser.add_argument(
-            "--oneStep",
+            "--one-step",
             type=int,
             default=None,
             dest="one_step",
+        )
+        parser.add_argument(
+            "--dont-run",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+            dest="dont_run",
         )
 
     def run_steps(self, steps: list[ScriptComponent], **kwargs):
@@ -205,14 +229,15 @@ class DataPipeline(ABC):
                 continue
 
             script_to_run = str(com)
+
+            print("\n[STEP START]", i, com)
             if not script_to_run:
                 print("[SKIPPING ERASED STEP]")
                 continue
 
-            print("\n[STEP START]", i, com)
-
             com_start_time = datetime.now()
             execution_error = None
+            process = None
             try:
                 # Make all directories as needed
                 path_in_args = com.get_paths_in_args()
@@ -281,18 +306,19 @@ class DataPipeline(ABC):
     def set_pipeline_run_folder_path(self, new_path: str):
         self.pipeline_run_folder_path = new_path
         if new_path:
-            mkdir_if_not_exists(new_path)
+            mkdir_to_ensure_path(new_path)
             run_info_folder_path = join(new_path, "run_info")
         else:
             run_info_folder_path = ""
 
-        self.run_info_folder.set_folder_path(run_info_folder_path)
+        if not self.parent_pipeline_name:
+            self.run_info_folder.set_folder_path(run_info_folder_path)
 
     def run_from_cli(self):
         parser = argparse.ArgumentParser()
         self.add_cli_args(parser)
 
-        cli_args, _ = parser.parse_known_args()
+        cli_args = parser.parse_args()
 
         if cli_args.print_steps:
             self.print_steps(**vars(cli_args))
@@ -308,8 +334,10 @@ class DataPipeline(ABC):
 
         out_name: str = cli_args.out_name
         retry_name: str = cli_args.retry_name
+        is_last_run: bool = cli_args.last_run
         is_run_new: bool = cli_args.new_name
         is_run_test: bool = cli_args.test_name
+        is_dont_run: bool = cli_args.dont_run
 
         if is_run_test:
             run_name = "test"
@@ -320,15 +348,28 @@ class DataPipeline(ABC):
             is_retry = True
         elif is_run_new:
             run_name = get_current_date_filename()
+        elif is_last_run:
+            is_retry = True
+            folder_list = listdir(root_pipeline_folder_path)
+            run_name = ""
+            for folder in folder_list:
+                if folder.startswith("20") and folder > run_name:
+                    run_name = folder
+            if not run_name:
+                print("No last run folder found")
+                exit(1)
 
         if run_name is None:
             print("No name provided.")
             exit(1)
 
         pipeline_run_folder_path = join(root_pipeline_folder_path, run_name)
+        self.run_name = run_name
 
         in_kwargs = vars(cli_args)
         special_run_kwargs = {}
+        special_steps_kwargs = {}
+
         if is_retry:
             if not isdir(pipeline_run_folder_path):
                 print("Pipeline run folder to retry not found")
@@ -343,6 +384,7 @@ class DataPipeline(ABC):
             in_kwargs = self.run_info_folder.read_steps_from_inputs()
             special_run_kwargs["start_index"] = cli_args.start_index
             special_run_kwargs["end_index"] = cli_args.end_index
+            special_steps_kwargs["upsync"] = cli_args.upsync
         else:
             if not is_run_test and isdir(pipeline_run_folder_path):
                 print("Use -r to retry a run")
@@ -353,7 +395,8 @@ class DataPipeline(ABC):
 
         self.set_pipeline_run_folder_path(pipeline_run_folder_path)
 
-        steps_to_run = self.get_steps(**in_kwargs)
+        in_steps_kwargs = {**in_kwargs, **special_steps_kwargs}
+        steps_to_run = self.get_steps(**in_steps_kwargs)
 
         if cli_args.reset_run_info:
             self.run_info_folder.reset_folder()
@@ -362,4 +405,6 @@ class DataPipeline(ABC):
 
         # Run steps
         in_run_kwargs = {**in_kwargs, **special_run_kwargs}
-        self.run_steps(steps_to_run, **in_run_kwargs)
+
+        if not is_dont_run:
+            self.run_steps(steps_to_run, **in_run_kwargs)
