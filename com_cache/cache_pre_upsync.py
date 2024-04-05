@@ -33,7 +33,7 @@ def main():
     def get_status(in_row: dict):
         comments = in_row["comments"]
         if pd.isna(comments):
-            return "READY_FOR_UPLOAD"
+            return "READY_FOR_UPSYNC"
         return "REJECTED"
 
     master_df["status"] = master_df.apply(get_status, axis=1)

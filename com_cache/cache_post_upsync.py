@@ -47,10 +47,7 @@ def main():
             curr_df = curr_df[["product_url"]]
 
             curr_df["comments"] = pd.NA
-            if is_prod:
-                curr_df["status"] = "IN_PROD"
-            else:
-                curr_df["status"] = "IN_LOCAL"
+            curr_df["status"] = "UPLOADED"
 
             curr_df["last_run_name"] = run_name
 
