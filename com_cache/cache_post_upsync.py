@@ -30,28 +30,40 @@ def main():
     ic = IndexCache(prod=is_prod)
 
     file_name_list: list[str] = listdir(upsync_records_folder_path)
-    test_str = "upsync_upsert-"
+
     if is_prod:
-        test_str += "prod"
+        env_string = "prod"
     else:
-        test_str += "local"
+        env_string = "local"
+
+    upsert_test_str = "upsync_upsert-" + env_string
+    delete_test_str = "upsync_delete-" + env_string
 
     for file_name in file_name_list:
-        if file_name.startswith(test_str):
-            file_path = join(upsync_records_folder_path, file_name)
-            with open(file_path, "r", encoding="utf-8") as in_file:
-                file_contents = in_file.read()
-            file_obj = json.loads(file_contents)
-            uploaded_list = file_obj["uploaded_list"]
-            curr_df = pd.DataFrame(uploaded_list)
-            curr_df = curr_df[["product_url"]]
+        is_upsert = file_name.startswith(upsert_test_str)
+        is_delete = file_name.startswith(delete_test_str)
 
-            curr_df["comments"] = pd.NA
+        if not is_upsert and not is_delete:
+            continue
+
+        file_path = join(upsync_records_folder_path, file_name)
+        with open(file_path, "r", encoding="utf-8") as in_file:
+            file_contents = in_file.read()
+        file_obj = json.loads(file_contents)
+        uploaded_list = file_obj["uploaded_list"]
+        curr_df = pd.DataFrame(uploaded_list)
+        curr_df = curr_df[["product_url"]]
+
+        curr_df["comments"] = pd.NA
+
+        if is_upsert:
             curr_df["status"] = "UPLOADED"
+        if is_delete:
+            curr_df["status"] = "DELETED"
 
-            curr_df["last_run_name"] = run_name
+        curr_df["last_run_name"] = run_name
 
-            ic.add_data(in_df=curr_df)
+        ic.add_data(in_df=curr_df)
 
 
 if __name__ == "__main__":
