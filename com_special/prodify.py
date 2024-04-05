@@ -36,6 +36,13 @@ def main():
         action=argparse.BooleanOptionalAction,
         default=False,
     )
+    parser.add_argument(
+        "--delete-rejected",
+        type=bool,
+        dest="delete_rejected",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+    )
 
     args = parser.parse_args()
 
@@ -43,6 +50,7 @@ def main():
     out_folder_path: str = args.out_folder_path
     rejected_file_path: str = args.rejected_file_path
     ignore_missing_search_vector: bool = args.ignore_missing_search_vector
+    delete_rejected: bool = args.delete_rejected
 
     tpd = TPData(folder_path=tp_folder_path)
     master_df = tpd.get_combined_parts_df(filter_rejected=False)
@@ -89,13 +97,18 @@ def main():
     # Add updated at
     master_df["info_updated_at"] = pd.Timestamp.now()
 
-    # Save
-    save_path = join(out_folder_path, "zero.json")
-    save_df_as_json(master_df, save_path)
-
     if rejected_file_path:
         rejected_df = rejected_df[["product_url", "rejected"]]
         save_df_as_json(rejected_df, rejected_file_path)
+
+    if delete_rejected:
+        rejected_df = rejected_df[["product_url"]]
+        rejected_df["upsync_action"] = "delete"
+        master_df = pd.concat([master_df, rejected_df])
+
+    # Save
+    save_path = join(out_folder_path, "zero.json")
+    save_df_as_json(master_df, save_path)
 
 
 if __name__ == "__main__":

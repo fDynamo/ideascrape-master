@@ -29,6 +29,12 @@ class DucksterPipeline(DataPipeline):
             dest="reset_tp",
             action=argparse.BooleanOptionalAction,
         )
+        parser.add_argument(
+            "--delete-rejected",
+            type=bool,
+            dest="delete_rejected",
+            action=argparse.BooleanOptionalAction,
+        )
 
         super().add_cli_args(parser)
 
@@ -234,6 +240,10 @@ class DucksterPipeline(DataPipeline):
                 ComponentArg(arg_name="o", arg_val=folder_path_upsync, is_path=True),
                 ComponentArg(
                     arg_name="r", arg_val=file_path_rejected_prodify, is_path=True
+                ),
+                ComponentArg(
+                    arg_name="delete-rejected",
+                    arg_val=kwargs.get("delete-rejected", False),
                 ),
             ],
         )
