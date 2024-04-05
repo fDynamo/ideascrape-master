@@ -124,10 +124,11 @@ class DataPipeline(ABC):
         self, pipeline_run_folder_path="", run_name="", parent_pipeline_name=""
     ) -> None:
         super().__init__()
-        self.run_info_folder = RunInfoFolder(pipeline_run_folder_path)
-        self.set_pipeline_run_folder_path(pipeline_run_folder_path)
         self.run_name = run_name
         self.parent_pipeline_name = parent_pipeline_name
+
+        self.run_info_folder = RunInfoFolder()
+        self.set_pipeline_run_folder_path(pipeline_run_folder_path)
 
     def get_pipeline_name(self) -> str:
         if self.parent_pipeline_name:
@@ -305,12 +306,13 @@ class DataPipeline(ABC):
     def set_pipeline_run_folder_path(self, new_path: str):
         self.pipeline_run_folder_path = new_path
         if new_path:
-            mkdir_if_not_exists(new_path)
+            mkdir_to_ensure_path(new_path)
             run_info_folder_path = join(new_path, "run_info")
         else:
             run_info_folder_path = ""
 
-        self.run_info_folder.set_folder_path(run_info_folder_path)
+        if not self.parent_pipeline_name:
+            self.run_info_folder.set_folder_path(run_info_folder_path)
 
     def run_from_cli(self):
         parser = argparse.ArgumentParser()
