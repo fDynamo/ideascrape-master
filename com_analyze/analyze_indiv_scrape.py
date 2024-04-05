@@ -1,7 +1,3 @@
-from custom_helpers_py.filter_results import (
-    is_page_title_valid,
-    is_page_description_valid,
-)
 from custom_helpers_py.string_formatters import remove_unnecessary_spaces_from_string
 from custom_helpers_py.url_formatters import clean_url
 import argparse
@@ -10,10 +6,10 @@ from os.path import join
 import json
 import pandas as pd
 from com_analyze.analyze_page_copy import analyze_page_copy
-from custom_helpers_py.filter_results import is_url_valid
 from copy import deepcopy
 from custom_helpers_py.custom_classes.tp_data import TPData
 from custom_helpers_py.pandas_helpers import save_df_as_csv
+from com_filters.helpers import is_url_valid, is_page_desc_valid, is_page_title_valid
 
 
 """
@@ -72,11 +68,11 @@ def main():
 
         # See if url is valid
         url_valid_res = is_url_valid(file_obj["init_url"])
-        if url_valid_res != "y":
+        if not url_valid_res[0]:
             data_list.append(
                 {
                     **file_obj,
-                    "rejected": REJECTED_PREFIX + "Invalid url " + url_valid_res,
+                    "rejected": REJECTED_PREFIX + url_valid_res[1],
                 }
             )
             continue
@@ -86,9 +82,10 @@ def main():
         title = remove_unnecessary_spaces_from_string(title)
         file_obj["title"] = title
 
-        if not is_page_title_valid(title):
+        title_valid_res = is_page_title_valid(title)
+        if not title_valid_res[0]:
             data_list.append(
-                {**file_obj, "rejected": REJECTED_PREFIX + "Invalid title"}
+                {**file_obj, "rejected": REJECTED_PREFIX + title_valid_res[1]}
             )
             continue
 
@@ -100,9 +97,10 @@ def main():
 
         # Get new description
         description: str = file_obj["description"] or ""
-        analyzed_description: str = (
-            description + " " + analyzed_page_copy_obj["page_gist"]
-        )
+        if analyzed_page_copy_obj is not None:
+            analyzed_description: str = (
+                description + " " + analyzed_page_copy_obj["page_gist"]
+            )
         analyzed_description = remove_unnecessary_spaces_from_string(
             analyzed_description
         )
@@ -112,9 +110,10 @@ def main():
         else:
             description = remove_unnecessary_spaces_from_string(description)
 
-        if not is_page_description_valid(description):
+        desc_valid_res = is_page_desc_valid(description)
+        if not desc_valid_res[0]:
             data_list.append(
-                {**file_obj, "rejected": REJECTED_PREFIX + "Invalid description"}
+                {**file_obj, "rejected": REJECTED_PREFIX + desc_valid_res[1]}
             )
             continue
 

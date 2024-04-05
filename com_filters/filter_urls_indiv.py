@@ -1,10 +1,10 @@
 import pandas as pd
-from custom_helpers_py.filter_results import is_url_valid
 from custom_helpers_py.url_formatters import clean_url, get_domain_from_url
 from custom_helpers_py.pandas_helpers import read_csv_as_df, save_df_as_csv
 from custom_helpers_py.custom_classes.tp_data import TPData
-import argparse
 from custom_helpers_py.custom_classes.index_cache import IndexCache
+from com_filters.helpers import is_url_valid
+import argparse
 
 
 def main():
@@ -94,10 +94,10 @@ def main():
         if is_use_cache_filter and in_url in recent_url_set:
             return "filter_urls_indiv: Recently updated"
 
-        valid = is_url_valid(in_url)
-        if valid == "y":
+        is_valid_res = is_url_valid(in_url)
+        if is_valid_res[0]:
             return None
-        return "filter_urls_indiv: " + valid
+        return "filter_urls_indiv: " + is_valid_res[1]
 
     master_df["rejected"] = master_df["url"].apply(is_url_rejected)
 

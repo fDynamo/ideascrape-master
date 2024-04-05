@@ -1,14 +1,12 @@
-from custom_helpers_py.filter_results import (
-    is_domain_similarweb_scrapable,
-)
+import argparse
+import pandas as pd
 from custom_helpers_py.pandas_helpers import (
     read_csv_as_df,
     save_df_as_csv,
 )
-import argparse
-from custom_helpers_py.custom_classes.tp_data import TPData
-import pandas as pd
 from custom_helpers_py.url_formatters import get_domain_from_url
+from custom_helpers_py.custom_classes.tp_data import TPData
+from com_filters.helpers import is_domain_similarweb_scrapable
 
 
 def main():
@@ -77,9 +75,9 @@ def main():
     # TODO: More complex yet efficient logic to truly filter trash out
     def filter_domains(in_domain: str):
         check_res = is_domain_similarweb_scrapable(in_domain)
-        if check_res == "y":
+        if check_res[0]:
             return None
-        return check_res
+        return check_res[1]
 
     master_df["rejected_similarweb_scrape"] = master_df["domain"].apply(filter_domains)
     master_df

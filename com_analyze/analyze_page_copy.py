@@ -4,8 +4,11 @@ from custom_helpers_py.string_formatters import remove_unnecessary_spaces_from_s
 
 
 def analyze_page_copy(in_file_path: str):
-    with open(in_file_path, "r", encoding="utf-8") as in_file:
-        page_copy: str = in_file.read()
+    try:
+        with open(in_file_path, "r", encoding="utf-8") as in_file:
+            page_copy: str = in_file.read()
+    except:
+        return None
 
     meta_end_splitter = "---"
     meta_end_idx = page_copy.find(meta_end_splitter)
