@@ -59,12 +59,17 @@ async function main() {
 
     // Sort records to action lists
     const upsertList = [];
+    const deleteList = [];
     for (let recordIdx = 0; recordIdx < recordList.length; recordIdx++) {
       const recordObj = recordList[recordIdx];
       const upsyncAction = recordObj["upsync_action"];
       if (upsyncAction == "upsert") {
         delete recordObj["upsync_action"];
         upsertList.push(recordObj);
+      }
+      if (upsyncAction == "delete") {
+        delete recordObj["upsync_action"];
+        deleteList.push(recordObj["product_url"]);
       }
     }
 
@@ -110,6 +115,58 @@ async function main() {
           };
 
           let recordFileName = "upsync_upsert-";
+          if (prod) {
+            recordFileName += "prod-";
+          } else {
+            recordFileName += "local-";
+          }
+          recordFileName += "batch_" + batchIdx + "-" + fileName;
+
+          const recordFilePath = join(recordsFolderPath, recordFileName);
+          writeFileSync(recordFilePath, JSON.stringify(toRecordObj, null, 3));
+        }
+      }
+    }
+
+    const shouldDelete = !onlyAction || onlyAction == "delete";
+    if (shouldDelete) {
+      const DELETE_BATCH_SIZE = 1000;
+      const deleteBatchList = batchData(deleteList, DELETE_BATCH_SIZE);
+      for (let batchIdx = 0; batchIdx < deleteBatchList.length; batchIdx++) {
+        if (isNumber(oneBatchIndex) && batchIdx !== oneBatchIndex) {
+          continue;
+        }
+
+        console.log("[deleting] file idx", fileIdx, "batch idx", batchIdx);
+
+        const batchObj = deleteBatchList[batchIdx];
+        const { data, error } = await supabase
+          .from("search_main")
+          .delete()
+          .in("product_url", batchObj)
+          .select("id,product_url");
+
+        if (error) {
+          console.log(
+            "[failed delete] file idx",
+            fileIdx,
+            "batch idx",
+            batchIdx
+          );
+          console.error(error);
+          process.exit(1);
+        }
+
+        if (data) {
+          const uploadedList = data.map((obj) => {
+            return { id: obj.id, product_url: obj.product_url };
+          });
+          const toRecordObj = {
+            uploaded_list: uploadedList,
+            num_uploaded: uploadedList.length,
+          };
+
+          let recordFileName = "upsync_delete-";
           if (prod) {
             recordFileName += "prod-";
           } else {
