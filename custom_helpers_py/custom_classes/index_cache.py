@@ -6,7 +6,7 @@ from custom_helpers_py.pandas_helpers import save_df_as_json, read_json_as_df
 
 
 class IndexCache:
-    def __init__(self, prod) -> None:
+    def __init__(self, prod: bool) -> None:
         load_dotenv(override=True)
         self.cache_folder_path = environ.get("CACHE_FOLDER")
         if not self.cache_folder_path or not exists(self.cache_folder_path):
@@ -103,6 +103,19 @@ class IndexCache:
 
         mask = df[date_col] >= past_ts
         df = df[mask]
+
+        urls = df["product_url"]
+        return urls.to_list()
+
+    def get_urls(self, only_uploaded=False):
+        if not exists(self.index_cache_file_path):
+            raise Exception("No cache")
+
+        df = read_json_as_df(self.index_cache_file_path)
+
+        if only_uploaded:
+            mask = df["status"] == "UPLOADED"
+            df = df[mask]
 
         urls = df["product_url"]
         return urls.to_list()
