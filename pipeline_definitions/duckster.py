@@ -41,6 +41,13 @@ class DucksterPipeline(DataPipeline):
             dest="safe_indiv_scrape",
             action=argparse.BooleanOptionalAction,
         )
+        parser.add_argument(
+            "--skip-cache-filter",
+            type=bool,
+            dest="skip_cache_filter",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+        )
 
         super().add_cli_args(parser)
 
@@ -83,7 +90,7 @@ class DucksterPipeline(DataPipeline):
                 ),
                 ComponentArg(
                     arg_name="use-cache-filter",
-                    arg_val=True,
+                    arg_val=not kwargs.get("skip_cache_filter", False),
                 ),
             ],
         )
