@@ -37,6 +37,13 @@ def main():
         default=False,
     )
     parser.add_argument(
+        "--skip-missing-search-vector",
+        type=bool,
+        dest="skip_missing_search_vector",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+    )
+    parser.add_argument(
         "--delete-rejected",
         type=bool,
         dest="delete_rejected",
@@ -50,6 +57,7 @@ def main():
     out_folder_path: str = args.out_folder_path
     rejected_file_path: str = args.rejected_file_path
     ignore_missing_search_vector: bool = args.ignore_missing_search_vector
+    skip_missing_search_vector: bool = args.skip_missing_search_vector
     delete_rejected: bool = args.delete_rejected
 
     tpd = TPData(folder_path=tp_folder_path)
@@ -79,6 +87,9 @@ def main():
         "sw_url": "",
         "sw_visits_last_month": "",
         "sw_created_at": "",
+        "from_googleps": "",
+        "googleps_count_download": "",
+        "googleps_updated_at": "",
     }
     master_df = grab_and_rename_columns(master_df, grab_dict)
 
@@ -86,10 +97,17 @@ def main():
 
         def check_missing_search_vector(in_row: dict):
             sv = in_row["search_vector"]
-            if not isinstance(sv, str):
-                raise Exception("Missing search vector found", in_row["product_url"])
 
-        master_df.apply(check_missing_search_vector, axis=1)
+            if not isinstance(sv, str):
+                if skip_missing_search_vector:
+                    return False
+
+                raise Exception("Missing search vector found", in_row["product_url"])
+            return True
+
+        master_df["tmp"] = master_df.apply(check_missing_search_vector, axis=1)
+        master_df = master_df[master_df["tmp"]]
+        master_df = master_df.drop(columns=["tmp"])
 
     # Add upsync action
     master_df["upsync_action"] = "upsert"

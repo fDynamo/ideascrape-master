@@ -65,15 +65,11 @@ def main():
         save_image_name = convert_url_to_file_name(entry["product_url"])
 
         # Get extension name
-        to_save_ext = ""
+        to_save_ext = ".png"
         for ext in allowed_extensions:
             if ext in image_url.lower():
                 to_save_ext = ext
                 break
-
-        if to_save_ext == "":
-            entry[LOCAL_IMAGE_ERROR_COL_NAME] = "Invalid extension"
-            continue
 
         save_image_name = save_image_name + to_save_ext
         save_file_path = join(out_folder_path, save_image_name)

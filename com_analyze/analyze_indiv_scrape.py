@@ -10,7 +10,7 @@ from copy import deepcopy
 from custom_helpers_py.custom_classes.tp_data import TPData
 from custom_helpers_py.pandas_helpers import save_df_as_csv
 from com_filters.helpers import is_url_valid, is_page_desc_valid, is_page_title_valid
-
+from custom_helpers_py.utilities import number_str_to_number
 
 """
 This script combines all the data from individual scrapes by filtering and analyzing data. It creates a CC of indiv scrape data to be used in other scripts
@@ -127,8 +127,13 @@ def main():
 
                 # Add new vars
                 file_obj["from_googleps"] = True
-                file_obj["googleps_count_download"] = pc_data["count_downloads"]
                 file_obj["googleps_updated_at"] = pc_data["updated_at"]
+
+                # Fix downloads
+                new_downloads: str = pc_data["count_downloads"]
+                new_downloads = number_str_to_number(new_downloads)
+
+                file_obj["googleps_count_download"] = new_downloads
 
         desc_valid_res = is_page_desc_valid(description)
         if not desc_valid_res[0]:

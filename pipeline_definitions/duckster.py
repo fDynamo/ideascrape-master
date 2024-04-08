@@ -15,7 +15,11 @@ class DucksterPipeline(DataPipeline):
 
     def add_cli_args(self, parser):
         parser.add_argument(
-            "-i", "--in-url-file-path", type=str, dest="in_url_file_path", required=True
+            "-i",
+            "--in-url-file-path",
+            type=str,
+            dest="in_url_file_path",
+            required=False,  # Not required so we can retry
         )
         parser.add_argument(
             "--skip-url-filter",
@@ -45,6 +49,13 @@ class DucksterPipeline(DataPipeline):
             "--skip-cache-filter",
             type=bool,
             dest="skip_cache_filter",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+        )
+        parser.add_argument(
+            "--skip-missing-search-vector",
+            type=bool,
+            dest="skip_missing_search_vector",
             action=argparse.BooleanOptionalAction,
             default=False,
         )
@@ -269,6 +280,13 @@ class DucksterPipeline(DataPipeline):
             com_prodify.add_arg(
                 ComponentArg(
                     arg_name="ignore-missing-search-vector",
+                    arg_val=True,
+                ),
+            )
+        if kwargs.get("skip_missing_search_vector"):
+            com_prodify.add_arg(
+                ComponentArg(
+                    arg_name="skip-missing-search-vector",
                     arg_val=True,
                 ),
             )

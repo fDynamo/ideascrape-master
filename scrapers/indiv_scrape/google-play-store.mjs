@@ -15,6 +15,7 @@ function evaluateEssentialData() {
   let title = "";
   if (titleEl) {
     title = titleEl.innerText;
+    title = title.replace(" - Apps on Google Play", "");
   }
 
   let description = "";
