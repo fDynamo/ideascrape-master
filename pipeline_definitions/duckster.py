@@ -260,7 +260,7 @@ class DucksterPipeline(DataPipeline):
                 ),
                 ComponentArg(
                     arg_name="delete-rejected",
-                    arg_val=kwargs.get("delete-rejected", False),
+                    arg_val=kwargs.get("delete_rejected", False),
                 ),
             ],
         )

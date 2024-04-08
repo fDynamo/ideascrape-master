@@ -21,7 +21,11 @@ def main():
     in_folder_path = args.in_folder_path
     tp_folder_path = args.tp_folder_path
 
-    master_df = concat_folder_into_df(in_folder_path, drop_subset="domain")
+    try:
+        master_df = concat_folder_into_df(in_folder_path, drop_subset="domain")
+    except:
+        print("No similarweb data found, skipping")
+        quit(0)
 
     # Delete malformed rows
     master_df = master_df.dropna(subset="total_visits_last_month")

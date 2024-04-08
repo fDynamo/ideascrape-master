@@ -384,7 +384,8 @@ class DataPipeline(ABC):
             in_kwargs = self.run_info_folder.read_steps_from_inputs()
             special_run_kwargs["start_index"] = cli_args.start_index
             special_run_kwargs["end_index"] = cli_args.end_index
-            special_steps_kwargs["upsync"] = cli_args.upsync
+            if cli_args.upsync is not None:
+                special_steps_kwargs["upsync"] = cli_args.upsync
         else:
             if not is_run_test and isdir(pipeline_run_folder_path):
                 print("Use -r to retry a run")

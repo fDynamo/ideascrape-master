@@ -1,4 +1,5 @@
 from custom_helpers_py.json_helpers import load_json_as_obj
+from custom_helpers_py.url_formatters import clean_url
 import validators
 from langdetect import detect
 from os.path import dirname, join, realpath
@@ -13,15 +14,18 @@ indiv_url_filters_file_path = join(filter_files_folder_path, "indiv_url_filters.
 indiv_url_filters = load_json_as_obj(indiv_url_filters_file_path)
 
 
-def is_url_valid(in_clean_url: str):
+def is_url_valid(in_url: str, clean_in_url=False):
+    if clean_in_url:
+        in_url = clean_url(in_url)
+
     try:
-        if not in_clean_url or not isinstance(in_clean_url, str):
+        if not in_url or not isinstance(in_url, str):
             raise Exception("cannot read URL")
 
-        if not validators.url("https://" + in_clean_url):
+        if not validators.url("https://" + in_url):
             raise Exception("invalid URL form")
 
-        _filter_using_filter_file(in_clean_url, indiv_url_filters)
+        _filter_using_filter_file(in_url, indiv_url_filters)
     except Exception as error:
         return (False, str(error))
 

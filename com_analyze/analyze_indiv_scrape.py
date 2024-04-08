@@ -124,6 +124,9 @@ def main():
 
     # Process data
     master_df = pd.DataFrame(data_list)
+    if not "rejected" in master_df.columns:
+        master_df["rejected"] = pd.NA
+
     col_to_drop_list = ["end_url", "request_duration_s"]
     master_df = master_df.drop(columns=col_to_drop_list)
     master_df = master_df.rename(columns={"init_url": "product_url"})

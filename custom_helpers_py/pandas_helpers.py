@@ -68,7 +68,7 @@ def concat_folder_into_df(
         if allow_empty_return:
             return None
         else:
-            raise "No files to concat!"
+            raise Exception("No files to concat!")
 
     master_df = pd.concat(df_list)
 
