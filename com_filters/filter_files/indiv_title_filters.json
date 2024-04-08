@@ -1,4 +1,12 @@
 {
-  "substrings": ["404", "500", "501", "not found", "for sale", "just a moment"],
+  "substrings": [
+    "404",
+    "500",
+    "501",
+    "not found",
+    "for sale",
+    "just a moment",
+    "supplier"
+  ],
   "starts": ["40", "50"]
 }

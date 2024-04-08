@@ -34,6 +34,9 @@ def camel_to_snake_case(in_str: str) -> str:
 
 
 def remove_unnecessary_spaces_from_string(in_str: str) -> str:
+    if not in_str or not isinstance(in_str, str):
+        return ""
+
     to_return = in_str
     to_return = to_return.replace("\n", " ")
     to_return = re.sub(" +", " ", to_return)

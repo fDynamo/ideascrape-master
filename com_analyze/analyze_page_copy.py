@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import re
 from custom_helpers_py.string_formatters import remove_unnecessary_spaces_from_string
+import json
 
 
 def analyze_page_copy(in_file_path: str):
@@ -20,6 +21,19 @@ def analyze_page_copy(in_file_path: str):
 
     if "generic" in meta_info:
         return analyze_generic(meta_info, content)
+    if "google_play_store" in meta_info:
+        return analyze_google_play_store(meta_info, content)
+
+    return None
+
+
+"""
+Page copy analyzers must return in the form of:
+{
+    page_type: str,
+    data: dict
+}
+"""
 
 
 def analyze_generic(meta_info: str, content: str):
@@ -97,4 +111,9 @@ def analyze_generic(meta_info: str, content: str):
 
     to_return["link_list"] = link_list
 
-    return to_return
+    return {"page_type": "generic", "data": to_return}
+
+
+def analyze_google_play_store(meta_info: str, content: str):
+    content_obj = json.loads(content)
+    return {"page_type": "google_play_store", "data": content_obj}

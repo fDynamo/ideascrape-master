@@ -1,4 +1,7 @@
 {
+  "whitelist": {
+    "substrings": ["play.google.com/store/apps/details"]
+  },
   "substrings": [
     "manufacturer",
     "supplier",
@@ -153,7 +156,6 @@
     "discord.",
     "slack.",
     "shopify.",
-    "play.google.com/store/apps/details",
     "marketplace.visualstudio.com/items",
     "itunes.apple.com/WebObjects",
     "selfmadebd.",

@@ -42,7 +42,7 @@ def main():
     for i, in_record in enumerate(in_list):
         print("embedding", i)
         product_url = in_record["product_url"]
-        text_to_embed = in_record["analyzed_description"]
+        text_to_embed = in_record["search_vector_text"]
         text_to_embed = clean_text(text_to_embed)
         if not text_to_embed or text_to_embed == "":
             print("empty skipping")

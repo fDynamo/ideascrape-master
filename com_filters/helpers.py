@@ -95,6 +95,29 @@ def is_domain_similarweb_scrapable(in_domain):
 
 
 def _filter_using_filter_file(in_str: str, filter_file_dict: dict):
+    whitelist_dict: dict = filter_file_dict.get("whitelist", None)
+
+    # In whitelist, always pass no matter what
+    if whitelist_dict is not None:
+        substrings = whitelist_dict.get("substrings", None)
+        if substrings:
+            for substring in substrings:
+                if substring in in_str:
+                    return
+
+        starts = whitelist_dict.get("starts", None)
+        if starts:
+            for start in starts:
+                if in_str.startswith(start):
+                    return
+
+        ends = whitelist_dict.get("ends", None)
+        if ends:
+            for end in ends:
+                if in_str.endswith(end):
+                    return
+
+    # Filter out
     substrings = filter_file_dict.get("substrings", None)
     if substrings:
         for substring in substrings:

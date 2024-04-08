@@ -93,22 +93,42 @@ def main():
         page_copy_file_path = join(
             page_copy_folder_path, file_name.replace(".json", ".txt")
         )
-        analyzed_page_copy_obj = analyze_page_copy(page_copy_file_path)
+        pc_obj = analyze_page_copy(page_copy_file_path)
 
-        # Get new description
         description: str = file_obj["description"] or ""
-        if analyzed_page_copy_obj is not None:
-            analyzed_description: str = (
-                description + " " + analyzed_page_copy_obj["page_gist"]
-            )
-        analyzed_description = remove_unnecessary_spaces_from_string(
-            analyzed_description
-        )
+        description = remove_unnecessary_spaces_from_string(description)
 
-        if not description or description == "":
-            description = analyzed_description
-        else:
-            description = remove_unnecessary_spaces_from_string(description)
+        search_vector_text: str = description
+
+        # Use analyzed page copy
+        if pc_obj is not None:
+            pc_data: dict = pc_obj["data"]
+            if pc_obj["page_type"] == "generic":
+                analyzed_description: str = description + " " + pc_data["page_gist"]
+                analyzed_description = remove_unnecessary_spaces_from_string(
+                    analyzed_description
+                )
+
+                if not description or description == "":
+                    description = analyzed_description
+                search_vector_text = analyzed_description
+            if pc_obj["page_type"] == "google_play_store":
+                analyzed_description: str = (
+                    description + " " + pc_data["long_description"]
+                )
+                analyzed_description = remove_unnecessary_spaces_from_string(
+                    analyzed_description
+                )
+
+                search_vector_text = analyzed_description
+                if not description or description == "":
+                    description = analyzed_description
+                search_vector_text = analyzed_description
+
+                # Add new vars
+                file_obj["from_googleps"] = True
+                file_obj["googleps_count_download"] = pc_data["count_downloads"]
+                file_obj["googleps_updated_at"] = pc_data["updated_at"]
 
         desc_valid_res = is_page_desc_valid(description)
         if not desc_valid_res[0]:
@@ -117,7 +137,7 @@ def main():
             )
             continue
 
-        file_obj["analyzed_description"] = analyzed_description
+        file_obj["search_vector_text"] = search_vector_text
         file_obj["description"] = description
 
         data_list.append(file_obj)

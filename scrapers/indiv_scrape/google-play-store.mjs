@@ -20,16 +20,8 @@ function evaluateEssentialData() {
   let description = "";
   const metaDescriptionEl = document.querySelector('meta[name="description"]');
   if (metaDescriptionEl) {
-    description += metaDescriptionEl.content.trim();
+    description = metaDescriptionEl.content.trim();
   }
-
-  const pageDescriptionEl = document.querySelector(
-    'div[data-g-id="description"]'
-  );
-  if (pageDescriptionEl) {
-    description += " " + pageDescriptionEl.innerText.trim();
-  }
-  description = description.trim();
 
   let imageUrl = "";
   const imageEl = document.querySelector('img[alt="Icon image"]');
@@ -46,6 +38,15 @@ function evaluateEssentialData() {
 
 function evaluatePageCopy() {
   const metricsElList = document.querySelectorAll("div.w7Iutd>div");
+
+  let longDescription = "";
+  const pageDescriptionEl = document.querySelector(
+    'div[data-g-id="description"]'
+  );
+  if (pageDescriptionEl) {
+    longDescription = pageDescriptionEl.innerText.trim();
+  }
+
   let countDownloads = "";
   for (let i = 0; i < metricsElList.length; i++) {
     const currEl = metricsElList[i];
@@ -59,13 +60,14 @@ function evaluatePageCopy() {
   const updatedEl = document.querySelector("div.xg1aie");
   let updatedAt = "";
   if (updatedEl) {
-    updatedAt = updatedEl.innerText;
+    updatedAt = updatedEl.innerText.trim();
   }
 
   return JSON.stringify(
     {
-      countDownloads,
-      updatedAt,
+      count_downloads: countDownloads,
+      updated_at: updatedAt,
+      long_description: longDescription,
     },
     null,
     3
