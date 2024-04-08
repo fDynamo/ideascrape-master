@@ -48,6 +48,8 @@ def main():
     mask = master_df["product_url"].str.contains(substring)
     master_df = master_df[mask]
 
+    master_df.rename(columns={"product_url": "url"})
+
     if out_file_path.endswith("json"):
         save_df_as_json(master_df, out_file_path)
     else:

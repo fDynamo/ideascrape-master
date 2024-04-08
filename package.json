@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "indiv_scrape": "node scrapers/indiv_scrape/scrape-individual.mjs",
+    "indiv_scrape": "node scrapers/indiv_scrape/index.mjs",
     "sup_similarweb_scrape": "node scrapers/sup_similarweb_scrape/scrape-similarweb.mjs",
     "source_aift_scrape": "node scrapers/source_aift_scrape/index.mjs",
     "source_ph_scrape": "node scrapers/source_ph_scrape/scrape-homefeed.mjs",

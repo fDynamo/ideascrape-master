@@ -141,7 +141,9 @@
     "marketplace.atlassian.",
     ".substack.",
     "bubbleapps.",
-    "/product"
+    "/product",
+    "/login",
+    "/auth"
   ],
   "starts": [
     "http",
