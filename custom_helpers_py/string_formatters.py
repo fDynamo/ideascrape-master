@@ -91,7 +91,13 @@ def cleanhtml(raw_html):
 def convert_url_to_file_name(in_url: str):
     in_url = clean_url(in_url)
     in_url = clean_text(in_url, remove_html=True, remove_non_alpha=True)
-    return in_url.replace(".", "_").replace(" ", "_").replace("/", "_")
+    return (
+        in_url.replace(".", "-d-")
+        .replace(" ", "_")
+        .replace("/", "-s-")
+        .replace("?", "-q-")
+        .replace("&", "-a-")
+    )
 
 
 if __name__ == "__main__":
