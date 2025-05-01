@@ -1,7 +1,9 @@
 ## Overview
-Ideascrape scrapes indie hacker websites then runs it through a series of processing code then finally uploads it to supabase. While processing, it creates vector embeddings. 
+Ideascrape (AKA Hackersearch) is a search engine for indie products. The data is prepared by scraping indie product websites (think product hunt), then processing that data with some python code, then finally uploading it to supabase. The NextJS website serves as the front end for the app. 
 
-Was my first big project when trying to be an entrepreneur, ended up being a massive time sink. Lots of learnings though.
+While processing, it structures raw data, creates vector embeddings for search, etc.
+
+Was my first big project when trying to be an entrepreneur, ended up being a massive time sink. Lots of learnings.
 
 
 ## Setup
