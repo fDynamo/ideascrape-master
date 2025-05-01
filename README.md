@@ -1,3 +1,9 @@
+## Overview
+Ideascrape scrapes indie hacker websites then runs it through a series of processing code then finally uploads it to supabase. While processing, it creates vector embeddings. 
+
+Was my first big project when trying to be an entrepreneur, ended up being a massive time sink. Lots of learnings though.
+
+
 ## Setup
 
 1. Create python venv in .venv
